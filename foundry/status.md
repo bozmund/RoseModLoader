@@ -1,14 +1,14 @@
 # Foundry status
 
-_Updated 2026-10-09 00:38_
+_Updated 2026-10-09 00:39_
 
 | State | Tasks |
 |---|---:|
-| open | 155 |
+| open | 157 |
 | claimed | 0 |
 | landed | 1 |
 | escalated | 0 |
-| rejected | 6 |
+| rejected | 4 |
 
 Attempts so far: 2. Landed on the first attempt: 0.
 
@@ -16,7 +16,7 @@ Attempts so far: 2. Landed on the first attempt: 0.
 
 - `farmersdelight-5f0b8a06` net/minecraft/world/level/block/state/BlockState.is(Lnet/minecraft/world/level/block/Block;)Z (landed: 2026-10-09 00:29)
 
-## Open (155), most used first
+## Open (157), most used first
 
 - `farmersdelight-707fa12d` net/minecraft/world/food/FoodProperties$Builder.fast()Lnet/minecraft/world/food/FoodProperties$Builder; - 18 uses
 - `farmersdelight-aa9bac46` com/mojang/blaze3d/vertex/PoseStack.mulPose(Lorg/joml/Quaternionf;)V - 17 uses
@@ -29,6 +29,7 @@ Attempts so far: 2. Landed on the first attempt: 0.
 - `farmersdelight-f11157a5` net/minecraft/world/level/LevelAccessor.scheduleTick(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/material/Fluid;I)V - 9 uses
 - `farmersdelight-281d3237` net/minecraft/nbt/CompoundTag.getInt(Ljava/lang/String;)I - 8 uses
 - `farmersdelight-3afba3b7` net/minecraft/world/item/ItemStack.of(Lnet/minecraft/nbt/CompoundTag;)Lnet/minecraft/world/item/ItemStack; - 8 uses
+- `farmersdelight-3d303ffd` net/minecraft/world/level/Level.getRecipeManager()Lnet/minecraft/world/item/crafting/RecipeManager; - 8 uses
 - `farmersdelight-6f6731b8` net/minecraft/world/item/ItemStack.hurtAndBreak(ILnet/minecraft/world/entity/LivingEntity;Ljava/util/function/Consumer;)V - 8 uses
 - `farmersdelight-0269d899` net/minecraft/world/entity/ai/attributes/AttributeModifier.getOperation()Lnet/minecraft/world/entity/ai/attributes/AttributeModifier$Operation; - 5 uses
 - `farmersdelight-36c25704` net/minecraft/util/Mth.sin(F)F - 5 uses
@@ -42,5 +43,4 @@ Attempts so far: 2. Landed on the first attempt: 0.
 - `farmersdelight-8f0e4700` net/minecraft/nbt/CompoundTag.getLong(Ljava/lang/String;)J - 4 uses
 - `farmersdelight-9981d5ba` net/minecraft/world/effect/MobEffectUtil.formatDuration(Lnet/minecraft/world/effect/MobEffectInstance;F)Lnet/minecraft/network/chat/Component; - 4 uses
 - `farmersdelight-b39ead78` net/minecraft/world/entity/player/Player.broadcastBreakEvent(Lnet/minecraft/world/InteractionHand;)V - 4 uses
-- `farmersdelight-ca261e89` net/minecraft/world/level/block/Block.updateShape(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/core/Direction;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/LevelAccessor;Lnet/minecraft/core/BlockPos;Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/block/state/BlockState; - 4 uses
-- ... and 130 more
+- ... and 132 more

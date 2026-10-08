@@ -1,9 +1,7 @@
 package rose.translate;
 
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -45,24 +43,40 @@ public final class CallAdapter {
     /** The unique adaptation for a call that doesn't resolve as written, or {@code null}. Names are 26.3 names. */
     public Adaptation find(String owner, String name, String desc, boolean isStatic) {
         if (name.startsWith("<")) return null;
-        Set<String> candidates = new LinkedHashSet<>();
+        // descriptor -> generic signature (or "" when it has none); first declaration in the hierarchy wins
+        java.util.Map<String, String> candidates = new java.util.LinkedHashMap<>();
         for (ClassIndex.Info info : ClassIndex.hierarchy(owner, first, fallback)) {
             for (String m : info.methods()) {
                 if (!m.startsWith(name + "(") || m.length() == name.length()) continue;
                 if (info.staticMethods().contains(m) != isStatic) continue;
-                candidates.add(m.substring(name.length()));
+                candidates.putIfAbsent(m.substring(name.length()), info.signatures().getOrDefault(m, ""));
             }
         }
         candidates.remove(desc);
         List<Adaptation> applicable = new ArrayList<>();
-        for (String candidate : candidates) {
-            Adaptation a = applicable(desc, candidate);
+        for (var candidate : candidates.entrySet()) {
+            Adaptation a = applicable(desc, candidate.getKey(), returnsTypeVariable(candidate.getValue()));
             if (a != null) applicable.add(a);
         }
         return applicable.size() == 1 ? applicable.getFirst() : null;
     }
 
-    private Adaptation applicable(String oldDesc, String newDesc) {
+    /** True if a generic method signature's return type is a type variable (e.g. {@code (TT;)TT;}). */
+    static boolean returnsTypeVariable(String signature) {
+        return !signature.isEmpty() && signature.substring(signature.lastIndexOf(')') + 1).startsWith("T");
+    }
+
+    /**
+     * Return types must stay compatible <em>in meaning</em>, not just for the verifier:
+     * <ul>
+     *   <li>same type; or the old call ignored nothing and the new method returns a value (discarded);</li>
+     *   <li>a narrower (covariant) type, unless the old type was {@code Object} (then the caller casts it to what the
+     *       old generic meant, and a different object would fail at runtime);</li>
+     *   <li>a wider type only when the new method's return is a generic type variable (erasure), so casting back is
+     *       safe.</li>
+     * </ul>
+     */
+    private Adaptation applicable(String oldDesc, String newDesc, boolean returnsTypeVariable) {
         Type[] oldArgs = Type.getArgumentTypes(oldDesc);
         Type[] newArgs = Type.getArgumentTypes(newDesc);
         if (oldArgs.length != newArgs.length) return null;
@@ -77,8 +91,10 @@ public final class CallAdapter {
         if (isPrimitive(expected) || isPrimitive(actual)) {
             return expected.equals(actual) ? new Adaptation(newDesc, null, false) : null;
         }
-        if (assignable(actual, expected)) return new Adaptation(newDesc, null, false);
-        if (assignable(expected, actual)) {
+        if (expected.equals(actual)) return new Adaptation(newDesc, null, false);
+        boolean expectedIsObject = expected.getDescriptor().equals("Ljava/lang/Object;");
+        if (!expectedIsObject && assignable(actual, expected)) return new Adaptation(newDesc, null, false);
+        if (returnsTypeVariable && assignable(expected, actual)) {
             return new Adaptation(newDesc, expected.getSort() == Type.ARRAY ? expected.getDescriptor() : expected.getInternalName(), false);
         }
         return null;

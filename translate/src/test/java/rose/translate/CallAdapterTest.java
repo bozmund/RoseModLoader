@@ -22,7 +22,7 @@ class CallAdapterTest {
         try (ZipOutputStream out = new ZipOutputStream(Files.newOutputStream(jar))) {
             for (var e : Map.of(
                     "game/Typed", type("game/Typed", "java/lang/Object", true,
-                            new String[] {"is", "(Ljava/lang/Object;)Z"}, new String[] {"value", "()Ljava/lang/Object;"}),
+                            new String[] {"is", "(Ljava/lang/Object;)Z"}, new String[] {"value", "()Ljava/lang/Object;", "()TT;"}),
                     "game/State", type("game/State", "java/lang/Object", false,
                             new String[] {"setBlock", "(Lgame/Block;)Lgame/State;"}),
                     "game/Block", type("game/Block", "java/lang/Object", false),
@@ -43,7 +43,7 @@ class CallAdapterTest {
         cw.visit(Opcodes.V21, Opcodes.ACC_PUBLIC | (isInterface ? Opcodes.ACC_INTERFACE | Opcodes.ACC_ABSTRACT : 0),
                 name, null, superName, interfaces);
         for (String[] m : methods) {
-            MethodVisitor mv = cw.visitMethod(Opcodes.ACC_PUBLIC | Opcodes.ACC_ABSTRACT, m[0], m[1], null, null);
+            MethodVisitor mv = cw.visitMethod(Opcodes.ACC_PUBLIC | Opcodes.ACC_ABSTRACT, m[0], m[1], m.length > 2 ? m[2] : null, null);
             mv.visitEnd();
         }
         cw.visitEnd();
@@ -74,5 +74,14 @@ class CallAdapterTest {
         assertNull(adapter.find("game/Overloaded", "put", "(Ljava/lang/String;)V", false), "two applicable overloads");
         assertNull(adapter.find("game/State", "is", "(I)Z", false), "primitive can't widen to Object");
         assertNull(adapter.find("game/State", "is", "(Lgame/Block;)Z", true), "static-ness must match");
+    }
+
+    @Test
+    void returnTypesThatChangedMeaningAreNotAdapted(@TempDir Path dir) throws IOException {
+        CallAdapter adapter = adapter(dir);
+        // Old code expected the value (Object, cast by the caller); a different returned object would fail at runtime.
+        assertNull(adapter.find("game/State", "setBlock", "(Lgame/Block;)Ljava/lang/Object;", false));
+        // A wider return type without a type variable in the signature is a real API change, not erasure.
+        assertNull(adapter.find("game/State", "setBlock", "(Lgame/Block;)Lgame/Block;", false));
     }
 }

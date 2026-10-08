@@ -17,6 +17,7 @@ shimSignature: public static void decrementOpeners(net.minecraft.world.level.blo
 ruleLine: net/minecraft/world/level/block/entity/ContainerOpenersCounter.m_155468_(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)V	rose/era/v1_20_1/shim/ContainerOpenersCounterShim.decrementOpeners	<evidence>
 attempts: 0
 created: 2026-10-09
+closedReason: resolved-elsewhere
 ---
 
 # Redirect `net/minecraft/world/level/block/entity/ContainerOpenersCounter.decrementOpeners(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)V`

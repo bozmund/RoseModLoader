@@ -17,6 +17,7 @@ shimSignature: public static java.lang.Object get(net.minecraft.core.Registry se
 ruleLine: net/minecraft/core/Registry.m_7745_(Lnet/minecraft/resources/ResourceLocation;)Ljava/lang/Object;	rose/era/v1_20_1/shim/RegistryShim.get	<evidence>
 attempts: 0
 created: 2026-10-09
+closedReason: -
 ---
 
 # Redirect `net/minecraft/core/Registry.get(Lnet/minecraft/resources/ResourceLocation;)Ljava/lang/Object;`
@@ -32,3 +33,7 @@ Write a static shim that does what the 1.20.1 method did, using 26.3 APIs, and r
 ## Closed 2026-10-09 00:38
 
 No longer reported by `rose analyze` (resolved elsewhere).
+
+## Reopened 2026-10-09 00:39
+
+Reported again by `rose analyze`.

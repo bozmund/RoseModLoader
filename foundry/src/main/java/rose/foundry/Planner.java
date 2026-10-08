@@ -60,6 +60,7 @@ public final class Planner {
         for (Task open : store.list(Task.State.OPEN)) {
             if (mod.equals(open.get("mod")) && !current.contains(open.get("symbol"))) {
                 open.appendBody("\n## Closed " + Foundry.now() + "\n\nNo longer reported by `rose analyze` (resolved elsewhere).\n");
+                open.set("closedReason", "resolved-elsewhere");
                 store.move(open, Task.State.REJECTED);
                 Foundry.log("closed " + open.id() + " (resolved elsewhere): " + open.get("readable"));
             }
@@ -71,7 +72,19 @@ public final class Planner {
                 if (!"method".equals(f.get("kind").getAsString())) continue;
                 if (!REDIRECTABLE.contains(f.get("status").getAsString())) continue;
                 Task task = redirectTask(mod, modJar, f, vanilla);
-                if (task == null || store.exists(task.id())) continue;
+                if (task == null) continue;
+                var existing = store.find(task.id());
+                if (existing.isPresent()) {
+                    // A task closed only because its finding vanished comes back if the finding does.
+                    Task old = existing.get();
+                    if (old.state() == Task.State.REJECTED && "resolved-elsewhere".equals(old.get("closedReason"))) {
+                        old.set("closedReason", "-");
+                        old.appendBody("\n## Reopened " + Foundry.now() + "\n\nReported again by `rose analyze`.\n");
+                        store.move(old, Task.State.OPEN);
+                        Foundry.log("reopened " + old.id() + ": " + old.get("readable"));
+                    }
+                    continue;
+                }
                 store.save(task);
                 created.add(task);
             }

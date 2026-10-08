@@ -28,9 +28,10 @@ public final class ClassIndex {
      * @param methods       {@code name+desc} of every declared method
      * @param staticMethods the subset of {@code methods} that are static
      * @param fields        {@code name:desc} and bare {@code name} of every declared field
+     * @param signatures    generic signatures by {@code name+desc}, for methods that have one
      */
     public record Info(String name, String superName, List<String> interfaces, Set<String> methods, Set<String> fields,
-                Set<String> methodNames, Set<String> staticMethods) {}
+                Set<String> methodNames, Set<String> staticMethods, Map<String, String> signatures) {}
 
     private final Map<String, Info> classes = new HashMap<>();
     private final boolean includeJdk;
@@ -116,6 +117,7 @@ public final class ClassIndex {
         Set<String> methodNames = new HashSet<>();
         Set<String> fields = new HashSet<>();
         Set<String> staticMethods = new HashSet<>();
+        Map<String, String> signatures = new HashMap<>();
         String[] header = new String[2];
         List<String> interfaces = new ArrayList<>();
         new ClassReader(bytes).accept(new ClassVisitor(Opcodes.ASM9) {
@@ -131,6 +133,7 @@ public final class ClassIndex {
                 methods.add(name + desc);
                 methodNames.add(name);
                 if ((access & Opcodes.ACC_STATIC) != 0) staticMethods.add(name + desc);
+                if (signature != null) signatures.put(name + desc, signature);
                 return null;
             }
 
@@ -141,6 +144,6 @@ public final class ClassIndex {
                 return null;
             }
         }, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
-        return new Info(header[0], header[1], List.copyOf(interfaces), methods, fields, methodNames, staticMethods);
+        return new Info(header[0], header[1], List.copyOf(interfaces), methods, fields, methodNames, staticMethods, signatures);
     }
 }

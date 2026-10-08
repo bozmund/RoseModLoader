@@ -17,6 +17,7 @@ shimSignature: public static void remove(net.minecraft.nbt.CompoundTag self, jav
 ruleLine: net/minecraft/nbt/CompoundTag.m_128473_(Ljava/lang/String;)V	rose/era/v1_20_1/shim/CompoundTagShim.remove	<evidence>
 attempts: 0
 created: 2026-10-09
+closedReason: resolved-elsewhere
 ---
 
 # Redirect `net/minecraft/nbt/CompoundTag.remove(Ljava/lang/String;)V`
