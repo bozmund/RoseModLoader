@@ -40,6 +40,9 @@ You can run the game and check your change yourself. Full reference: `docs/agent
 - A task usually targets one finding. Evidence it's fixed: the finding disappears from `rose analyze`, and a GameTest proves the behavior.
 - New rules go in `rosetta/rules/` and need an evidence column. Check every rule against `corpus/minecraft/26.3/src`.
 
+## Foundry tasks
+If you were started by the foundry, your task is in `.foundry/TASK.md` in the current worktree. It names the exact files you may change. Anything else makes the scope gate reject the work. See `docs/FOUNDRY.md`.
+
 ## Getting stuck
 If you can't make progress after a real attempt, stop and write an escalation note in your task report:
 - what you tried;

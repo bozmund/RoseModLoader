@@ -17,6 +17,8 @@ shimSignature: public static net.minecraft.world.food.FoodProperties.Builder fas
 ruleLine: net/minecraft/world/food/FoodProperties$Builder.m_38766_()Lnet/minecraft/world/food/FoodProperties$Builder;	rose/era/v1_20_1/shim/FoodPropertiesBuilderShim.fast	<evidence>
 attempts: 0
 created: 2026-10-09
+lastFeedback: -
+escalated: 2026-10-09 00:30
 ---
 
 # Redirect `net/minecraft/world/food/FoodProperties$Builder.fast()Lnet/minecraft/world/food/FoodProperties$Builder;`
@@ -28,3 +30,19 @@ Write a static shim that does what the 1.20.1 method did, using 26.3 APIs, and r
 - Signature: `public static net.minecraft.world.food.FoodProperties.Builder fast(net.minecraft.world.food.FoodProperties.Builder self)`
 - Rule (append to `rosetta/rules/forge-1.20.1/redirects.tsv`, replace `<evidence>`):
   `net/minecraft/world/food/FoodProperties$Builder.m_38766_()Lnet/minecraft/world/food/FoodProperties$Builder;<TAB>rose/era/v1_20_1/shim/FoodPropertiesBuilderShim.fast<TAB><evidence>`
+
+## Escalated 2026-10-09 00:30
+
+5 attempts by script: C:/MyRepositories/Rose/foundry/test-agents/bad-signature.sh failed. Last gate: **analyze**
+
+```
+the call is still unresolved: [RULE_BROKEN|net/minecraft/world/food/FoodProperties$Builder.m_38766_()Lnet/minecraft/world/food/FoodProperties$Builder;]
+(RULE_BROKEN means the rule exists but the shim's name or signature doesn't match the task)
+```
+
+Last agent message:
+
+> script exited with 0: wrote a shim with the wrong signature
+
+Next step: a stronger model or a human takes this task. The worktree `foundry/worktrees/farmersdelight-707fa12d` (branch `foundry/farmersdelight-707fa12d`)
+holds the last attempt. Run `rose foundry retry farmersdelight-707fa12d` to put it back in the queue after fixing the cause.

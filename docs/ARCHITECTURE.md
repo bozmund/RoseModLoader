@@ -27,7 +27,7 @@ An old mod jar goes through the translation pipeline once. The result is cached 
 | `core` | `rose.core` | Rose's hooks into 26.3: registries, events, networking, config |
 | `translate` | `rose.translate` | `RosettaRemapper` + `JarTranslator` (renames today; rules, inheritance bridges, Mixin rebasing next) |
 | `rosetta` | `rose.rosetta` | Name layers built from mapping files (`NameLayerBuilder`), reviewed rules (`rosetta/rules/`); see docs/ROSETTA.md |
-| `eras/era-1.20.1` | `rose.era.v1_20_1` | Shims for vanilla 1.20.1 → 26.3 |
+| `eras/era-1.20.1` | `rose.era.v1_20_1.shim` | Static shims for vanilla 1.20.1 → 26.3 that redirect rules point at |
 | `dialects/forge-1.20.1` | `rose.dialect.forge.v1_20_1` | Forge 1.20.1 API reimplementation |
 | `packfix` | `rose.packfix` | Asset/data pack upgrader |
 | `analyzer` | `rose.analyzer` | `rose analyze <mod.jar>`: resolves every reference against 26.3 and writes the compatibility report |
@@ -35,7 +35,7 @@ An old mod jar goes through the translation pipeline once. The result is cached 
 | `bridge-cli` | `rose.cli` | The `rose` command: launch, `ctl`, events, GameTests, and the MCP server (`rose mcp`) |
 | `testing` | `rose.testing` | Server/client harnesses, GameTests, oracle dumper |
 | `corpus-tools` | `rose.corpus` | Builds the local `corpus/` (game jars, mappings, decompiled source) |
-| `foundry/` (TypeScript, later) | | 24/7 AI task orchestrator driving the `pi` agent |
+| `foundry` | `rose.foundry` | The AI foundry: findings → tasks → agent in a worktree → gates → `develop` (see docs/FOUNDRY.md) |
 
 ## Launch sequence (today)
 

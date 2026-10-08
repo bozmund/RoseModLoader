@@ -33,11 +33,30 @@ final class Worktrees {
         return "foundry/" + id;
     }
 
+    /**
+     * Makes sure {@code develop} exists and contains everything on {@code main} (tooling and gate fixes land on main;
+     * the gates run develop's code). The merge happens in a temporary worktree, never in the user's checkout.
+     */
     void ensureIntegrationBranch() throws IOException, InterruptedException {
         try {
             Proc.git(home, "rev-parse", "--verify", "--quiet", INTEGRATION_BRANCH);
         } catch (IOException missing) {
-            Proc.git(home, "branch", INTEGRATION_BRANCH, "HEAD");
+            Proc.git(home, "branch", INTEGRATION_BRANCH, "main");
+            return;
+        }
+        try {
+            Proc.git(home, "merge-base", "--is-ancestor", "main", INTEGRATION_BRANCH);
+            return; // already up to date
+        } catch (IOException behind) {
+            // fall through: merge main into develop
+        }
+        Path sync = home.resolve("foundry").resolve("worktrees").resolve("_sync-develop");
+        if (Files.exists(sync)) Proc.git(home, "worktree", "remove", "--force", sync.toString());
+        Proc.git(home, "worktree", "add", sync.toString(), INTEGRATION_BRANCH);
+        try {
+            Proc.git(sync, "merge", "--no-edit", "-q", "main");
+        } finally {
+            Proc.git(home, "worktree", "remove", "--force", sync.toString());
         }
     }
 
@@ -96,6 +115,12 @@ final class Worktrees {
         if (Files.exists(dir)) {
             for (String shared : SHARED) unlink(dir.resolve(shared));
             Proc.git(home, "worktree", "remove", "--force", dir.toString());
+            // Git can leave the (now empty) folder behind on Windows; remove it only if it really is empty.
+            if (Files.isDirectory(dir)) {
+                try (var entries = Files.list(dir)) {
+                    if (entries.findAny().isEmpty()) Files.delete(dir);
+                }
+            }
         }
         if (deleteBranch) {
             try {

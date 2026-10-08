@@ -130,10 +130,13 @@ public final class Foundry {
         log("  escalated " + task.id());
     }
 
-    /** Puts an escalated or rejected task back in the queue (attempt counter reset). */
+    /** Puts a task back in the queue from scratch: attempts reset, its worktree, branch and feedback discarded. */
     public void retry(String id) throws Exception {
         Task task = store.find(id).orElseThrow(() -> new IllegalArgumentException("no task " + id));
+        worktrees.close(id, true);
+        Files.deleteIfExists(feedbackFile(task));
         task.set("attempts", 0);
+        task.set("lastFeedback", "-");
         store.move(task, Task.State.OPEN);
     }
 

@@ -23,7 +23,7 @@ Rose is built to be **AI-native**. The **Rose Agent Bridge** lets AI models obse
 | M2 | Rose core + native API | done |
 | M2b | Agent Bridge v1: `rose` CLI + MCP server | done (dedicated-server run needs EULA) |
 | M3 | Translation engine, analyzer, Rosetta v0 | done: `rose analyze` lists every gap for Farmer's Delight 1.20.1 |
-| M4 | AI foundry v1 | |
+| M4 | AI foundry v1 | done: gates proven with scripted agents; waiting for the local model to run real tasks |
 | M5 | Forge 1.20.1 dialect → **Farmer's Delight 1.20.1 on 26.3** | |
 | M6+ | More Forge 1.20.1 mods, modpack builder, Fabric 1.20.1, older eras | |
 
