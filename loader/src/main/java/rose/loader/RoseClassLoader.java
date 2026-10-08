@@ -36,11 +36,14 @@ public final class RoseClassLoader extends SecureClassLoader {
      */
     private static final List<String> PARENT_FIRST = List.of(
             "java.", "jdk.", "sun.",
-            "rose.boot.", "rose.loader.");
+            "rose.boot.", "rose.loader.", "rose.mixin.",
+            // Mixin runs in the parent; transformed game classes must link against that same copy.
+            "org.spongepowered.", "com.llamalad7.mixinextras.");
 
     private final ResourceIndex resources;
     private final ClassLoader parent;
     private final List<ClassTransformer> transformers = new CopyOnWriteArrayList<>();
+    private volatile ClassTransformer finalTransformer;
 
     public RoseClassLoader(List<Path> classpath, ClassLoader parent) {
         super("rose", parent);
@@ -48,8 +51,47 @@ public final class RoseClassLoader extends SecureClassLoader {
         this.resources = new ResourceIndex(classpath);
     }
 
+    /** Adds a transformer that runs in registration order, before the final transformer. */
     public void addTransformer(ClassTransformer transformer) {
         transformers.add(transformer);
+    }
+
+    /**
+     * Sets the transformer that runs last (Mixin). It sees classes after Rose's translation, and it is skipped
+     * by {@link #getClassBytes(String, boolean)} so Mixin can read targets without re-entering itself.
+     */
+    public void setFinalTransformer(ClassTransformer transformer) {
+        if (finalTransformer != null) throw new IllegalStateException("final transformer already set");
+        finalTransformer = transformer;
+    }
+
+    /**
+     * Returns a class's bytes from Rose's classpath without defining it, or {@code null} if it isn't there.
+     *
+     * @param internalName      e.g. {@code net/minecraft/world/item/Item}
+     * @param runTransformers   whether to apply the regular (non-final) transformers
+     */
+    public byte[] getClassBytes(String internalName, boolean runTransformers) throws IOException {
+        URL url = resources.findResource(internalName + ".class");
+        if (url == null) return null;
+        byte[] bytes;
+        try (InputStream in = url.openStream()) {
+            bytes = in.readAllBytes();
+        }
+        return runTransformers ? applyTransformers(internalName, bytes) : bytes;
+    }
+
+    public boolean isClassLoaded(String name) {
+        synchronized (getClassLoadingLock(name)) {
+            return findLoadedClass(name) != null;
+        }
+    }
+
+    private byte[] applyTransformers(String internalName, byte[] bytes) {
+        for (ClassTransformer transformer : transformers) {
+            bytes = transformer.transform(internalName, bytes);
+        }
+        return bytes;
     }
 
     /** Adds a jar or folder (e.g. a mod) after start-up. */
@@ -89,9 +131,9 @@ public final class RoseClassLoader extends SecureClassLoader {
         }
 
         String internalName = name.replace('.', '/');
-        for (ClassTransformer transformer : transformers) {
-            bytes = transformer.transform(internalName, bytes);
-        }
+        bytes = applyTransformers(internalName, bytes);
+        ClassTransformer last = finalTransformer;
+        if (last != null) bytes = last.transform(internalName, bytes);
         definePackageFor(name, manifest);
         return defineClass(name, bytes, 0, bytes.length, source);
     }

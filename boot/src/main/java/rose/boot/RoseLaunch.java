@@ -13,7 +13,10 @@ import java.util.Map;
 import java.util.UUID;
 import rose.boot.mojang.GameInstaller;
 import rose.boot.mojang.InstalledGame;
+import rose.loader.ModDiscovery;
+import rose.loader.ModMetadata;
 import rose.loader.RoseClassLoader;
+import rose.mixin.RoseMixin;
 
 /**
  * Rose's entry point. Installs the requested Minecraft version, builds Rose's class loader around it and
@@ -46,6 +49,19 @@ public final class RoseLaunch {
         classpath.add(game.gameJar());
         classpath.addAll(game.libraries());
         RoseClassLoader loader = new RoseClassLoader(classpath, RoseLaunch.class.getClassLoader());
+
+        List<ModMetadata> mods = ModDiscovery.discover(gameDir.resolve("mods"),
+                ModDiscovery.parsePathList(System.getProperty("rose.dev.mods")));
+        List<String> mixinConfigs = new ArrayList<>();
+        for (ModMetadata mod : mods) {
+            loader.addPath(mod.root());
+            mixinConfigs.addAll(mod.mixins());
+        }
+        System.out.println("[rose] " + mods.size() + " mod(s): "
+                + mods.stream().map(m -> m.id() + " " + m.version()).toList());
+        RoseMixin.bootstrap(loader,
+                options.side() == InstalledGame.Side.CLIENT ? RoseMixin.CLIENT : RoseMixin.SERVER,
+                mixinConfigs);
 
         List<String> gameArgs = options.side() == InstalledGame.Side.CLIENT
                 ? clientArgs(game, installer, gameDir, runDir, options)

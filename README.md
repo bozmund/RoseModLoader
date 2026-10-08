@@ -18,8 +18,8 @@ Rose is built to be **AI-native**. The **Rose Agent Bridge** lets AI models obse
 
 | Milestone | Goal | Status |
 |---|---|---|
-| M0 | Groundwork: repo, build, corpus tooling | in progress |
-| M1 | Rose boots vanilla 26.3 (client + server) | |
+| M0 | Groundwork: repo, build, corpus tooling | done |
+| M1 | Rose boots vanilla 26.3 (client + server) with Mixin | done (LAN check pending) |
 | M2 | Rose core + native API | |
 | M2b | Agent Bridge v1 | |
 | M3 | Translation engine, analyzer, Rosetta v0 | |
@@ -34,7 +34,24 @@ Requirements: JDK 25. The Gradle wrapper is included.
 ```bash
 ./gradlew build
 ./gradlew corpusSetup   # downloads Minecraft 26.3 + 1.20.1 into corpus/ and decompiles them (local only)
+./gradlew runClient     # starts the 26.3 client through Rose (offline dev account), with the test mods
+./gradlew runServer     # starts the dedicated server; accept Mojang's EULA in run/server/eula.txt first
 ```
+
+## Writing a Rose-native mod (early)
+
+Put a `rose.mod.json` at the root of your jar:
+
+```json
+{
+  "schemaVersion": 1,
+  "id": "hello",
+  "version": "0.0.1",
+  "mixins": ["hello.mixins.json"]
+}
+```
+
+Drop the jar into `run/client/mods/` or `run/server/mods/`. Mixin (with MixinExtras) is available. Since Minecraft 26.x isn't obfuscated, no refmap is needed. See [`testmods/hello`](testmods/hello) for a working example.
 
 ## Legal
 

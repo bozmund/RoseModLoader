@@ -36,6 +36,14 @@ An old mod jar goes through the translation pipeline once. The result is cached 
 | `corpus-tools` | `rose.corpus` | Builds the local `corpus/` (game jars, mappings, decompiled source) |
 | `foundry/` (TypeScript, later) | | 24/7 AI task orchestrator driving the `pi` agent |
 
+## Launch sequence (today)
+
+1. `RoseLaunch` installs the game, libraries and assets into `run/` (`rose.boot.mojang.GameInstaller`).
+2. It creates `RoseClassLoader` over the game jar and libraries. Only the JDK, `rose.boot/loader/mixin` and Mixin itself come from the parent loader.
+3. `ModDiscovery` finds mods (`run/<side>/mods/*.jar`, plus `-Drose.dev.mods`) by their `rose.mod.json` and adds them to the loader.
+4. `RoseMixin.bootstrap` starts Mixin with Rose's service (`rose.mixin.RoseMixinService`), adds every mod's mixin configs, moves Mixin to its DEFAULT phase, and installs Mixin as the loader's *final* transformer. Translation transformers added later with `addTransformer` run before Mixin.
+5. Vanilla's own main class (`net.minecraft.client.main.Main` or `net.minecraft.server.Main`) is started inside the loader.
+
 ## The corpus (local only)
 
 `./gradlew corpusSetup` creates `corpus/minecraft/<version>/` containing:

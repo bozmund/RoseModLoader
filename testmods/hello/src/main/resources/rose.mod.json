@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "id": "hello",
+  "name": "Hello Rose (test mod)",
+  "version": "0.0.1",
+  "mixins": ["hello.mixins.json"]
+}

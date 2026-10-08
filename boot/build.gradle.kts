@@ -1,5 +1,6 @@
 dependencies {
     api(project(":loader"))
+    api(project(":mixin-service"))
     api(libs.gson)
 }
 
@@ -11,6 +12,9 @@ val gameJvmArgs = listOf(
     "-Xmx4G",
 )
 
+// Development test mods loaded on every runClient/runServer (see testmods/).
+val devMods = listOf(":testmods:hello")
+
 fun JavaExec.roseLaunch(side: String) {
     group = "rose"
     classpath = sourceSets["main"].runtimeClasspath
@@ -20,6 +24,11 @@ fun JavaExec.roseLaunch(side: String) {
     workingDir = gameDir
     doFirst { gameDir.mkdirs() }
     jvmArgs(gameJvmArgs)
+    val modJars = files(devMods.map { project(it).tasks.named("jar") })
+    inputs.files(modJars)
+    jvmArgumentProviders.add(CommandLineArgumentProvider {
+        listOf("-Drose.dev.mods=" + modJars.files.joinToString(File.pathSeparator) { it.absolutePath })
+    })
     args("--side", side, "--runDir", rootProject.file("run").absolutePath)
     standardInput = System.`in`
 }
