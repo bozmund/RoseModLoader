@@ -15,7 +15,10 @@ fun JavaExec.roseLaunch(side: String) {
     group = "rose"
     classpath = sourceSets["main"].runtimeClasspath
     mainClass.set("rose.boot.RoseLaunch")
-    workingDir = rootProject.projectDir
+    // The game writes logs/ and crash-reports/ to its working directory, so keep it inside run/.
+    val gameDir = rootProject.file("run/$side")
+    workingDir = gameDir
+    doFirst { gameDir.mkdirs() }
     jvmArgs(gameJvmArgs)
     args("--side", side, "--runDir", rootProject.file("run").absolutePath)
     standardInput = System.`in`

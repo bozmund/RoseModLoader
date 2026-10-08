@@ -26,3 +26,7 @@ foundry/logs/
 # OS
 .DS_Store
 Thumbs.db
+
+# Game output if launched from the repo root by mistake
+/logs/
+/crash-reports/
