@@ -1,0 +1,28 @@
+# Gradle / build
+.gradle/
+build/
+out/
+*.class
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+bin/
+
+# Local-only game and mod files. NEVER commit these (Mojang EULA, mod licenses).
+/corpus/
+/run/
+/runs/
+/patches-local/
+
+# Foundry worktrees and logs
+foundry/worktrees/
+foundry/logs/
+
+# OS
+.DS_Store
+Thumbs.db
