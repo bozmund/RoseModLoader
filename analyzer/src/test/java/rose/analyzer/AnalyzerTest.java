@@ -79,6 +79,46 @@ class AnalyzerTest {
     }
 
     @Test
+    void redirectRulesResolveCallsOnlyWhenTheShimMatches(@TempDir Path dir) throws Exception {
+        Path rules = dir.resolve("redirects.tsv");
+        java.nio.file.Files.writeString(rules, "net/minecraft/Old.m_2_()V\tshim/OldShim.use\tevidence\n");
+        Map<String, byte[]> mod = Map.of("mod/A", TestJars.caller("mod/A", "net/minecraft/Old", "m_2_", "()V"));
+
+        // Shim with the right signature: static void use(New self)
+        Path good = TestJars.jar(dir, "good-shim.jar", Map.of("shim/OldShim", staticShim("use", "(Lnet/minecraft/New;)V")));
+        Report fixed = analyzeWith(dir, rules, good, mod);
+        assertEquals(0, fixed.blocking(), () -> "unexpected: " + byReadable(fixed));
+        assertEquals(1, fixed.redirected());
+
+        // Shim with the wrong signature: the rule is reported as broken
+        Path bad = TestJars.jar(dir, "bad-shim.jar", Map.of("shim/OldShim", staticShim("use", "(Ljava/lang/String;)V")));
+        Report broken = analyzeWith(dir, rules, bad, mod);
+        assertEquals(Status.RULE_BROKEN, byReadable(broken).get("net/minecraft/Old.use()V"));
+    }
+
+    private Report analyzeWith(Path dir, Path rules, Path shimJar, Map<String, byte[]> modClasses) throws Exception {
+        Path target = TestJars.jar(dir, "target.jar", Map.of(
+                "net/minecraft/New", TestJars.type("net/minecraft/New", "java/lang/Object", "tick()V", "render(I)V")));
+        Path old = TestJars.jar(dir, "old.jar", Map.of(
+                "net/minecraft/Old", TestJars.type("net/minecraft/Old", "java/lang/Object", "tick()V", "use()V", "render()V")));
+        Path mod = TestJars.jar(dir, "mod.jar", modClasses);
+        return new Analyzer(LAYER, rose.rosetta.RedirectRules.read(rules), ClassIndex.of(List.of(target, shimJar), true),
+                ClassIndex.of(List.of(old), true)).analyze(mod);
+    }
+
+    private static byte[] staticShim(String name, String desc) {
+        var cw = new org.objectweb.asm.ClassWriter(org.objectweb.asm.ClassWriter.COMPUTE_MAXS);
+        cw.visit(org.objectweb.asm.Opcodes.V21, org.objectweb.asm.Opcodes.ACC_PUBLIC, "shim/OldShim", null, "java/lang/Object", null);
+        var mv = cw.visitMethod(org.objectweb.asm.Opcodes.ACC_PUBLIC | org.objectweb.asm.Opcodes.ACC_STATIC, name, desc, null, null);
+        mv.visitCode();
+        mv.visitInsn(org.objectweb.asm.Opcodes.RETURN);
+        mv.visitMaxs(0, 0);
+        mv.visitEnd();
+        cw.visitEnd();
+        return cw.toByteArray();
+    }
+
+    @Test
     void integrationPackagesAreNotRuntimeProblems(@TempDir Path dir) throws Exception {
         Report report = analyze(dir, Map.of(
                 "mod/integration/jei/Plugin", TestJars.caller("mod/integration/jei/Plugin", "mezz/jei/api/IModPlugin", "register", "()V")));

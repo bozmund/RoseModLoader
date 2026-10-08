@@ -15,8 +15,11 @@ shimClass: rose.era.v1_20_1.shim.BlockStateShim
 shimFile: eras/era-1.20.1/src/main/java/rose/era/v1_20_1/shim/BlockStateShim.java
 shimSignature: public static boolean is(net.minecraft.world.level.block.state.BlockState self, net.minecraft.world.level.block.Block block)
 ruleLine: net/minecraft/world/level/block/state/BlockState.m_60713_(Lnet/minecraft/world/level/block/Block;)Z	rose/era/v1_20_1/shim/BlockStateShim.is	<evidence>
-attempts: 0
+attempts: 2
 created: 2026-10-09
+lastFeedback: scope
+landed: 2026-10-09 00:29
+result: resolved; runtime findings 590 -> 589 (1 fixed)
 ---
 
 # Redirect `net/minecraft/world/level/block/state/BlockState.is(Lnet/minecraft/world/level/block/Block;)Z`
@@ -28,3 +31,11 @@ Write a static shim that does what the 1.20.1 method did, using 26.3 APIs, and r
 - Signature: `public static boolean is(net.minecraft.world.level.block.state.BlockState self, net.minecraft.world.level.block.Block block)`
 - Rule (append to `rosetta/rules/forge-1.20.1/redirects.tsv`, replace `<evidence>`):
   `net/minecraft/world/level/block/state/BlockState.m_60713_(Lnet/minecraft/world/level/block/Block;)Z<TAB>rose/era/v1_20_1/shim/BlockStateShim.is<TAB><evidence>`
+
+## Landed 2026-10-09 00:29
+
+Attempt 2 by script: C:/MyRepositories/Rose/foundry/test-agents/good-blockstate-is.sh. resolved; runtime findings 590 -> 589 (1 fixed)
+
+Agent summary:
+
+> script exited with 0: wrote eras/era-1.20.1/src/main/java/rose/era/v1_20_1/shim/BlockStateShim.java and the rule

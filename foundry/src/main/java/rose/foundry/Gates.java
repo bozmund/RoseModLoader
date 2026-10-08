@@ -39,9 +39,11 @@ final class Gates {
 
         Path jar = Path.of(task.get("jar")).toAbsolutePath();
         if (!jar.isAbsolute() || !Files.exists(jar)) jar = worktree.resolve(task.get("jar"));
+        Path report = worktree.resolve("build/analyze").resolve(jar.getFileName().toString().replaceAll("\\.jar$", "") + ".rose.json");
+        // The analyzer task ignores exit codes (3 = "problems found"), so never judge a report left from a previous attempt.
+        Files.deleteIfExists(report);
         Proc.Result analyze = Proc.run(worktree, Proc.gradle(worktree, "-q", ":analyzer:run", "--args=" + jar),
                 logs.resolve("gate-analyze.log"), 30);
-        Path report = worktree.resolve("build/analyze").resolve(jar.getFileName().toString().replaceAll("\\.jar$", "") + ".rose.json");
         if (!analyze.ok() || !Files.exists(report)) return new Outcome(false, "analyze", "analyzer failed:\n" + analyze.tail(30));
         Outcome delta = compare(task, report, baselineReport);
         if (!delta.passed()) return delta;
