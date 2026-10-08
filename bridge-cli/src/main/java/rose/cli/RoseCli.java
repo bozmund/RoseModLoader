@@ -73,6 +73,13 @@ public final class RoseCli {
             case "test" -> {
                 return GameTests.run(home, args.isEmpty() ? null : args.getFirst());
             }
+            case "foundry" -> {
+                // Runs in the game's Java through Gradle (it builds and analyzes); arguments pass through.
+                boolean windows = System.getProperty("os.name").toLowerCase(java.util.Locale.ROOT).contains("win");
+                List<String> gradle = new ArrayList<>(List.of(home.resolve(windows ? "gradlew.bat" : "gradlew").toString(),
+                        "-q", "--console=plain", ":foundry:run", "--args=" + String.join(" ", args)));
+                return new ProcessBuilder(gradle).directory(home.toFile()).inheritIO().start().waitFor();
+            }
             case "analyze" -> {
                 if (args.isEmpty()) throw new IllegalArgumentException("usage: rose analyze <mod.jar>");
                 return analyze(home, Path.of(args.getFirst()).toAbsolutePath());
@@ -199,6 +206,7 @@ public final class RoseCli {
                   rose stop [client|server]
                   rose test [SELECTOR]                                     run GameTests headless (default sample:*)
                   rose analyze <mod.jar>                                   compatibility report for an old mod (exit 3 = problems)
+                  rose foundry plan|run|status|show|pack|retry|reject ...  the AI foundry (see docs/FOUNDRY.md)
                   rose mcp                                                 MCP server on stdio (Claude Code etc.)
 
                 Targets: client, server, gametest. Without --target, the first running one is used.

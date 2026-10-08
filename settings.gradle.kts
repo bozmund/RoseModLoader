@@ -15,6 +15,7 @@ include(
     "testing",
     "corpus-tools",
     "bridge-cli",
+    "foundry",
 )
 
 include("eras:era-1.20.1")

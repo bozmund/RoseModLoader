@@ -20,7 +20,7 @@ import rose.analyzer.Finding.Status;
  * <b>integration</b> problems only matter when an optional mod (JEI, EMI...) is installed; <b>data-generation</b>
  * problems only affect the mod author's build-time generators.
  */
-public record Report(Path jar, String modId, String source, int classes, int references,
+public record Report(Path jar, String modId, String source, int classes, int references, int redirected,
                      List<Finding> findings, Map<String, Integer> forgeSurface, List<String> nestedJars,
                      ClassContexts contexts) {
 
@@ -58,6 +58,7 @@ public record Report(Path jar, String modId, String source, int classes, int ref
         out.addProperty("target", "26.3");
         out.addProperty("classes", classes);
         out.addProperty("references", references);
+        out.addProperty("redirected", redirected);
         JsonObject problems = new JsonObject();
         CONTEXTS.forEach(c -> problems.addProperty(c, problems(c)));
         out.add("problems", problems);
@@ -100,6 +101,7 @@ public record Report(Path jar, String modId, String source, int classes, int ref
         md.append("| Classes | ").append(classes).append(" (").append(contexts.integration().size())
                 .append(" optional-integration, ").append(contexts.dataGeneration().size()).append(" data-generation) |\n");
         md.append("| References checked | ").append(references).append(" |\n");
+        md.append("| Calls redirected to era-bridge shims | ").append(redirected).append(" |\n");
         md.append("| **Runtime problems** | **").append(problems("runtime")).append("** (must reach 0 to load) |\n");
         md.append("| Integration problems | ").append(problems("integration")).append(" (only with JEI/EMI/... installed) |\n");
         md.append("| Data-generation problems | ").append(problems("data-generation")).append(" (build time only) |\n");

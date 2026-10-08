@@ -30,3 +30,7 @@ Thumbs.db
 # Game output if launched from the repo root by mistake
 /logs/
 /crash-reports/
+
+# Foundry per-task scratch inside worktrees (context packs, agent notes)
+.foundry/
+/foundry/work/

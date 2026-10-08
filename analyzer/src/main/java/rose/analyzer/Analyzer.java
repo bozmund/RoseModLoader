@@ -37,6 +37,7 @@ import org.objectweb.asm.tree.MultiANewArrayInsnNode;
 import org.objectweb.asm.tree.TypeInsnNode;
 import rose.analyzer.Finding.Status;
 import rose.rosetta.NameLayer;
+import rose.rosetta.RedirectRules;
 import rose.translate.JarTranslator;
 import rose.translate.RosettaRemapper;
 
@@ -54,6 +55,8 @@ public final class Analyzer {
 
     private final NameLayer layer;
     private final RosettaRemapper remapper;
+    private final RedirectRules redirects;
+    private int redirected;
     private final ClassIndex target;
     private final ClassIndex vanillaOld;
     private final Map<String, Finding> findings = new LinkedHashMap<>();
@@ -68,7 +71,13 @@ public final class Analyzer {
      * @param vanillaOld the source version's client with readable (Mojang) names, to tell Forge-added methods apart
      */
     public Analyzer(NameLayer layer, ClassIndex target, ClassIndex vanillaOld) {
+        this(layer, RedirectRules.empty(), target, vanillaOld);
+    }
+
+    /** @param target must include the era bridge jar so redirect shims can be checked */
+    public Analyzer(NameLayer layer, RedirectRules redirects, ClassIndex target, ClassIndex vanillaOld) {
         this.layer = layer;
+        this.redirects = redirects;
         this.remapper = new RosettaRemapper(layer);
         this.target = target;
         this.vanillaOld = vanillaOld;
@@ -102,7 +111,7 @@ public final class Analyzer {
                 for (String config : mixinConfigs.split(",")) analyzeMixinConfig(zip, config.trim());
             }
         }
-        return new Report(modJar, modId, layer.source(), modOriginal.names().size(), references,
+        return new Report(modJar, modId, layer.source(), modOriginal.names().size(), references, redirected,
                 new ArrayList<>(findings.values()), forgeSurface, nested, contexts);
     }
 
@@ -110,7 +119,7 @@ public final class Analyzer {
         ClassIndex index = new ClassIndex(false);
         Path tmp = Files.createTempFile("rose-analyze", ".jar");
         try {
-            new JarTranslator(remapper).translate(modJar, tmp);
+            new JarTranslator(remapper, redirects).translate(modJar, tmp);
             index.addJar(tmp);
         } finally {
             Files.deleteIfExists(tmp);
@@ -136,7 +145,9 @@ public final class Analyzer {
 
     private void instruction(AbstractInsnNode insn, String where) {
         switch (insn) {
-            case MethodInsnNode mi -> methodRef(mi.owner, mi.name, mi.desc, where, "method");
+            case MethodInsnNode mi -> {
+                if (!redirect(mi, where)) methodRef(mi.owner, mi.name, mi.desc, where, "method");
+            }
             case FieldInsnNode fi -> fieldRef(fi.owner, fi.name, fi.desc, where, "field");
             case TypeInsnNode ti -> typeRef(ti.desc, where);
             case MultiANewArrayInsnNode ma -> descRefs(Type.getType(ma.desc), where);
@@ -149,6 +160,29 @@ public final class Analyzer {
             }
             default -> { }
         }
+    }
+
+    /**
+     * @return true if a redirect rule covers this call (it is then resolved, or reported as RULE_BROKEN when the
+     *         shim is missing or has the wrong signature)
+     */
+    private boolean redirect(MethodInsnNode call, String where) {
+        if (call.getOpcode() == Opcodes.INVOKESPECIAL) return false;
+        RedirectRules.Redirect rule = redirects.find(call.owner, call.name, call.desc);
+        if (rule == null) return false;
+        references++;
+        String shimDesc = remapper.mapMethodDesc(rule.shimDescriptor(call.getOpcode() == Opcodes.INVOKESTATIC));
+        ClassIndex.Info shim = target.get(rule.shimOwner());
+        if (shim != null && shim.methods().contains(rule.shimName() + shimDesc)) {
+            redirected++;
+        } else {
+            String readable = rule.symbol();
+            NameLayer.MemberEntry entry = layer.method(call.name);
+            if (entry != null) readable = call.owner + "." + entry.readableOldName() + call.desc;
+            add(Status.RULE_BROKEN, "method", rule.symbol(), readable,
+                    rule.shimOwner() + "." + rule.shimName() + shimDesc + " (expected, static)", where);
+        }
+        return true;
     }
 
     private void handleRef(Handle h, String where) {

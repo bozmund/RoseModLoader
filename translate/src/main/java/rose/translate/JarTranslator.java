@@ -12,6 +12,7 @@ import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.commons.ClassRemapper;
 import org.objectweb.asm.commons.Remapper;
+import rose.rosetta.RedirectRules;
 
 /**
  * Writes a translated copy of a mod jar: every class is renamed through a {@link Remapper}; resources, nested jars
@@ -20,9 +21,15 @@ import org.objectweb.asm.commons.Remapper;
  */
 public final class JarTranslator {
     private final Remapper remapper;
+    private final RedirectRules redirects;
 
     public JarTranslator(Remapper remapper) {
+        this(remapper, RedirectRules.empty());
+    }
+
+    public JarTranslator(Remapper remapper, RedirectRules redirects) {
         this.remapper = remapper;
+        this.redirects = redirects;
     }
 
     public void translate(Path input, Path output) throws IOException {
@@ -49,8 +56,9 @@ public final class JarTranslator {
 
     public byte[] translateClass(byte[] bytes) {
         ClassReader reader = new ClassReader(bytes);
-        ClassWriter writer = new ClassWriter(0); // same frames and maxs: renaming doesn't change control flow
-        reader.accept(new ClassRemapper(writer, remapper), 0);
+        ClassWriter writer = new ClassWriter(0); // same frames and maxs: renaming/redirecting doesn't change control flow
+        // Redirects match old names, so they run before renaming: reader -> redirects -> remapper -> writer.
+        reader.accept(new RedirectingClassVisitor(new ClassRemapper(writer, remapper), redirects), 0);
         return writer.toByteArray();
     }
 

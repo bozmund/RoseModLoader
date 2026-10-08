@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import rose.rosetta.NameLayer;
+import rose.rosetta.RedirectRules;
 import rose.rosetta.RosettaMain;
 
 /**
@@ -33,12 +34,14 @@ public final class AnalyzerMain {
         require(vanillaOld, "run ./gradlew corpusSetup");
 
         NameLayer layer = NameLayer.read(RosettaMain.FORGE_1201_LAYER);
+        RedirectRules redirects = RedirectRules.read(REDIRECTS);
         List<Path> targetJars = new ArrayList<>();
         for (String line : Files.readAllLines(classpathFile)) if (!line.isBlank()) targetJars.add(Path.of(line));
+        targetJars.addAll(eraJars()); // redirect shims live here
         ClassIndex target = ClassIndex.of(targetJars, true);
         ClassIndex old = ClassIndex.of(List.of(vanillaOld), true);
 
-        Report report = new Analyzer(layer, target, old).analyze(jar);
+        Report report = new Analyzer(layer, redirects, target, old).analyze(jar);
         String base = jar.getFileName().toString().replaceAll("\\.jar$", "");
         Path json = out.resolve(base + ".rose.json");
         Path md = out.resolve(base + ".rose.md");
@@ -53,6 +56,17 @@ public final class AnalyzerMain {
         System.out.println("  report: " + md.toAbsolutePath());
         System.out.println("  json:   " + json.toAbsolutePath());
         System.exit(report.blocking() == 0 ? 0 : 3);
+    }
+
+    static final Path REDIRECTS = Path.of("rosetta", "rules", "forge-1.20.1", "redirects.tsv");
+
+    /** The built era-bridge jar(s) for Forge 1.20.1 (built by :eras:era-1.20.1:jar, which the run task depends on). */
+    private static List<Path> eraJars() throws java.io.IOException {
+        Path libs = Path.of("eras", "era-1.20.1", "build", "libs");
+        if (!Files.isDirectory(libs)) return List.of();
+        try (var files = Files.list(libs)) {
+            return files.filter(p -> p.toString().endsWith(".jar") && !p.toString().endsWith("-sources.jar")).toList();
+        }
     }
 
     private static void require(Path file, String hint) {

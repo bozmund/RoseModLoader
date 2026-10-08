@@ -3,3 +3,5 @@
 *.cmd text eol=crlf
 *.jar binary
 *.png binary
+# Rule files are append-mostly; union merges let parallel foundry branches add lines without conflicts.
+rosetta/rules/**/*.tsv merge=union

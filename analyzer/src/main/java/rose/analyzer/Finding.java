@@ -14,6 +14,7 @@ import java.util.TreeSet;
  */
 public final class Finding {
     public enum Status {
+        RULE_BROKEN("rule", "A redirect rule exists, but its shim is missing or has the wrong signature"),
         CLASS_GONE("era-bridge", "Class has no counterpart in 26.3"),
         CLASS_MISSING("era-bridge", "Class translated, but it is not in 26.3"),
         METHOD_GONE("era-bridge", "Method has no counterpart in 26.3 (removed, split or merged)"),
