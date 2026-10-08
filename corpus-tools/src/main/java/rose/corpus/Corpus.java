@@ -1,7 +1,6 @@
 package rose.corpus;
 
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.FileSystem;
@@ -20,14 +19,14 @@ import net.fabricmc.tinyremapper.NonClassCopyMode;
 import net.fabricmc.tinyremapper.OutputConsumerPath;
 import net.fabricmc.tinyremapper.TinyRemapper;
 import org.jetbrains.java.decompiler.main.decompiler.ConsoleDecompiler;
+import rose.boot.mojang.Downloader;
+import rose.boot.mojang.VersionManifest;
 
 /** Builds the local corpus: Mojang's game jars, mappings, Mojang-named jars and decompiled sources. */
 final class Corpus {
-    static final String VERSION_MANIFEST = "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json";
-
     private final Path root;
     private final Downloader downloader = new Downloader();
-    private JsonObject manifest;
+    private final VersionManifest manifest = new VersionManifest(downloader);
 
     Corpus(Path root) {
         this.root = root;
@@ -38,9 +37,7 @@ final class Corpus {
         MinecraftVersion mc = new MinecraftVersion(id, root.resolve("minecraft").resolve(id));
         Files.createDirectories(mc.dir());
 
-        JsonObject entry = findInManifest(id);
-        downloader.download(entry.get("url").getAsString(), mc.versionJson(), entry.get("sha1").getAsString());
-        JsonObject version = JsonParser.parseString(Files.readString(mc.versionJson())).getAsJsonObject();
+        JsonObject version = manifest.versionJson(id, mc.versionJson());
         JsonObject downloads = version.getAsJsonObject("downloads");
 
         download(downloads, "client", mc.clientJar());
@@ -81,7 +78,7 @@ final class Corpus {
                 .build();
         Path tmp = out.resolveSibling(out.getFileName() + ".part");
         Files.deleteIfExists(tmp);
-        try (OutputConsumerPath output = new OutputConsumerPath.Builder(tmp).build()) {
+        try (OutputConsumerPath output = new OutputConsumerPath.Builder(tmp).assumeArchive(true).build()) {
             output.addNonClassFiles(mc.clientJar(), NonClassCopyMode.FIX_META_INF, remapper);
             remapper.readInputs(mc.clientJar());
             remapper.apply(output);
@@ -105,7 +102,8 @@ final class Corpus {
             "--decompile-generics=1",
             "--remove-synthetic=1",
             "--remove-bridge=1",
-            "--log-level=warn",
+            "--log-level=error",
+            "--skip-extra-files=1", // only Java source; assets/data are read from the jar when needed
             "--only=net/minecraft/",
             "--only=com/mojang/",
             mc.namedClientJar().toString(),
@@ -133,17 +131,6 @@ final class Corpus {
             String[] parts = Files.readAllLines(versionsList).getFirst().split("\t");
             Files.copy(zip.getPath("META-INF", "versions", parts[2]), mc.serverJar());
         }
-    }
-
-    private JsonObject findInManifest(String id) throws IOException, InterruptedException {
-        if (manifest == null) {
-            manifest = JsonParser.parseString(downloader.getString(VERSION_MANIFEST)).getAsJsonObject();
-        }
-        for (var element : manifest.getAsJsonArray("versions")) {
-            JsonObject entry = element.getAsJsonObject();
-            if (entry.get("id").getAsString().equals(id)) return entry;
-        }
-        throw new IOException("Minecraft version not found in Mojang's manifest: " + id);
     }
 
     /** Feeds a mapping-io tree (source namespace = obfuscated, dst 0 = named) into tiny-remapper. */

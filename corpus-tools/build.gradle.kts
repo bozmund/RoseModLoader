@@ -3,6 +3,7 @@ plugins {
 }
 
 dependencies {
+    implementation(project(":boot")) // Mojang download helpers
     implementation(libs.gson)
     implementation(libs.mapping.io)
     implementation(libs.tiny.remapper)
@@ -14,7 +15,7 @@ application {
 }
 
 // ./gradlew corpusSetup  -> prepares corpus/ for the versions Rose currently works with.
-// Extra arguments: ./gradlew corpusSetup --args="setup 1.19.2"
+// Other versions: ./gradlew :corpus-tools:run --args="setup 1.19.2"
 tasks.named<JavaExec>("run") {
     workingDir = rootProject.projectDir
     maxHeapSize = "6G"

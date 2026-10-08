@@ -1,4 +1,4 @@
-package rose.corpus;
+package rose.boot.mojang;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,13 +15,13 @@ import java.time.Duration;
 import java.util.HexFormat;
 
 /** Downloads files and checks their SHA-1, the hash Mojang publishes for every game file. */
-final class Downloader {
+public final class Downloader {
     private final HttpClient http = HttpClient.newBuilder()
             .followRedirects(HttpClient.Redirect.NORMAL)
             .connectTimeout(Duration.ofSeconds(30))
             .build();
 
-    String getString(String url) throws IOException, InterruptedException {
+    public String getString(String url) throws IOException, InterruptedException {
         HttpResponse<String> response = http.send(request(url), HttpResponse.BodyHandlers.ofString());
         checkStatus(url, response.statusCode());
         return response.body();
@@ -32,12 +32,17 @@ final class Downloader {
      *
      * @param sha1 expected SHA-1 in hex, or {@code null} to skip verification
      */
-    void download(String url, Path target, String sha1) throws IOException, InterruptedException {
+    public void download(String url, Path target, String sha1) throws IOException, InterruptedException {
+        download(url, target, sha1, false);
+    }
+
+    /** As {@link #download(String, Path, String)}; {@code quiet} suppresses per-file log lines (e.g. for assets). */
+    public void download(String url, Path target, String sha1, boolean quiet) throws IOException, InterruptedException {
         if (Files.exists(target) && (sha1 == null || sha1.equalsIgnoreCase(sha1(target)))) {
-            System.out.println("[corpus] cached  " + target);
+            if (!quiet) System.out.println("[rose] cached  " + target);
             return;
         }
-        System.out.println("[corpus] fetch   " + url);
+        if (!quiet) System.out.println("[rose] fetch   " + url);
         Files.createDirectories(target.getParent());
         Path tmp = target.resolveSibling(target.getFileName() + ".part");
         HttpResponse<InputStream> response = http.send(request(url), HttpResponse.BodyHandlers.ofInputStream());
@@ -55,7 +60,7 @@ final class Downloader {
         Files.move(tmp, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
     }
 
-    static String sha1(Path file) throws IOException {
+    public static String sha1(Path file) throws IOException {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-1");
             try (InputStream in = Files.newInputStream(file)) {

@@ -1,0 +1,123 @@
+[20:10:52] [Datafixer Bootstrap #0/INFO]: 307 Datafixer optimizations took 265 milliseconds
+[20:10:53] [main/ERROR]: Unable to locate English counter names in registry Perflib 009. Counters may need to be rebuilt: 
+com.sun.jna.platform.win32.Win32Exception: The parameter is incorrect.
+	at rose//com.sun.jna.platform.win32.Advapi32Util.registryGetStringArray(Advapi32Util.java:921)
+	at rose//com.sun.jna.platform.win32.Advapi32Util.registryGetStringArray(Advapi32Util.java:898)
+	at rose//oshi.driver.windows.registry.HkeyPerformanceDataUtil.mapCounterIndicesFromRegistry(HkeyPerformanceDataUtil.java:274)
+	at rose//oshi.driver.windows.registry.HkeyPerformanceDataUtil.<clinit>(HkeyPerformanceDataUtil.java:51)
+	at rose//oshi.driver.windows.registry.ProcessPerformanceData.buildProcessMapFromRegistry(ProcessPerformanceData.java:45)
+	at rose//oshi.software.os.windows.WindowsOperatingSystem.queryProcessMapFromRegistry(WindowsOperatingSystem.java:328)
+	at rose//oshi.util.Memoizer$1.get(Memoizer.java:65)
+	at rose//oshi.software.os.windows.WindowsOperatingSystem.processMapToList(WindowsOperatingSystem.java:298)
+	at rose//oshi.software.os.windows.WindowsOperatingSystem.getProcess(WindowsOperatingSystem.java:292)
+	at rose//oshi.software.os.OperatingSystem.getCurrentProcess(OperatingSystem.java:246)
+	at rose//net.minecraft.SystemReport.lambda$putSoftware$0(SystemReport.java:116)
+	at rose//net.minecraft.SystemReport.ignoreErrors(SystemReport.java:121)
+	at rose//net.minecraft.SystemReport.putSoftware(SystemReport.java:116)
+	at rose//net.minecraft.SystemReport.lambda$new$7(SystemReport.java:68)
+	at rose//net.minecraft.SystemReport.ignoreErrors(SystemReport.java:121)
+	at rose//net.minecraft.SystemReport.<init>(SystemReport.java:68)
+	at rose//net.minecraft.CrashReport.<init>(CrashReport.java:35)
+	at rose//net.minecraft.CrashReport.preload(CrashReport.java:252)
+	at rose//net.minecraft.client.main.Main.main(Main.java:172)
+	at rose.boot.RoseLaunch.main(RoseLaunch.java:59)
+[20:10:53] [main/WARN]: Unable to locate English counter names in registry Perflib 009. Assuming English counters. Error 0x80070057. See https://support.microsoft.com/en-us/help/300956/how-to-manually-rebuild-performance-counter-library-values
+[20:10:53] [main/WARN]: Failed to get system info for Process Loads
+java.lang.NullPointerException: Cannot invoke "oshi.software.os.OSProcess.getUserTime()" because "process" is null
+	at rose//net.minecraft.SystemReport.lambda$putProcessDetails$0(SystemReport.java:190)
+	at rose//net.minecraft.SystemReport.setDetail(SystemReport.java:96)
+	at rose//net.minecraft.SystemReport.putProcessDetails(SystemReport.java:189)
+	at rose//net.minecraft.SystemReport.lambda$putSoftware$0(SystemReport.java:116)
+	at rose//net.minecraft.SystemReport.ignoreErrors(SystemReport.java:121)
+	at rose//net.minecraft.SystemReport.putSoftware(SystemReport.java:116)
+	at rose//net.minecraft.SystemReport.lambda$new$7(SystemReport.java:68)
+	at rose//net.minecraft.SystemReport.ignoreErrors(SystemReport.java:121)
+	at rose//net.minecraft.SystemReport.<init>(SystemReport.java:68)
+	at rose//net.minecraft.CrashReport.<init>(CrashReport.java:35)
+	at rose//net.minecraft.CrashReport.preload(CrashReport.java:252)
+	at rose//net.minecraft.client.main.Main.main(Main.java:172)
+	at rose.boot.RoseLaunch.main(RoseLaunch.java:59)
+[20:10:53] [main/WARN]: Failed to get system info for Process Virtual Size (MiB)
+java.lang.NullPointerException: Cannot invoke "oshi.software.os.OSProcess.getVirtualSize()" because "process" is null
+	at rose//net.minecraft.SystemReport.lambda$putProcessDetails$1(SystemReport.java:202)
+	at rose//net.minecraft.SystemReport.setDetail(SystemReport.java:96)
+	at rose//net.minecraft.SystemReport.putProcessDetails(SystemReport.java:202)
+	at rose//net.minecraft.SystemReport.lambda$putSoftware$0(SystemReport.java:116)
+	at rose//net.minecraft.SystemReport.ignoreErrors(SystemReport.java:121)
+	at rose//net.minecraft.SystemReport.putSoftware(SystemReport.java:116)
+	at rose//net.minecraft.SystemReport.lambda$new$7(SystemReport.java:68)
+	at rose//net.minecraft.SystemReport.ignoreErrors(SystemReport.java:121)
+	at rose//net.minecraft.SystemReport.<init>(SystemReport.java:68)
+	at rose//net.minecraft.CrashReport.<init>(CrashReport.java:35)
+	at rose//net.minecraft.CrashReport.preload(CrashReport.java:252)
+	at rose//net.minecraft.client.main.Main.main(Main.java:172)
+	at rose.boot.RoseLaunch.main(RoseLaunch.java:59)
+[20:10:53] [main/WARN]: Failed to get system info for Process Resident Size (MiB)
+java.lang.NullPointerException: Cannot invoke "oshi.software.os.OSProcess.getResidentSetSize()" because "process" is null
+	at rose//net.minecraft.SystemReport.lambda$putProcessDetails$2(SystemReport.java:203)
+	at rose//net.minecraft.SystemReport.setDetail(SystemReport.java:96)
+	at rose//net.minecraft.SystemReport.putProcessDetails(SystemReport.java:203)
+	at rose//net.minecraft.SystemReport.lambda$putSoftware$0(SystemReport.java:116)
+	at rose//net.minecraft.SystemReport.ignoreErrors(SystemReport.java:121)
+	at rose//net.minecraft.SystemReport.putSoftware(SystemReport.java:116)
+	at rose//net.minecraft.SystemReport.lambda$new$7(SystemReport.java:68)
+	at rose//net.minecraft.SystemReport.ignoreErrors(SystemReport.java:121)
+	at rose//net.minecraft.SystemReport.<init>(SystemReport.java:68)
+	at rose//net.minecraft.CrashReport.<init>(CrashReport.java:35)
+	at rose//net.minecraft.CrashReport.preload(CrashReport.java:252)
+	at rose//net.minecraft.client.main.Main.main(Main.java:172)
+	at rose.boot.RoseLaunch.main(RoseLaunch.java:59)
+[20:11:06] [Render thread/INFO]: Environment: Environment[discoveryUrl=https://discovery.minecraftservices.com/minecraft/client, name=PROD]
+[20:11:06] [Render thread/INFO]: Setting user: RoseDev
+[20:11:06] [Render thread/INFO]: Backend library: LWJGL version 3.4.3+4
+[20:11:06] [Render thread/INFO]: SDL [SYSTEM]: App name: Minecraft
+[20:11:06] [Render thread/INFO]: SDL [SYSTEM]: App version: 26.3
+[20:11:06] [Render thread/INFO]: SDL [SYSTEM]: App ID: com.mojang.minecraft
+[20:11:06] [Render thread/INFO]: SDL [SYSTEM]: SDL revision: SDL-3.4.14-62f10da
+[20:11:07] [Download-2/ERROR]: Failed to fetch user properties
+com.mojang.authlib.exceptions.InvalidCredentialsException: Status: 401
+	at rose//com.mojang.authlib.exceptions.MinecraftClientHttpException.toAuthenticationException(MinecraftClientHttpException.java:70)
+	at rose//com.mojang.authlib.services.MinecraftServicesUserApiService.fetchProperties(MinecraftServicesUserApiService.java:168)
+	at rose//net.minecraft.client.Minecraft.lambda$new$1(Minecraft.java:451)
+	at java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1789)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Caused by: MinecraftClientHttpException[type=HTTP_ERROR, status=401, response=ErrorResponse[path=/player/attributes, error=null, errorMessage=null, details=null]]
+	at rose//com.mojang.authlib.minecraft.client.MinecraftClient.buildHttpException(MinecraftClient.java:170)
+	at rose//com.mojang.authlib.minecraft.client.MinecraftClient.readServiceResponse(MinecraftClient.java:147)
+	at rose//com.mojang.authlib.minecraft.client.MinecraftClient.getWithEtag(MinecraftClient.java:81)
+	at rose//com.mojang.authlib.minecraft.client.MinecraftClient.get(MinecraftClient.java:65)
+	at rose//com.mojang.authlib.services.MinecraftServicesUserApiService.fetchProperties(MinecraftServicesUserApiService.java:118)
+	... 5 more
+[20:11:07] [Render thread/INFO]: Using graphics backend OpenGL, using drivers: 3.3.0 NVIDIA 610.78
+[20:11:07] [Render thread/INFO]: Using graphics device: NVIDIA GeForce RTX 4050 Laptop GPU/PCIe/SSE2 (NVIDIA Corporation)
+[20:11:07] [Render thread/INFO]: Using graphics device extensions: GL_ARB_multi_draw_indirect, GL_ARB_shader_draw_parameters, GL_ARB_base_instance, GL_KHR_debug, GL_ARB_draw_indirect, GL_ARB_clip_control, GL_ARB_vertex_attrib_binding, GL_ARB_direct_state_access, GL_EXT_texture_filter_anisotropic
+[20:11:07] [Render thread/INFO]: Created window using SDL video driver: windows
+[20:11:27] [Download-2/INFO]: Could not authorize you against Realms server: java.lang.RuntimeException: Failed to parse into SignedJWT: 0
+[20:11:27] [Download-2/ERROR]: Failed to fetch Realms feature flags
+com.mojang.realmsclient.exception.RealmsServiceException: Realms authentication error with message 'java.lang.RuntimeException: Failed to parse into SignedJWT: 0'
+	at rose//com.mojang.realmsclient.client.RealmsClient.execute(RealmsClient.java:625)
+	at rose//com.mojang.realmsclient.client.RealmsClient.fetchFeatureFlags(RealmsClient.java:204)
+	at java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1789)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+[20:11:30] [Render thread/INFO]: Reloading ResourceManager: vanilla, vanilla
+[20:11:33] [Worker-Main-4/INFO]: Found unifont_pua-17.0.01.hex, loading
+[20:11:33] [Worker-Main-14/INFO]: Found unifont_all_no_pua-17.0.01.hex, loading
+[20:11:34] [Worker-Main-13/INFO]: Found unifont_jp_patch-17.0.01.hex, loading
+[20:11:43] [Render thread/INFO]: OpenAL initialized on device OpenAL Soft on Speakers (2- Realtek(R) Audio)
+[20:11:43] [Render thread/INFO]: Sound engine started
+[20:11:43] [Render thread/INFO]: Created: 512x256x0 minecraft:textures/atlas/particles.png-atlas
+[20:11:43] [Render thread/INFO]: Created: 256x128x0 minecraft:textures/atlas/celestials.png-atlas
+[20:11:43] [Render thread/INFO]: Created: 128x128x0 minecraft:textures/atlas/decorated_pot.png-atlas
+[20:11:43] [Render thread/INFO]: Created: 512x256x0 minecraft:textures/atlas/paintings.png-atlas
+[20:11:43] [Render thread/INFO]: Created: 1024x512x0 minecraft:textures/atlas/shield_patterns.png-atlas
+[20:11:43] [Render thread/INFO]: Created: 1024x512x0 minecraft:textures/atlas/banner_patterns.png-atlas
+[20:11:43] [Render thread/INFO]: Created: 2048x2048x4 minecraft:textures/atlas/blocks.png-atlas
+[20:11:43] [Render thread/INFO]: Created: 1024x512x0 minecraft:textures/atlas/items.png-atlas
+[20:11:43] [Render thread/INFO]: Created: 1024x1024x0 minecraft:textures/atlas/gui.png-atlas
+[20:11:43] [Render thread/INFO]: Created: 128x64x0 minecraft:textures/atlas/map_decorations.png-atlas
+[20:11:43] [Render thread/INFO]: Created: 512x512x0 minecraft:textures/atlas/chest.png-atlas
+[20:11:43] [Render thread/INFO]: Created: 512x512x0 minecraft:textures/atlas/shulker_boxes.png-atlas
