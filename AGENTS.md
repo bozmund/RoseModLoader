@@ -27,6 +27,14 @@ You are working on **Rose Mod Loader**, a Minecraft Java 26.3 mod loader that ru
 - Prepare the corpus: `./gradlew corpusSetup`
 - In-game tests, headless, no EULA needed: `./gradlew runGameTests` (select with `-Prose.tests=sample:*`). The task fails if any required GameTest fails, and the report is written to `build/gametest/report.xml`.
 
+## Seeing and driving the game (Agent Bridge)
+You can run the game and check your change yourself. Full reference: `docs/agent-bridge.md`.
+- `./rose launch client` (Windows: `rose.cmd`), then `./rose ctl client.createTestWorld`.
+- `./rose methods` lists everything you can call. Use `./rose ctl <method> key=value ...` to call one.
+- Read what happened with `./rose events --types log,chat,overlay`, and look with `./rose ctl client.screenshot`.
+- Always finish with `./rose stop client`.
+- For pass/fail evidence, prefer GameTests (`./rose test "modid:*"`) over manual clicking: they are what the gates run.
+
 ## Getting stuck
 If you can't make progress after a real attempt, stop and write an escalation note in your task report:
 - what you tried;

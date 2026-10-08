@@ -31,7 +31,8 @@ An old mod jar goes through the translation pipeline once. The result is cached 
 | `dialects/forge-1.20.1` | `rose.dialect.forge.v1_20_1` | Forge 1.20.1 API reimplementation |
 | `packfix` | `rose.packfix` | Asset/data pack upgrader |
 | `analyzer` | `rose.analyzer` | `rose analyze <mod.jar>` compatibility report |
-| `agent-bridge` | `rose.bridge` | AI control & testing interface (JSON-RPC, MCP, CLI) |
+| `agent-bridge` | `rose.bridge` | Built-in mod `rose_bridge`: JSON-RPC endpoint inside the game (see docs/agent-bridge.md) |
+| `bridge-cli` | `rose.cli` | The `rose` command: launch, `ctl`, events, GameTests, and the MCP server (`rose mcp`) |
 | `testing` | `rose.testing` | Server/client harnesses, GameTests, oracle dumper |
 | `corpus-tools` | `rose.corpus` | Builds the local `corpus/` (game jars, mappings, decompiled source) |
 | `foundry/` (TypeScript, later) | | 24/7 AI task orchestrator driving the `pi` agent |

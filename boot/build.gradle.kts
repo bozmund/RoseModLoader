@@ -12,10 +12,11 @@ val gameJvmArgs = listOf(
     "--add-exports", "java.base/jdk.internal.misc=ALL-UNNAMED",
     "-XX:StackShadowPages=32",
     "-Xmx4G",
+    "-Drose.bridge=true", // dev runs: Agent Bridge on (localhost + token only)
 )
 
 // Mods loaded on every runClient/runServer/runGameTests: Rose's own core mod plus the test mods (see testmods/).
-val devMods = listOf(":core", ":testmods:hello", ":testmods:sample")
+val devMods = listOf(":core", ":agent-bridge", ":testmods:hello", ":testmods:sample")
 
 fun JavaExec.roseLaunch(side: String) {
     group = "rose"

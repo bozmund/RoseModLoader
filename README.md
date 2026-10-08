@@ -20,8 +20,8 @@ Rose is built to be **AI-native**. The **Rose Agent Bridge** lets AI models obse
 |---|---|---|
 | M0 | Groundwork: repo, build, corpus tooling | done |
 | M1 | Rose boots vanilla 26.3 (client + server) with Mixin | done (LAN check pending) |
-| M2 | Rose core + native API | done (multiplayer check waits for M2b) |
-| M2b | Agent Bridge v1 | |
+| M2 | Rose core + native API | done |
+| M2b | Agent Bridge v1: `rose` CLI + MCP server | done (dedicated-server run needs EULA) |
 | M3 | Translation engine, analyzer, Rosetta v0 | |
 | M4 | AI foundry v1 | |
 | M5 | Forge 1.20.1 dialect → **Farmer's Delight 1.20.1 on 26.3** | |
@@ -38,6 +38,19 @@ Requirements: JDK 25. The Gradle wrapper is included.
 ./gradlew runServer     # starts the dedicated server; accept Mojang's EULA in run/server/eula.txt first
 ./gradlew runGameTests  # runs mods' GameTests headless; fails if any required test fails (report: build/gametest/report.xml)
 ```
+
+## Letting AI drive the game
+
+```bash
+./rose launch client               # rose.cmd on Windows
+./rose ctl client.createTestWorld
+./rose ctl world.setBlock x=10 y=4 z=-6 block=sample:counter_block
+./rose ctl client.useBlock x=10 y=4 z=-6
+./rose events --types overlay      # -> "Counter: 1"
+./rose test "sample:*"             # GameTests, headless
+```
+
+Claude Code picks up the `rose` MCP server from `.mcp.json`. It gets tools to launch, call any bridge method, read events, take screenshots (returned as images) and run tests. See [docs/agent-bridge.md](docs/agent-bridge.md).
 
 ## Writing a Rose-native mod (early)
 

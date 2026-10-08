@@ -55,7 +55,7 @@ public final class RoseLaunch {
         RoseClassLoader loader = new RoseClassLoader(classpath, RoseLaunch.class.getClassLoader());
 
         List<ModMetadata> mods = ModDiscovery.discover(gameDir.resolve("mods"),
-                ModDiscovery.parsePathList(System.getProperty("rose.dev.mods")));
+                snapshotDevMods(ModDiscovery.parsePathList(System.getProperty("rose.dev.mods")), gameDir));
         List<String> mixinConfigs = new ArrayList<>();
         for (ModMetadata mod : mods) {
             loader.addPath(mod.root());
@@ -81,6 +81,26 @@ public final class RoseLaunch {
         MethodHandles.publicLookup()
                 .findStatic(main, "main", MethodType.methodType(void.class, String[].class))
                 .invokeExact(gameArgs.toArray(String[]::new));
+    }
+
+    /**
+     * Dev mod jars come straight from Gradle's build output. Copy them first, so rebuilding while the game runs
+     * can't change a jar the game is reading from (which crashes it with "invalid LOC header").
+     */
+    private static List<Path> snapshotDevMods(List<Path> devMods, Path gameDir) throws java.io.IOException {
+        Path dir = gameDir.resolve(".rose-dev-mods");
+        Files.createDirectories(dir);
+        List<Path> out = new ArrayList<>();
+        for (Path mod : devMods) {
+            if (Files.isDirectory(mod)) {
+                out.add(mod);
+                continue;
+            }
+            Path copy = dir.resolve(mod.getFileName());
+            Files.copy(mod, copy, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            out.add(copy);
+        }
+        return out;
     }
 
     private static List<String> clientArgs(InstalledGame game, GameInstaller installer, Path gameDir, Path runDir,

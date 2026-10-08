@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "id": "rose_bridge",
+  "name": "Rose Agent Bridge",
+  "version": "0.0.1",
+  "mixins": ["rose_bridge.mixins.json"],
+  "entrypoints": {
+    "main": ["rose.bridge.BridgeMod"],
+    "client": ["rose.bridge.client.BridgeClientMod"]
+  }
+}

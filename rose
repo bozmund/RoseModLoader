@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+# Rose command line (Agent Bridge, MCP, launching). Builds itself on first use.
+ROSE_HOME="$(cd "$(dirname "$0")" && pwd)"
+export ROSE_HOME
+ROSE_BIN="$ROSE_HOME/bridge-cli/build/install/rose/bin/rose"
+if [ ! -x "$ROSE_BIN" ]; then
+  "$ROSE_HOME/gradlew" -q -p "$ROSE_HOME" :bridge-cli:installDist 1>&2 || exit 1
+fi
+exec "$ROSE_BIN" "$@"

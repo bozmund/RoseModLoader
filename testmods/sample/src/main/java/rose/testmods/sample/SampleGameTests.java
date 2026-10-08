@@ -21,6 +21,23 @@ final class SampleGameTests {
         RoseGameTests.register(SampleMod.id("counter_increments"), SampleGameTests::counterIncrements);
         RoseGameTests.register(SampleMod.id("recipe_loaded"), SampleGameTests::recipeLoaded);
         RoseGameTests.register(SampleMod.id("payload_roundtrip"), SampleGameTests::payloadRoundtrip);
+        RoseGameTests.register(SampleMod.id("block_state_has_network_id"), SampleGameTests::blockStateHasNetworkId);
+    }
+
+    /**
+     * Regression test: mod block states need a network id, or the first block-update packet for them fails to
+     * encode and disconnects the player. (Found by the Agent Bridge in a real client session.)
+     */
+    private static void blockStateHasNetworkId(GameTestHelper helper) {
+        var state = SampleMod.COUNTER_BLOCK.defaultBlockState();
+        helper.assertTrue(net.minecraft.world.level.block.Block.BLOCK_STATE_REGISTRY.getId(state) >= 0,
+                "sample:counter_block has no network id");
+        var buf = new RegistryFriendlyByteBuf(Unpooled.buffer(), helper.getLevel().registryAccess());
+        var packet = new net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket(BlockPos.ZERO, state);
+        net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket.STREAM_CODEC.encode(buf, packet);
+        var decoded = net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket.STREAM_CODEC.decode(buf);
+        helper.assertTrue(decoded.getBlockState() == state, "block state changed in transit: " + decoded.getBlockState());
+        helper.succeed();
     }
 
     /** Block + block entity registration, and the block's use() logic. */

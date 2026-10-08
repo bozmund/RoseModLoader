@@ -14,6 +14,7 @@ include(
     "agent-bridge",
     "testing",
     "corpus-tools",
+    "bridge-cli",
 )
 
 include("eras:era-1.20.1")

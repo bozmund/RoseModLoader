@@ -38,3 +38,4 @@ Their formats change between versions. Packfix upgrades them.
 - Item model definitions moved into `assets/<ns>/items/` (1.21.4), and rendering was reworked.
 - Custom networking uses `CustomPacketPayload` + `StreamCodec` (1.20.5).
 - `ResourceLocation` was renamed to `Identifier` (late 1.21.x).
+- Window and input moved from GLFW to **SDL3** (26.3). Mouse buttons now use SDL numbering: **left = 1** (`InputConstants.MOUSE_BUTTON_LEFT`), where GLFW-era code used 0. Old mods that compare mouse button numbers will need an era-bridge rule. (Found while building the Agent Bridge: a click with button 0 is silently ignored.)

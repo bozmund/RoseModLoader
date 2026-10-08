@@ -14,6 +14,7 @@ import net.minecraft.server.packs.PackLocationInfo;
 import net.minecraft.server.packs.PackSelectionConfig;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.PathPackResources;
+import net.minecraft.server.packs.repository.KnownPack;
 import net.minecraft.server.packs.repository.Pack;
 import net.minecraft.server.packs.repository.PackCompatibility;
 import net.minecraft.server.packs.repository.PackSource;
@@ -37,8 +38,12 @@ public final class ModPackSource implements RepositorySource {
     public void loadPacks(Consumer<Pack> result) {
         for (ModMetadata mod : RoseLoader.get().mods()) {
             if (!hasContent(mod.root(), type.getDirectory())) continue;
+            // A "known pack" identity marks the mod's registry content (worldgen, test instances, ...) as stable,
+            // so creating a world doesn't show the experimental-features warning, and lets a client that has the
+            // same mod version skip receiving that data when joining a server.
+            KnownPack known = new KnownPack("rose", "mod/" + mod.id(), mod.version());
             PackLocationInfo location = new PackLocationInfo(
-                    "mod/" + mod.id(), Component.literal(mod.name()), PackSource.BUILT_IN, Optional.empty());
+                    "mod/" + mod.id(), Component.literal(mod.name()), PackSource.BUILT_IN, Optional.of(known));
             Pack.ResourcesSupplier resources = Files.isDirectory(mod.root())
                     ? new PathPackResources.PathResourcesSupplier(mod.root())
                     : new FilePackResources.FileResourcesSupplier(mod.root());

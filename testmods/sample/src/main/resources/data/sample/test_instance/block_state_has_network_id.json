@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "sample:block_state_has_network_id",
+  "structure": "minecraft:empty",
+  "max_ticks": 20,
+  "padding": 2
+}
