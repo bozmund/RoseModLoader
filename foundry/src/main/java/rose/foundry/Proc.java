@@ -59,7 +59,8 @@ final class Proc {
         List<String> command = new ArrayList<>(List.of("git"));
         command.addAll(List.of(args));
         Process process = new ProcessBuilder(command).directory(dir.toFile()).redirectErrorStream(true).start();
-        String out = new String(process.getInputStream().readAllBytes(), java.nio.charset.StandardCharsets.UTF_8).trim();
+        // Only trailing whitespace: leading spaces are meaningful (e.g. " M file" in `git status --porcelain`).
+        String out = new String(process.getInputStream().readAllBytes(), java.nio.charset.StandardCharsets.UTF_8).stripTrailing();
         if (process.waitFor() != 0) throw new IOException("git " + String.join(" ", args) + " failed: " + out);
         return out;
     }
