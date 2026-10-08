@@ -2,3 +2,4 @@
 # symbol = the call exactly as in old bytecode (see rose analyze). Shims live in eras/era-1.20.1 (rose.era.v1_20_1.shim).
 # Instance calls pass the receiver as the shim's first argument. Every rule needs evidence.
 net/minecraft/world/item/ItemStack.m_150930_(Lnet/minecraft/world/item/Item;)Z	rose/era/v1_20_1/shim/ItemStackShim.is	1.20.1 ItemStack.is(Item) = getItem() == item; 26.3 only has is(Predicate<Holder<Item>>); getItem() unchanged
+net/minecraft/world/level/block/state/BlockState.m_60713_(Lnet/minecraft/world/level/block/Block;)Z	rose/era/v1_20_1/shim/BlockStateShim.is	1.20.1 BlockStateBase.is(Block) = getBlock() == block; 26.3 only has generic TypedInstance.is(T) (erased to Object), getBlock() unchanged
