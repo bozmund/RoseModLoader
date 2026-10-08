@@ -4,13 +4,12 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import rose.boot.mojang.InstalledGame;
 
 /** Command-line options for {@link RoseLaunch}. Arguments after {@code --} go to the game unchanged. */
-record LaunchOptions(InstalledGame.Side side, String version, Path runDir, String username, List<String> extraArgs) {
+record LaunchOptions(LaunchTarget target, String version, Path runDir, String username, List<String> extraArgs) {
 
     static LaunchOptions parse(String[] args) {
-        InstalledGame.Side side = InstalledGame.Side.CLIENT;
+        LaunchTarget target = LaunchTarget.CLIENT;
         String version = RoseLaunch.MINECRAFT_VERSION;
         Path runDir = Path.of("run");
         String username = "RoseDev";
@@ -18,7 +17,7 @@ record LaunchOptions(InstalledGame.Side side, String version, Path runDir, Strin
 
         for (int i = 0; i < args.length; i++) {
             switch (args[i]) {
-                case "--side" -> side = InstalledGame.Side.valueOf(args[++i].toUpperCase(Locale.ROOT));
+                case "--side" -> target = LaunchTarget.valueOf(args[++i].toUpperCase(Locale.ROOT));
                 case "--version" -> version = args[++i];
                 case "--runDir" -> runDir = Path.of(args[++i]);
                 case "--username" -> username = args[++i];
@@ -29,6 +28,6 @@ record LaunchOptions(InstalledGame.Side side, String version, Path runDir, Strin
                 default -> throw new IllegalArgumentException("unknown option: " + args[i]);
             }
         }
-        return new LaunchOptions(side, version, runDir, username, List.copyOf(extra));
+        return new LaunchOptions(target, version, runDir, username, List.copyOf(extra));
     }
 }

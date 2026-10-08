@@ -1,0 +1,6 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "redstone",
+  "ingredients": ["minecraft:cobblestone", "minecraft:redstone"],
+  "result": { "id": "sample:counter_block", "count": 1 }
+}

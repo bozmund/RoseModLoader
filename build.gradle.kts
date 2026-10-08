@@ -1,3 +1,5 @@
+import java.util.concurrent.Callable
+
 plugins {
     `java-library`
 }
@@ -14,6 +16,15 @@ allprojects {
         maven("https://maven.neoforged.net/releases/") { name = "NeoForged" }
     }
 }
+
+// Minecraft 26.3 client jar + libraries, for modules that compile against the game (api, core, test mods).
+// Written by :boot:installMinecraft; never published. Use: compileOnly(rootProject.extra["minecraft"] as FileCollection)
+val minecraftClasspathFile = layout.buildDirectory.file("minecraft/classpath-26.3.txt")
+extra["minecraftClasspathFile"] = minecraftClasspathFile
+extra["minecraft"] = files(Callable {
+    val file = minecraftClasspathFile.get().asFile
+    if (file.exists()) file.readLines().filter { it.isNotBlank() } else emptyList()
+}).builtBy(":boot:installMinecraft")
 
 subprojects {
     // Container folders ("eras", "dialects") are not real projects.

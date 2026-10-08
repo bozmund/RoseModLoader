@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "id": "rose",
+  "name": "Rose Mod Loader",
+  "version": "0.0.1",
+  "mixins": ["rose.core.mixins.json"]
+}

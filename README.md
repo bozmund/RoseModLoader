@@ -20,7 +20,7 @@ Rose is built to be **AI-native**. The **Rose Agent Bridge** lets AI models obse
 |---|---|---|
 | M0 | Groundwork: repo, build, corpus tooling | done |
 | M1 | Rose boots vanilla 26.3 (client + server) with Mixin | done (LAN check pending) |
-| M2 | Rose core + native API | |
+| M2 | Rose core + native API | done (multiplayer check waits for M2b) |
 | M2b | Agent Bridge v1 | |
 | M3 | Translation engine, analyzer, Rosetta v0 | |
 | M4 | AI foundry v1 | |
@@ -36,6 +36,7 @@ Requirements: JDK 25. The Gradle wrapper is included.
 ./gradlew corpusSetup   # downloads Minecraft 26.3 + 1.20.1 into corpus/ and decompiles them (local only)
 ./gradlew runClient     # starts the 26.3 client through Rose (offline dev account), with the test mods
 ./gradlew runServer     # starts the dedicated server; accept Mojang's EULA in run/server/eula.txt first
+./gradlew runGameTests  # runs mods' GameTests headless; fails if any required test fails (report: build/gametest/report.xml)
 ```
 
 ## Writing a Rose-native mod (early)
@@ -45,13 +46,28 @@ Put a `rose.mod.json` at the root of your jar:
 ```json
 {
   "schemaVersion": 1,
-  "id": "hello",
+  "id": "sample",
   "version": "0.0.1",
-  "mixins": ["hello.mixins.json"]
+  "mixins": ["sample.mixins.json"],
+  "entrypoints": {
+    "main": ["com.example.SampleMod"],
+    "client": ["com.example.SampleClient"]
+  }
 }
 ```
 
-Drop the jar into `run/client/mods/` or `run/server/mods/`. Mixin (with MixinExtras) is available. Since Minecraft 26.x isn't obfuscated, no refmap is needed. See [`testmods/hello`](testmods/hello) for a working example.
+Drop the jar into `run/client/mods/` or `run/server/mods/`. Your jar's `data/` and `assets/` folders load automatically as built-in packs (no `pack.mcmeta` needed).
+
+| API | What it does |
+|---|---|
+| `rose.api.ModInitializer` / `rose.api.client.ClientModInitializer` | entrypoints (`main` runs just before registries freeze) |
+| `rose.api.registry.RoseRegistries` | blocks, items, block items, block entity types (sets the registry key for you) |
+| `rose.api.event.RoseEvents` | server started/stopping/tick, player join |
+| `rose.api.network.RoseNetworking` (+ `client.RoseClientNetworking`) | custom packets in both directions |
+| `rose.api.config.RoseConfig` | per-mod JSON config in `config/<modid>.json` |
+| `rose.api.gametest.RoseGameTests` | GameTest functions |
+
+Mixin (with MixinExtras) is available. Since Minecraft 26.x isn't obfuscated, no refmap is needed. Examples: [`testmods/sample`](testmods/sample) (all of the above) and [`testmods/hello`](testmods/hello) (Mixin only).
 
 ## Legal
 

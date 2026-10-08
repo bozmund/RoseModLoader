@@ -1,0 +1,23 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "rose.core.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "mixins": [
+    "BuiltInPackSourceAccessor",
+    "BuiltInRegistriesMixin",
+    "ClientboundCustomPayloadPacketMixin",
+    "MinecraftServerMixin",
+    "PackRepositoryMixin",
+    "PlayerListMixin",
+    "ServerboundCustomPayloadPacketMixin",
+    "ServerGamePacketListenerImplMixin"
+  ],
+  "client": [
+    "client.ClientPacketListenerMixin",
+    "client.MinecraftMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

@@ -25,6 +25,7 @@ You are working on **Rose Mod Loader**, a Minecraft Java 26.3 mod loader that ru
 - Build everything: `./gradlew build`
 - One module's tests: `./gradlew :translate:test`
 - Prepare the corpus: `./gradlew corpusSetup`
+- In-game tests, headless, no EULA needed: `./gradlew runGameTests` (select with `-Prose.tests=sample:*`). The task fails if any required GameTest fails, and the report is written to `build/gametest/report.xml`.
 
 ## Getting stuck
 If you can't make progress after a real attempt, stop and write an escalation note in your task report:

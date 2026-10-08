@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "id": "sample",
+  "name": "Rose Sample Mod",
+  "version": "0.0.1",
+  "entrypoints": {
+    "main": ["rose.testmods.sample.SampleMod"],
+    "client": ["rose.testmods.sample.client.SampleClient"]
+  }
+}

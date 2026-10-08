@@ -68,7 +68,15 @@ public final class ModDiscovery {
                 json.has("name") ? json.get("name").getAsString() : id,
                 required(json, "version", root),
                 strings(json.getAsJsonArray("mixins")),
+                entrypoints(json.getAsJsonObject("entrypoints")),
                 root);
+    }
+
+    private static Map<String, List<String>> entrypoints(JsonObject json) {
+        if (json == null) return Map.of();
+        Map<String, List<String>> out = new HashMap<>();
+        for (var entry : json.entrySet()) out.put(entry.getKey(), strings(entry.getValue().getAsJsonArray()));
+        return Map.copyOf(out);
     }
 
     private static String required(JsonObject json, String key, Path root) throws IOException {

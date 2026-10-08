@@ -16,6 +16,7 @@ import rose.boot.mojang.InstalledGame;
 import rose.loader.ModDiscovery;
 import rose.loader.ModMetadata;
 import rose.loader.RoseClassLoader;
+import rose.loader.RoseLoader;
 import rose.mixin.RoseMixin;
 
 /**
@@ -31,18 +32,21 @@ import rose.mixin.RoseMixin;
  */
 public final class RoseLaunch {
     public static final String MINECRAFT_VERSION = "26.3";
+    private static final String GAMETEST_MAIN = "net.minecraft.gametest.Main";
 
     public static void main(String[] args) throws Throwable {
         LaunchOptions options = LaunchOptions.parse(args);
         Path runDir = options.runDir().toAbsolutePath();
         GameInstaller installer = new GameInstaller(runDir);
 
-        System.out.println("[rose] Rose Mod Loader - Minecraft " + options.version() + " " + options.side());
-        InstalledGame game = options.side() == InstalledGame.Side.CLIENT
-                ? installer.installClient(options.version())
-                : installer.installServer(options.version());
+        LaunchTarget target = options.target();
+        System.out.println("[rose] Rose Mod Loader - Minecraft " + options.version() + " " + target);
+        // The GameTest server ships in the client jar, so it uses the client install.
+        InstalledGame game = target == LaunchTarget.SERVER
+                ? installer.installServer(options.version())
+                : installer.installClient(options.version());
 
-        Path gameDir = runDir.resolve(options.side() == InstalledGame.Side.CLIENT ? "client" : "server");
+        Path gameDir = runDir.resolve(target.folder());
         Files.createDirectories(gameDir);
 
         List<Path> classpath = new ArrayList<>();
@@ -59,17 +63,21 @@ public final class RoseLaunch {
         }
         System.out.println("[rose] " + mods.size() + " mod(s): "
                 + mods.stream().map(m -> m.id() + " " + m.version()).toList());
+        RoseLoader.initialize(target.side(), mods, loader);
         RoseMixin.bootstrap(loader,
-                options.side() == InstalledGame.Side.CLIENT ? RoseMixin.CLIENT : RoseMixin.SERVER,
+                target.side() == RoseLoader.Side.CLIENT ? RoseMixin.CLIENT : RoseMixin.SERVER,
                 mixinConfigs);
 
-        List<String> gameArgs = options.side() == InstalledGame.Side.CLIENT
-                ? clientArgs(game, installer, gameDir, runDir, options)
-                : serverArgs(options);
+        List<String> gameArgs = switch (target) {
+            case CLIENT -> clientArgs(game, installer, gameDir, runDir, options);
+            case SERVER -> new ArrayList<>(List.of("--nogui"));
+            case GAMETEST -> new ArrayList<>(List.of("--universe", gameDir.resolve("universe").toString()));
+        };
         gameArgs.addAll(options.extraArgs());
+        String mainClass = target == LaunchTarget.GAMETEST ? GAMETEST_MAIN : game.mainClass();
 
         Thread.currentThread().setContextClassLoader(loader);
-        Class<?> main = Class.forName(game.mainClass(), false, loader);
+        Class<?> main = Class.forName(mainClass, false, loader);
         MethodHandles.publicLookup()
                 .findStatic(main, "main", MethodType.methodType(void.class, String[].class))
                 .invokeExact(gameArgs.toArray(String[]::new));
@@ -106,12 +114,6 @@ public final class RoseLaunch {
             if (!element.isJsonPrimitive()) continue; // rule-based optional args (demo, resolution, quick play)
             args.add(substitute(element.getAsString(), vars));
         }
-        return args;
-    }
-
-    private static List<String> serverArgs(LaunchOptions options) {
-        List<String> args = new ArrayList<>();
-        args.add("--nogui");
         return args;
     }
 

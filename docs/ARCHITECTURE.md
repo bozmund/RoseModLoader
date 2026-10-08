@@ -42,7 +42,22 @@ An old mod jar goes through the translation pipeline once. The result is cached 
 2. It creates `RoseClassLoader` over the game jar and libraries. Only the JDK, `rose.boot/loader/mixin` and Mixin itself come from the parent loader.
 3. `ModDiscovery` finds mods (`run/<side>/mods/*.jar`, plus `-Drose.dev.mods`) by their `rose.mod.json` and adds them to the loader.
 4. `RoseMixin.bootstrap` starts Mixin with Rose's service (`rose.mixin.RoseMixinService`), adds every mod's mixin configs, moves Mixin to its DEFAULT phase, and installs Mixin as the loader's *final* transformer. Translation transformers added later with `addTransformer` run before Mixin.
-5. Vanilla's own main class (`net.minecraft.client.main.Main` or `net.minecraft.server.Main`) is started inside the loader.
+5. Vanilla's own main class is started inside the loader: `net.minecraft.client.main.Main`, `net.minecraft.server.Main` or `net.minecraft.gametest.Main`.
+
+## Rose core (the built-in `rose` mod)
+
+`core` and `api` compile against Minecraft 26.3, so they can't live in the parent class loader. They ship as one mod jar (`core` includes `api`'s classes), which `RoseClassLoader` loads like any other mod. Its hooks (`rose.core.mixins.json`):
+
+| Hook | Where | Why |
+|---|---|---|
+| main entrypoints | `BuiltInRegistries.freeze` HEAD | Vanilla content exists, registries still open. The same moment on client, server and GameTest server |
+| client entrypoints | `Minecraft.<init>` TAIL | Client exists |
+| mod packs | `PackRepository.<init>` RETURN | Adds a `ModPackSource` next to vanilla's built-in source (data or resources) |
+| payload codecs | fallback arg of `CustomPacketPayload.codec(...)` in the custom-payload packets' static init | Rose ids resolve to mod codecs at decode time |
+| payload receivers | `ServerGamePacketListenerImpl.handleCustomPayload`, `ClientPacketListener.handleCustomPayload` | Dispatch on the game thread |
+| events | `MinecraftServer.runServer/tickServer/stopServer`, `PlayerList.placeNewPlayer` | `RoseEvents` |
+
+The compile classpath for game-side modules comes from `:boot:installMinecraft`, which downloads 26.3 into `run/` and writes `build/minecraft/classpath-26.3.txt`.
 
 ## The corpus (local only)
 
