@@ -38,6 +38,8 @@ import org.objectweb.asm.tree.TypeInsnNode;
 import rose.analyzer.Finding.Status;
 import rose.rosetta.NameLayer;
 import rose.rosetta.RedirectRules;
+import rose.translate.ClassIndex;
+import rose.translate.CallAdapter;
 import rose.translate.JarTranslator;
 import rose.translate.RosettaRemapper;
 
@@ -57,6 +59,8 @@ public final class Analyzer {
     private final RosettaRemapper remapper;
     private final RedirectRules redirects;
     private int redirected;
+    private int adapted;
+    private CallAdapter adapter;
     private final ClassIndex target;
     private final ClassIndex vanillaOld;
     private final Map<String, Finding> findings = new LinkedHashMap<>();
@@ -86,6 +90,7 @@ public final class Analyzer {
     public Report analyze(Path modJar) throws IOException {
         modOriginal = ClassIndex.of(List.of(modJar), false);
         modTranslated = translatedIndex(modJar);
+        adapter = new CallAdapter(modTranslated, target);
         List<String> nested = new ArrayList<>();
         String modId;
         try (ZipFile zip = new ZipFile(modJar.toFile())) {
@@ -111,7 +116,7 @@ public final class Analyzer {
                 for (String config : mixinConfigs.split(",")) analyzeMixinConfig(zip, config.trim());
             }
         }
-        return new Report(modJar, modId, layer.source(), modOriginal.names().size(), references, redirected,
+        return new Report(modJar, modId, layer.source(), modOriginal.names().size(), references, redirected, adapted,
                 new ArrayList<>(findings.values()), forgeSurface, nested, contexts);
     }
 
@@ -146,7 +151,10 @@ public final class Analyzer {
     private void instruction(AbstractInsnNode insn, String where) {
         switch (insn) {
             case MethodInsnNode mi -> {
-                if (!redirect(mi, where)) methodRef(mi.owner, mi.name, mi.desc, where, "method");
+                if (!redirect(mi, where)) {
+                    Boolean isStatic = mi.getOpcode() == Opcodes.INVOKESPECIAL ? null : mi.getOpcode() == Opcodes.INVOKESTATIC;
+                    methodRef(mi.owner, mi.name, mi.desc, where, "method", isStatic);
+                }
             }
             case FieldInsnNode fi -> fieldRef(fi.owner, fi.name, fi.desc, where, "field");
             case TypeInsnNode ti -> typeRef(ti.desc, where);
@@ -187,7 +195,7 @@ public final class Analyzer {
 
     private void handleRef(Handle h, String where) {
         if (h.getTag() <= Opcodes.H_PUTSTATIC) fieldRef(h.getOwner(), h.getName(), h.getDesc(), where, "field");
-        else methodRef(h.getOwner(), h.getName(), h.getDesc(), where, "method");
+        else methodRef(h.getOwner(), h.getName(), h.getDesc(), where, "method", null);
     }
 
     private void typeRef(String internalNameOrDesc, String where) {
@@ -231,7 +239,8 @@ public final class Analyzer {
 
     // ---- members ----------------------------------------------------------------------------------------------
 
-    private void methodRef(String owner, String name, String desc, String where, String kind) {
+    /** @param isStatic whether the call is static; {@code null} when unknown (no automatic adaptation then) */
+    private void methodRef(String owner, String name, String desc, String where, String kind, Boolean isStatic) {
         if (owner.startsWith("[") || !classRef(owner, where) || startsWithAny(owner, PROVIDED_PREFIXES)) return;
         String newOwner = remapper.map(owner);
         String newName = remapper.mapMethodName(owner, name, desc);
@@ -240,6 +249,10 @@ public final class Analyzer {
         if (hierarchy.stream().anyMatch(i -> i.methods().contains(newName + newDesc))) return;
         if (!hierarchyComplete(newOwner)) return; // a supertype is missing; that class is already reported
         if (!signatureResolves(newDesc)) return;  // ditto for a class in the signature
+        if (isStatic != null && adapter.find(newOwner, newName, newDesc, isStatic) != null) {
+            adapted++; // the translator rewrites this call to the widened signature (see CallAdapter)
+            return;
+        }
 
         String symbol = owner + "." + name + desc;
         if (RosettaRemapper.SRG_METHOD.matcher(name).matches()) {
@@ -394,7 +407,7 @@ public final class Analyzer {
         String owner = ref.substring(1, ref.indexOf(';'));
         String rest = ref.substring(ref.indexOf(';') + 1);
         if (rest.contains("(")) {
-            methodRef(owner, rest.substring(0, rest.indexOf('(')), rest.substring(rest.indexOf('(')), mixin, "mixin-member");
+            methodRef(owner, rest.substring(0, rest.indexOf('(')), rest.substring(rest.indexOf('(')), mixin, "mixin-member", null);
         } else if (rest.contains(":")) {
             fieldRef(owner, rest.substring(0, rest.indexOf(':')), rest.substring(rest.indexOf(':') + 1), mixin, "mixin-member");
         }

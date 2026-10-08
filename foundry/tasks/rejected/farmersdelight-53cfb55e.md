@@ -28,3 +28,7 @@ Write a static shim that does what the 1.20.1 method did, using 26.3 APIs, and r
 - Signature: `public static void decrementOpeners(net.minecraft.world.level.block.entity.ContainerOpenersCounter self, net.minecraft.world.entity.player.Player player, net.minecraft.world.level.Level level, net.minecraft.core.BlockPos blockPos, net.minecraft.world.level.block.state.BlockState blockState)`
 - Rule (append to `rosetta/rules/forge-1.20.1/redirects.tsv`, replace `<evidence>`):
   `net/minecraft/world/level/block/entity/ContainerOpenersCounter.m_155468_(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)V<TAB>rose/era/v1_20_1/shim/ContainerOpenersCounterShim.decrementOpeners<TAB><evidence>`
+
+## Closed 2026-10-09 00:38
+
+No longer reported by `rose analyze` (resolved elsewhere).

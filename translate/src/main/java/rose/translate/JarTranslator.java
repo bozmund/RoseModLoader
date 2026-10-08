@@ -22,14 +22,21 @@ import rose.rosetta.RedirectRules;
 public final class JarTranslator {
     private final Remapper remapper;
     private final RedirectRules redirects;
+    private final CallAdapter adapter;
 
     public JarTranslator(Remapper remapper) {
-        this(remapper, RedirectRules.empty());
+        this(remapper, RedirectRules.empty(), null);
     }
 
     public JarTranslator(Remapper remapper, RedirectRules redirects) {
+        this(remapper, redirects, null);
+    }
+
+    /** @param adapter rewrites calls to methods whose signature widened; {@code null} to skip */
+    public JarTranslator(Remapper remapper, RedirectRules redirects, CallAdapter adapter) {
         this.remapper = remapper;
         this.redirects = redirects;
+        this.adapter = adapter;
     }
 
     public void translate(Path input, Path output) throws IOException {
@@ -56,9 +63,11 @@ public final class JarTranslator {
 
     public byte[] translateClass(byte[] bytes) {
         ClassReader reader = new ClassReader(bytes);
-        ClassWriter writer = new ClassWriter(0); // same frames and maxs: renaming/redirecting doesn't change control flow
-        // Redirects match old names, so they run before renaming: reader -> redirects -> remapper -> writer.
-        reader.accept(new RedirectingClassVisitor(new ClassRemapper(writer, remapper), redirects), 0);
+        // Frames stay valid (no control flow changes); max stack may grow when an adapted call now returns a value.
+        ClassWriter writer = new ClassWriter(adapter != null ? ClassWriter.COMPUTE_MAXS : 0);
+        // reader -> redirects (old names) -> remapper -> call adapter (new names) -> writer
+        var afterRename = adapter != null ? adapter.visitor(writer) : writer;
+        reader.accept(new RedirectingClassVisitor(new ClassRemapper(afterRename, remapper), redirects), 0);
         return writer.toByteArray();
     }
 

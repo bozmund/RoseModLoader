@@ -28,3 +28,7 @@ Write a static shim that does what the 1.20.1 method did, using 26.3 APIs, and r
 - Signature: `public static java.lang.Object get(net.minecraft.core.Registry self, net.minecraft.resources.Identifier identifier)`
 - Rule (append to `rosetta/rules/forge-1.20.1/redirects.tsv`, replace `<evidence>`):
   `net/minecraft/core/Registry.m_7745_(Lnet/minecraft/resources/ResourceLocation;)Ljava/lang/Object;<TAB>rose/era/v1_20_1/shim/RegistryShim.get<TAB><evidence>`
+
+## Closed 2026-10-09 00:38
+
+No longer reported by `rose analyze` (resolved elsewhere).

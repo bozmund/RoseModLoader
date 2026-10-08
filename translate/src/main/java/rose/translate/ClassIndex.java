@@ -1,4 +1,4 @@
-package rose.analyzer;
+package rose.translate;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,24 +23,29 @@ import org.objectweb.asm.Opcodes;
  * Class names, supertypes and member signatures of a set of jars, plus the JDK on demand. Enough to answer
  * "does {@code owner.name desc} exist here, possibly inherited?" without loading any class.
  */
-final class ClassIndex {
-    record Info(String name, String superName, List<String> interfaces, Set<String> methods, Set<String> fields,
-                Set<String> methodNames) {}
+public final class ClassIndex {
+    /**
+     * @param methods       {@code name+desc} of every declared method
+     * @param staticMethods the subset of {@code methods} that are static
+     * @param fields        {@code name:desc} and bare {@code name} of every declared field
+     */
+    public record Info(String name, String superName, List<String> interfaces, Set<String> methods, Set<String> fields,
+                Set<String> methodNames, Set<String> staticMethods) {}
 
     private final Map<String, Info> classes = new HashMap<>();
     private final boolean includeJdk;
 
-    ClassIndex(boolean includeJdk) {
+    public ClassIndex(boolean includeJdk) {
         this.includeJdk = includeJdk;
     }
 
-    static ClassIndex of(List<Path> jars, boolean includeJdk) throws IOException {
+    public static ClassIndex of(List<Path> jars, boolean includeJdk) throws IOException {
         ClassIndex index = new ClassIndex(includeJdk);
         for (Path jar : jars) index.addJar(jar);
         return index;
     }
 
-    void addJar(Path jar) throws IOException {
+    public void addJar(Path jar) throws IOException {
         try (ZipFile zip = new ZipFile(jar.toFile())) {
             var entries = zip.entries();
             while (entries.hasMoreElements()) {
@@ -55,15 +60,15 @@ final class ClassIndex {
         }
     }
 
-    boolean contains(String name) {
+    public boolean contains(String name) {
         return get(name) != null;
     }
 
-    Set<String> names() {
+    public Set<String> names() {
         return classes.keySet();
     }
 
-    Info get(String name) {
+    public Info get(String name) {
         Info info = classes.get(name);
         if (info == null && includeJdk && isJdkName(name)) {
             try (InputStream in = ClassLoader.getSystemResourceAsStream(name + ".class")) {
@@ -79,7 +84,7 @@ final class ClassIndex {
     }
 
     /** All supertypes of {@code name} (itself first), breadth-first, across this index and {@code fallback}. */
-    static List<Info> hierarchy(String name, ClassIndex first, ClassIndex fallback) {
+    public static List<Info> hierarchy(String name, ClassIndex first, ClassIndex fallback) {
         List<Info> out = new ArrayList<>();
         Deque<String> queue = new ArrayDeque<>(List.of(name));
         Set<String> seen = new HashSet<>();
@@ -96,7 +101,13 @@ final class ClassIndex {
         return out;
     }
 
-    static boolean isJdkName(String name) {
+    /** Whether a value of type {@code from} can be used where {@code to} is expected (internal names). */
+    public static boolean isAssignable(String from, String to, ClassIndex first, ClassIndex fallback) {
+        if (from.equals(to) || to.equals("java/lang/Object")) return true;
+        return hierarchy(from, first, fallback).stream().anyMatch(i -> i.name().equals(to));
+    }
+
+    public static boolean isJdkName(String name) {
         return name.startsWith("java/") || name.startsWith("javax/") || name.startsWith("jdk/") || name.startsWith("sun/");
     }
 
@@ -104,6 +115,7 @@ final class ClassIndex {
         Set<String> methods = new HashSet<>();
         Set<String> methodNames = new HashSet<>();
         Set<String> fields = new HashSet<>();
+        Set<String> staticMethods = new HashSet<>();
         String[] header = new String[2];
         List<String> interfaces = new ArrayList<>();
         new ClassReader(bytes).accept(new ClassVisitor(Opcodes.ASM9) {
@@ -118,6 +130,7 @@ final class ClassIndex {
             public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
                 methods.add(name + desc);
                 methodNames.add(name);
+                if ((access & Opcodes.ACC_STATIC) != 0) staticMethods.add(name + desc);
                 return null;
             }
 
@@ -128,6 +141,6 @@ final class ClassIndex {
                 return null;
             }
         }, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
-        return new Info(header[0], header[1], List.copyOf(interfaces), methods, fields, methodNames);
+        return new Info(header[0], header[1], List.copyOf(interfaces), methods, fields, methodNames, staticMethods);
     }
 }

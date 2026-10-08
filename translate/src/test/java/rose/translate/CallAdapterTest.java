@@ -1,0 +1,78 @@
+package rose.translate;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
+
+class CallAdapterTest {
+    /** game/State implements game/Typed, whose generic is(T) erases to is(Object); game/Block extends Object. */
+    private static CallAdapter adapter(Path dir) throws IOException {
+        Path jar = dir.resolve("game.jar");
+        try (ZipOutputStream out = new ZipOutputStream(Files.newOutputStream(jar))) {
+            for (var e : Map.of(
+                    "game/Typed", type("game/Typed", "java/lang/Object", true,
+                            new String[] {"is", "(Ljava/lang/Object;)Z"}, new String[] {"value", "()Ljava/lang/Object;"}),
+                    "game/State", type("game/State", "java/lang/Object", false,
+                            new String[] {"setBlock", "(Lgame/Block;)Lgame/State;"}),
+                    "game/Block", type("game/Block", "java/lang/Object", false),
+                    "game/Overloaded", type("game/Overloaded", "java/lang/Object", false,
+                            new String[] {"put", "(Ljava/lang/Object;)V"}, new String[] {"put", "(Ljava/lang/CharSequence;)V"})).entrySet()) {
+                out.putNextEntry(new ZipEntry(e.getKey() + ".class"));
+                out.write(e.getValue());
+                out.closeEntry();
+            }
+        }
+        ClassIndex game = ClassIndex.of(java.util.List.of(jar), true);
+        return new CallAdapter(new ClassIndex(false), game);
+    }
+
+    private static byte[] type(String name, String superName, boolean isInterface, String[]... methods) {
+        ClassWriter cw = new ClassWriter(0);
+        String[] interfaces = name.equals("game/State") ? new String[] {"game/Typed"} : null;
+        cw.visit(Opcodes.V21, Opcodes.ACC_PUBLIC | (isInterface ? Opcodes.ACC_INTERFACE | Opcodes.ACC_ABSTRACT : 0),
+                name, null, superName, interfaces);
+        for (String[] m : methods) {
+            MethodVisitor mv = cw.visitMethod(Opcodes.ACC_PUBLIC | Opcodes.ACC_ABSTRACT, m[0], m[1], null, null);
+            mv.visitEnd();
+        }
+        cw.visitEnd();
+        return cw.toByteArray();
+    }
+
+    @Test
+    void genericParameterIsAdaptedWithoutCast(@TempDir Path dir) throws IOException {
+        CallAdapter.Adaptation a = adapter(dir).find("game/State", "is", "(Lgame/Block;)Z", false);
+        assertEquals(new CallAdapter.Adaptation("(Ljava/lang/Object;)Z", null, false), a);
+    }
+
+    @Test
+    void widerReturnTypeGetsACast(@TempDir Path dir) throws IOException {
+        CallAdapter.Adaptation a = adapter(dir).find("game/State", "value", "()Lgame/Block;", false);
+        assertEquals(new CallAdapter.Adaptation("()Ljava/lang/Object;", "game/Block", false), a);
+    }
+
+    @Test
+    void newReturnValueIsPoppedWhenTheOldCallWasVoid(@TempDir Path dir) throws IOException {
+        CallAdapter.Adaptation a = adapter(dir).find("game/State", "setBlock", "(Lgame/Block;)V", false);
+        assertEquals(new CallAdapter.Adaptation("(Lgame/Block;)Lgame/State;", null, true), a);
+    }
+
+    @Test
+    void ambiguousOrIncompatibleCallsAreNotAdapted(@TempDir Path dir) throws IOException {
+        CallAdapter adapter = adapter(dir);
+        assertNull(adapter.find("game/Overloaded", "put", "(Ljava/lang/String;)V", false), "two applicable overloads");
+        assertNull(adapter.find("game/State", "is", "(I)Z", false), "primitive can't widen to Object");
+        assertNull(adapter.find("game/State", "is", "(Lgame/Block;)Z", true), "static-ness must match");
+    }
+}

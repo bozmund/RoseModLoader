@@ -28,3 +28,7 @@ Write a static shim that does what the 1.20.1 method did, using 26.3 APIs, and r
 - Signature: `public static void playSound(net.minecraft.world.level.Level self, net.minecraft.world.entity.player.Player player, double dValue, double dValue2, double dValue3, net.minecraft.sounds.SoundEvent soundEvent, net.minecraft.sounds.SoundSource soundSource, float fValue, float fValue2)`
 - Rule (append to `rosetta/rules/forge-1.20.1/redirects.tsv`, replace `<evidence>`):
   `net/minecraft/world/level/Level.m_6263_(Lnet/minecraft/world/entity/player/Player;DDDLnet/minecraft/sounds/SoundEvent;Lnet/minecraft/sounds/SoundSource;FF)V<TAB>rose/era/v1_20_1/shim/LevelShim.playSound<TAB><evidence>`
+
+## Closed 2026-10-09 00:38
+
+No longer reported by `rose analyze` (resolved elsewhere).

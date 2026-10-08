@@ -28,3 +28,7 @@ Write a static shim that does what the 1.20.1 method did, using 26.3 APIs, and r
 - Signature: `public static net.minecraft.world.item.crafting.RecipeManager getRecipeManager(net.minecraft.world.level.Level self)`
 - Rule (append to `rosetta/rules/forge-1.20.1/redirects.tsv`, replace `<evidence>`):
   `net/minecraft/world/level/Level.m_7465_()Lnet/minecraft/world/item/crafting/RecipeManager;<TAB>rose/era/v1_20_1/shim/LevelShim.getRecipeManager<TAB><evidence>`
+
+## Closed 2026-10-09 00:38
+
+No longer reported by `rose analyze` (resolved elsewhere).

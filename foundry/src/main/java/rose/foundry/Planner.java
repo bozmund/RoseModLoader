@@ -54,6 +54,16 @@ public final class Planner {
         String mod = report.has("modId") && !report.get("modId").isJsonNull()
                 ? report.get("modId").getAsString() : modJar.getFileName().toString();
         List<Task> created = new ArrayList<>();
+        // Open tasks whose finding is gone (fixed by a rule, an adaptation or another task) are closed.
+        Set<String> current = new HashSet<>();
+        report.getAsJsonArray("findings").forEach(e -> current.add(e.getAsJsonObject().get("symbol").getAsString()));
+        for (Task open : store.list(Task.State.OPEN)) {
+            if (mod.equals(open.get("mod")) && !current.contains(open.get("symbol"))) {
+                open.appendBody("\n## Closed " + Foundry.now() + "\n\nNo longer reported by `rose analyze` (resolved elsewhere).\n");
+                store.move(open, Task.State.REJECTED);
+                Foundry.log("closed " + open.id() + " (resolved elsewhere): " + open.get("readable"));
+            }
+        }
         try (ZipFile vanilla = new ZipFile(vanillaOldJar.toFile())) {
             for (JsonElement e : report.getAsJsonArray("findings")) {
                 JsonObject f = e.getAsJsonObject();

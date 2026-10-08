@@ -28,3 +28,7 @@ Write a static shim that does what the 1.20.1 method did, using 26.3 APIs, and r
 - Signature: `public static void remove(net.minecraft.nbt.CompoundTag self, java.lang.String string)`
 - Rule (append to `rosetta/rules/forge-1.20.1/redirects.tsv`, replace `<evidence>`):
   `net/minecraft/nbt/CompoundTag.m_128473_(Ljava/lang/String;)V<TAB>rose/era/v1_20_1/shim/CompoundTagShim.remove<TAB><evidence>`
+
+## Closed 2026-10-09 00:38
+
+No longer reported by `rose analyze` (resolved elsewhere).
