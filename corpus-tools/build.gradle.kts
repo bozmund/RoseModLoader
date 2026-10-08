@@ -30,3 +30,12 @@ tasks.register<JavaExec>("corpusSetup") {
     maxHeapSize = "6G"
     args("setup", "26.3", "1.20.1")
 }
+
+tasks.register<JavaExec>("corpusInputs") {
+    group = "rose"
+    description = "Download Rosetta's inputs (mapping files, game versions, pilot mods) listed in rosetta/sources.json."
+    classpath = sourceSets["main"].runtimeClasspath
+    mainClass.set("rose.corpus.CorpusMain")
+    workingDir = rootProject.projectDir
+    args("inputs")
+}

@@ -1,0 +1,7 @@
+# Class renames between Minecraft 1.21.11 (last obfuscated version, Mojang names) and 26.3.
+# Applied after the intermediary-based 1.20.1 -> 1.21.11 step. One rename per line:
+# old<TAB>new<TAB>evidence
+#
+# Only add renames that intermediary + Mojang names can't find (e.g. ResourceLocation -> Identifier needs no rule:
+# Mojang already renamed it by 1.21.11). Rose also proposes unique same-simple-name moves itself ("HEURISTIC" in the
+# name layer); promote a heuristic here once it is checked against corpus/minecraft/26.3/src.

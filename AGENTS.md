@@ -35,6 +35,11 @@ You can run the game and check your change yourself. Full reference: `docs/agent
 - Always finish with `./rose stop client`.
 - For pass/fail evidence, prefer GameTests (`./rose test "modid:*"`) over manual clicking: they are what the gates run.
 
+## Translating old mods (Rosetta)
+- `./rose analyze <mod.jar>` writes `build/analyze/<jar>.rose.md` and `.json`: every reference that doesn't resolve on 26.3, with a status, a work category and where it's used. Read `docs/ROSETTA.md` for the statuses.
+- A task usually targets one finding. Evidence it's fixed: the finding disappears from `rose analyze`, and a GameTest proves the behavior.
+- New rules go in `rosetta/rules/` and need an evidence column. Check every rule against `corpus/minecraft/26.3/src`.
+
 ## Getting stuck
 If you can't make progress after a real attempt, stop and write an escalation note in your task report:
 - what you tried;

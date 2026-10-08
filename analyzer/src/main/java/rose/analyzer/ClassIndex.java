@@ -1,0 +1,133 @@
+package rose.analyzer;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.nio.file.Path;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.zip.ZipFile;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.FieldVisitor;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
+
+/**
+ * Class names, supertypes and member signatures of a set of jars, plus the JDK on demand. Enough to answer
+ * "does {@code owner.name desc} exist here, possibly inherited?" without loading any class.
+ */
+final class ClassIndex {
+    record Info(String name, String superName, List<String> interfaces, Set<String> methods, Set<String> fields,
+                Set<String> methodNames) {}
+
+    private final Map<String, Info> classes = new HashMap<>();
+    private final boolean includeJdk;
+
+    ClassIndex(boolean includeJdk) {
+        this.includeJdk = includeJdk;
+    }
+
+    static ClassIndex of(List<Path> jars, boolean includeJdk) throws IOException {
+        ClassIndex index = new ClassIndex(includeJdk);
+        for (Path jar : jars) index.addJar(jar);
+        return index;
+    }
+
+    void addJar(Path jar) throws IOException {
+        try (ZipFile zip = new ZipFile(jar.toFile())) {
+            var entries = zip.entries();
+            while (entries.hasMoreElements()) {
+                var entry = entries.nextElement();
+                String name = entry.getName();
+                if (!name.endsWith(".class") || name.startsWith("META-INF/") || name.endsWith("module-info.class")) continue;
+                try (InputStream in = zip.getInputStream(entry)) {
+                    Info info = read(in.readAllBytes());
+                    classes.putIfAbsent(info.name(), info);
+                }
+            }
+        }
+    }
+
+    boolean contains(String name) {
+        return get(name) != null;
+    }
+
+    Set<String> names() {
+        return classes.keySet();
+    }
+
+    Info get(String name) {
+        Info info = classes.get(name);
+        if (info == null && includeJdk && isJdkName(name)) {
+            try (InputStream in = ClassLoader.getSystemResourceAsStream(name + ".class")) {
+                if (in != null) {
+                    info = read(in.readAllBytes());
+                    classes.put(name, info);
+                }
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        }
+        return info;
+    }
+
+    /** All supertypes of {@code name} (itself first), breadth-first, across this index and {@code fallback}. */
+    static List<Info> hierarchy(String name, ClassIndex first, ClassIndex fallback) {
+        List<Info> out = new ArrayList<>();
+        Deque<String> queue = new ArrayDeque<>(List.of(name));
+        Set<String> seen = new HashSet<>();
+        while (!queue.isEmpty()) {
+            String current = queue.removeFirst();
+            if (!seen.add(current)) continue;
+            Info info = first.get(current);
+            if (info == null && fallback != null) info = fallback.get(current);
+            if (info == null) continue;
+            out.add(info);
+            if (info.superName() != null) queue.add(info.superName());
+            queue.addAll(info.interfaces());
+        }
+        return out;
+    }
+
+    static boolean isJdkName(String name) {
+        return name.startsWith("java/") || name.startsWith("javax/") || name.startsWith("jdk/") || name.startsWith("sun/");
+    }
+
+    private static Info read(byte[] bytes) {
+        Set<String> methods = new HashSet<>();
+        Set<String> methodNames = new HashSet<>();
+        Set<String> fields = new HashSet<>();
+        String[] header = new String[2];
+        List<String> interfaces = new ArrayList<>();
+        new ClassReader(bytes).accept(new ClassVisitor(Opcodes.ASM9) {
+            @Override
+            public void visit(int version, int access, String name, String signature, String superName, String[] ifaces) {
+                header[0] = name;
+                header[1] = superName;
+                if (ifaces != null) interfaces.addAll(List.of(ifaces));
+            }
+
+            @Override
+            public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
+                methods.add(name + desc);
+                methodNames.add(name);
+                return null;
+            }
+
+            @Override
+            public FieldVisitor visitField(int access, String name, String desc, String signature, Object value) {
+                fields.add(name + ":" + desc);
+                fields.add(name);
+                return null;
+            }
+        }, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
+        return new Info(header[0], header[1], List.copyOf(interfaces), methods, fields, methodNames);
+    }
+}

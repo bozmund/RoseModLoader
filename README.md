@@ -22,7 +22,7 @@ Rose is built to be **AI-native**. The **Rose Agent Bridge** lets AI models obse
 | M1 | Rose boots vanilla 26.3 (client + server) with Mixin | done (LAN check pending) |
 | M2 | Rose core + native API | done |
 | M2b | Agent Bridge v1: `rose` CLI + MCP server | done (dedicated-server run needs EULA) |
-| M3 | Translation engine, analyzer, Rosetta v0 | |
+| M3 | Translation engine, analyzer, Rosetta v0 | done: `rose analyze` lists every gap for Farmer's Delight 1.20.1 |
 | M4 | AI foundry v1 | |
 | M5 | Forge 1.20.1 dialect → **Farmer's Delight 1.20.1 on 26.3** | |
 | M6+ | More Forge 1.20.1 mods, modpack builder, Fabric 1.20.1, older eras | |
@@ -37,7 +37,11 @@ Requirements: JDK 25. The Gradle wrapper is included.
 ./gradlew runClient     # starts the 26.3 client through Rose (offline dev account), with the test mods
 ./gradlew runServer     # starts the dedicated server; accept Mojang's EULA in run/server/eula.txt first
 ./gradlew runGameTests  # runs mods' GameTests headless; fails if any required test fails (report: build/gametest/report.xml)
+./gradlew corpusInputs  # mapping files + pilot mods for Rosetta (local only)
+./rose analyze corpus/mods/FarmersDelight-1.20.1-1.3.4.jar   # what stands between an old mod and 26.3
 ```
+
+See [docs/ROSETTA.md](docs/ROSETTA.md) for how translation and the compatibility report work.
 
 ## Letting AI drive the game
 

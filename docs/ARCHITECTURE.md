@@ -25,12 +25,12 @@ An old mod jar goes through the translation pipeline once. The result is cached 
 | `mixin-service` | `rose.mixin` | Mixin integration |
 | `api` | `rose.api` | Rose's small native API |
 | `core` | `rose.core` | Rose's hooks into 26.3: registries, events, networking, config |
-| `translate` | `rose.translate` | Remapper, rule interpreter, inheritance bridger, Mixin rebaser |
-| `rosetta` | `rose.rosetta` | Knowledge base: name layer, semantic rules, port-pair evidence |
+| `translate` | `rose.translate` | `RosettaRemapper` + `JarTranslator` (renames today; rules, inheritance bridges, Mixin rebasing next) |
+| `rosetta` | `rose.rosetta` | Name layers built from mapping files (`NameLayerBuilder`), reviewed rules (`rosetta/rules/`); see docs/ROSETTA.md |
 | `eras/era-1.20.1` | `rose.era.v1_20_1` | Shims for vanilla 1.20.1 → 26.3 |
 | `dialects/forge-1.20.1` | `rose.dialect.forge.v1_20_1` | Forge 1.20.1 API reimplementation |
 | `packfix` | `rose.packfix` | Asset/data pack upgrader |
-| `analyzer` | `rose.analyzer` | `rose analyze <mod.jar>` compatibility report |
+| `analyzer` | `rose.analyzer` | `rose analyze <mod.jar>`: resolves every reference against 26.3 and writes the compatibility report |
 | `agent-bridge` | `rose.bridge` | Built-in mod `rose_bridge`: JSON-RPC endpoint inside the game (see docs/agent-bridge.md) |
 | `bridge-cli` | `rose.cli` | The `rose` command: launch, `ctl`, events, GameTests, and the MCP server (`rose mcp`) |
 | `testing` | `rose.testing` | Server/client harnesses, GameTests, oracle dumper |

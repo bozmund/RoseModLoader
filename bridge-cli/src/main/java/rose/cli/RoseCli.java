@@ -73,10 +73,31 @@ public final class RoseCli {
             case "test" -> {
                 return GameTests.run(home, args.isEmpty() ? null : args.getFirst());
             }
+            case "analyze" -> {
+                if (args.isEmpty()) throw new IllegalArgumentException("usage: rose analyze <mod.jar>");
+                return analyze(home, Path.of(args.getFirst()).toAbsolutePath());
+            }
             case "mcp" -> new McpServer(home).serve();
             default -> throw new IllegalArgumentException("unknown command '" + command + "'\n" + usage());
         }
         return 0;
+    }
+
+    /**
+     * Runs the static analyzer through Gradle (it needs the game's Java and the corpus) and prints its summary.
+     * Exit code: 0 = no runtime problems, 3 = problems found (see the report), 1 = the analyzer failed.
+     */
+    static int analyze(Path home, Path jar) throws Exception {
+        if (!Files.exists(jar)) throw new IllegalArgumentException("no such file: " + jar);
+        boolean windows = System.getProperty("os.name").toLowerCase(java.util.Locale.ROOT).contains("win");
+        List<String> command = List.of(home.resolve(windows ? "gradlew.bat" : "gradlew").toString(), "-q",
+                ":analyzer:run", "--args=" + jar);
+        int exit = new ProcessBuilder(command).directory(home.toFile()).inheritIO().start().waitFor();
+        if (exit != 0) return 1;
+        Path json = home.resolve("build/analyze").resolve(jar.getFileName().toString().replaceAll("\\.jar$", "") + ".rose.json");
+        if (!Files.exists(json)) return 1;
+        JsonObject report = JsonParser.parseString(Files.readString(json)).getAsJsonObject();
+        return report.getAsJsonObject("problems").get("runtime").getAsLong() == 0 ? 0 : 3;
     }
 
     /** Asks the game to quit and waits until its bridge is gone, so a following launch doesn't collide with it. */
@@ -177,6 +198,7 @@ public final class RoseCli {
                   rose events [--target T] [--after N] [--types a,b] [--follow]
                   rose stop [client|server]
                   rose test [SELECTOR]                                     run GameTests headless (default sample:*)
+                  rose analyze <mod.jar>                                   compatibility report for an old mod (exit 3 = problems)
                   rose mcp                                                 MCP server on stdio (Claude Code etc.)
 
                 Targets: client, server, gametest. Without --target, the first running one is used.

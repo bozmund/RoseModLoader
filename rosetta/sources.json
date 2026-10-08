@@ -1,0 +1,32 @@
+{
+  "comment": "Inputs the corpus tool downloads into corpus/ (never committed). Rosetta builds its name layers from these.",
+  "mappings": [
+    {
+      "name": "mcpconfig-1.20.1",
+      "url": "https://maven.neoforged.net/releases/de/oceanlabs/mcp/mcp_config/1.20.1-20230612.114412/mcp_config-1.20.1-20230612.114412.zip",
+      "file": "mappings/mcp_config-1.20.1.zip"
+    },
+    {
+      "name": "intermediary-1.20.1",
+      "url": "https://maven.fabricmc.net/net/fabricmc/intermediary/1.20.1/intermediary-1.20.1-v2.jar",
+      "file": "mappings/intermediary-1.20.1-v2.jar"
+    },
+    {
+      "name": "intermediary-1.21.11",
+      "url": "https://maven.fabricmc.net/net/fabricmc/intermediary/1.21.11/intermediary-1.21.11-v2.jar",
+      "file": "mappings/intermediary-1.21.11-v2.jar"
+    }
+  ],
+  "minecraft": ["1.20.1", "1.21.11", "26.3"],
+  "mods": [
+    {
+      "id": "farmersdelight",
+      "loader": "forge",
+      "minecraft": "1.20.1",
+      "version": "1.20.1-1.3.4",
+      "url": "https://cdn.modrinth.com/data/R2OftAxM/versions/SiIpcZzM/FarmersDelight-1.20.1-1.3.4.jar",
+      "sha1": "26f615fd35f652021f5b0f1cba68afa7d578fe15",
+      "file": "mods/FarmersDelight-1.20.1-1.3.4.jar"
+    }
+  ]
+}
