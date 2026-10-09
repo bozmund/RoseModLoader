@@ -15,6 +15,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.function.Function;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
@@ -28,6 +29,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.Recipe;
@@ -182,9 +184,39 @@ public final class OracleDump {
         for (RecipeHolder<?> holder : server.getRecipeManager().getRecipes()) {
             Identifier id = holder.id().identifier();
             if (!ours(id)) continue;
-            out.put(id.toString(), encode(holder.value(), ops));
+            out.put(id.toString(), resolveItemTags(encode(holder.value(), ops)));
         }
         return toObject(out);
+    }
+
+    /**
+     * Replaces each item tag reference ({@code "#c:crops/wheat"}) with the items in it, so recipes compare by what
+     * they accept, not by tag names: Forge 1.20.1's {@code forge:} tags became {@code c:} tags. A tag with no items
+     * stays a name, marked {@code (empty)}.
+     */
+    private JsonElement resolveItemTags(JsonElement json) {
+        if (json instanceof JsonObject object) {
+            JsonObject out = new JsonObject();
+            object.entrySet().forEach(e -> out.add(e.getKey(), resolveItemTags(e.getValue())));
+            return out;
+        }
+        if (json instanceof JsonArray array) {
+            JsonArray out = new JsonArray();
+            array.forEach(e -> out.add(resolveItemTags(e)));
+            return out;
+        }
+        if (json instanceof JsonPrimitive p && p.isString() && p.getAsString().startsWith("#")) {
+            Identifier tag = Identifier.tryParse(p.getAsString().substring(1));
+            if (tag == null) return json;
+            TreeSet<String> items = new TreeSet<>();
+            BuiltInRegistries.ITEM.getTagOrEmpty(TagKey.create(Registries.ITEM, tag)).forEach(h ->
+                    h.unwrapKey().ifPresent(k -> items.add(k.identifier().toString())));
+            if (items.isEmpty()) return new JsonPrimitive(p.getAsString() + " (empty)");
+            JsonArray out = new JsonArray();
+            items.forEach(out::add);
+            return out;
+        }
+        return json;
     }
 
     /**
