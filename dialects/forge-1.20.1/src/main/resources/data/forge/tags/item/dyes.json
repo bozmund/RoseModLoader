@@ -1,0 +1,68 @@
+{
+  "values": [
+    {
+      "id": "#forge:dyes/white",
+      "required": false
+    },
+    {
+      "id": "#forge:dyes/orange",
+      "required": false
+    },
+    {
+      "id": "#forge:dyes/magenta",
+      "required": false
+    },
+    {
+      "id": "#forge:dyes/light_blue",
+      "required": false
+    },
+    {
+      "id": "#forge:dyes/yellow",
+      "required": false
+    },
+    {
+      "id": "#forge:dyes/lime",
+      "required": false
+    },
+    {
+      "id": "#forge:dyes/pink",
+      "required": false
+    },
+    {
+      "id": "#forge:dyes/gray",
+      "required": false
+    },
+    {
+      "id": "#forge:dyes/light_gray",
+      "required": false
+    },
+    {
+      "id": "#forge:dyes/cyan",
+      "required": false
+    },
+    {
+      "id": "#forge:dyes/purple",
+      "required": false
+    },
+    {
+      "id": "#forge:dyes/blue",
+      "required": false
+    },
+    {
+      "id": "#forge:dyes/brown",
+      "required": false
+    },
+    {
+      "id": "#forge:dyes/green",
+      "required": false
+    },
+    {
+      "id": "#forge:dyes/red",
+      "required": false
+    },
+    {
+      "id": "#forge:dyes/black",
+      "required": false
+    }
+  ]
+}

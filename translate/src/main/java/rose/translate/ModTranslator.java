@@ -16,6 +16,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 import com.google.gson.JsonParser;
+import rose.rosetta.BridgeRules;
+import rose.rosetta.ConversionRules;
 import rose.rosetta.NameLayer;
 import rose.rosetta.RedirectRules;
 
@@ -26,13 +28,23 @@ import rose.rosetta.RedirectRules;
  */
 public final class ModTranslator {
     /** Bump when translation output changes, so cached jars are rebuilt. */
-    public static final int VERSION = 2;
+    public static final int VERSION = 6;
 
     private final NameLayer layer;
     private final RedirectRules redirects;
+    private final BridgeRules bridges;
+    private final ConversionRules conversions;
     private final ClassIndex game;
     private final String inputsHash;
     private final List<ExtraTransform> extras;
+
+    /** Rewrites a non-class resource (data/asset upgrades): the new path and content, or {@code null} to leave it out. */
+    @FunctionalInterface
+    public interface ResourceTransform {
+        Resource apply(String path, byte[] content);
+    }
+
+    public record Resource(String path, byte[] content) {}
 
     /** A dialect-specific rewrite that runs after renaming (e.g. typed event listeners for Forge). */
     @FunctionalInterface
@@ -44,9 +56,12 @@ public final class ModTranslator {
      * @param game       the 26.3 game, its libraries and Rose's built-in mods (for call adaptation)
      * @param inputsHash identifies the rule set (name layer + rule files) so cached jars follow rule changes
      */
-    public ModTranslator(NameLayer layer, RedirectRules redirects, ClassIndex game, String inputsHash, List<ExtraTransform> extras) {
+    public ModTranslator(NameLayer layer, RedirectRules redirects, BridgeRules bridges, ConversionRules conversions,
+                         ClassIndex game, String inputsHash, List<ExtraTransform> extras) {
         this.layer = layer;
         this.redirects = redirects;
+        this.bridges = bridges;
+        this.conversions = conversions;
         this.game = game;
         this.inputsHash = inputsHash;
         this.extras = List.copyOf(extras);
@@ -54,6 +69,11 @@ public final class ModTranslator {
 
     /** The translated jar for {@code input} inside {@code cacheDir}, building it if needed. */
     public Path translate(Path input, Path cacheDir) throws IOException {
+        return translate(input, cacheDir, (path, content) -> new Resource(path, content));
+    }
+
+    /** As {@link #translate(Path, Path)}, upgrading other resources with {@code resources}. */
+    public Path translate(Path input, Path cacheDir, ResourceTransform resources) throws IOException {
         String key = sha256(Files.readAllBytes(input)).substring(0, 16) + "-" + inputsHash.substring(0, 12) + "-v" + VERSION;
         Path output = cacheDir.resolve(input.getFileName().toString().replaceAll("\\.jar$", "") + "-" + key + ".jar");
         if (Files.exists(output)) return output;
@@ -65,10 +85,12 @@ public final class ModTranslator {
         try {
             new JarTranslator(remapper, redirects).translate(input, renamed);
             ClassIndex mod = ClassIndex.of(List.of(renamed), false);
-            CallAdapter adapter = new CallAdapter(mod, game);
-            JarTranslator full = new JarTranslator(remapper, redirects, adapter, extras);
+            CallAdapter adapter = new CallAdapter(mod, game, conversions);
+            List<ExtraTransform> all = new ArrayList<>(extras);
+            all.add(new InheritanceBridger(bridges, mod, game));
+            JarTranslator full = new JarTranslator(remapper, redirects, adapter, all);
             Path tmp = output.resolveSibling(output.getFileName() + ".part");
-            writeTranslated(input, tmp, full, remapper);
+            writeTranslated(input, tmp, full, remapper, resources);
             Files.move(tmp, output, StandardCopyOption.REPLACE_EXISTING);
         } finally {
             Files.deleteIfExists(renamed);
@@ -76,10 +98,12 @@ public final class ModTranslator {
         return output;
     }
 
-    private void writeTranslated(Path input, Path output, JarTranslator translator, RosettaRemapper remapper) throws IOException {
+    private void writeTranslated(Path input, Path output, JarTranslator translator, RosettaRemapper remapper,
+                                 ResourceTransform resources) throws IOException {
         List<String> mixinConfigs = mixinConfigsOf(input);
         List<String> refmaps = refmapsOf(input);
         RefmapRemapper refmapRemapper = new RefmapRemapper(remapper);
+        java.util.Set<String> written = new java.util.HashSet<>();
         try (ZipFile in = new ZipFile(input.toFile()); ZipOutputStream out = new ZipOutputStream(Files.newOutputStream(output))) {
             var entries = in.entries();
             while (entries.hasMoreElements()) {
@@ -93,6 +117,13 @@ public final class ModTranslator {
                 if (name.endsWith(".class")) bytes = translator.translateClass(bytes);
                 else if (mixinConfigs.contains(name)) bytes = tolerantMixinConfig(new String(bytes, StandardCharsets.UTF_8)).getBytes(StandardCharsets.UTF_8);
                 else if (refmaps.contains(name)) bytes = refmapRemapper.remap(new String(bytes, StandardCharsets.UTF_8)).getBytes(StandardCharsets.UTF_8);
+                else {
+                    Resource fixed = resources.apply(name, bytes);
+                    if (fixed == null) continue;
+                    name = fixed.path();
+                    if (fixed.content() != null) bytes = fixed.content();
+                }
+                if (!written.add(name)) continue; // two old files mapped to one new path: the first wins
                 out.putNextEntry(new ZipEntry(name));
                 out.write(bytes);
                 out.closeEntry();

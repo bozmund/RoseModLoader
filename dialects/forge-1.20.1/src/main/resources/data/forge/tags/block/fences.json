@@ -1,0 +1,12 @@
+{
+  "values": [
+    {
+      "id": "#forge:fences/wooden",
+      "required": false
+    },
+    {
+      "id": "minecraft:nether_brick_fence",
+      "required": false
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "values": [
+    {
+      "id": "#forge:ores/iron",
+      "required": false
+    },
+    {
+      "id": "#forge:ores/gold",
+      "required": false
+    },
+    {
+      "id": "#forge:ores/copper",
+      "required": false
+    },
+    {
+      "id": "#forge:ores/coal",
+      "required": false
+    },
+    {
+      "id": "#forge:ores/diamond",
+      "required": false
+    },
+    {
+      "id": "#forge:ores/emerald",
+      "required": false
+    },
+    {
+      "id": "#forge:ores/lapis",
+      "required": false
+    },
+    {
+      "id": "#forge:ores/redstone",
+      "required": false
+    },
+    {
+      "id": "#forge:ores/quartz",
+      "required": false
+    },
+    {
+      "id": "#forge:ores/netherite_scrap",
+      "required": false
+    }
+  ]
+}

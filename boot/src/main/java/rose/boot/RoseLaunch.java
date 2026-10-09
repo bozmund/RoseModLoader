@@ -103,7 +103,7 @@ public final class RoseLaunch {
         nativeMods.forEach(m -> linkTargets.add(m.root()));
         Path rosetta = Path.of(System.getProperty("rose.rosetta.home", "rosetta"));
         Path names = Path.of(System.getProperty("rose.rosetta.names", "corpus/rosetta/names-forge-1.20.1.tsv"));
-        return new ForgeMods(names, rosetta.resolve("rules/forge-1.20.1/redirects.tsv"), linkTargets,
+        return new ForgeMods(names, rosetta.resolve("rules/forge-1.20.1"), linkTargets,
                 runDir.resolve(".rose-cache/translated/" + ForgeMods.DIALECT)).load(jars);
     }
 

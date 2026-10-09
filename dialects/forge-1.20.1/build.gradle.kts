@@ -3,6 +3,7 @@
 import java.util.concurrent.Callable
 
 val accessWidener = file("src/main/resources/rose_forge_1_20_1.accesswidener")
+val eraAccessWidener = rootProject.file("eras/era-1.20.1/src/main/resources/rose_era_1_20_1.accesswidener")
 val minecraft = rootProject.extra["minecraft"] as FileCollection
 val widenerTool by configurations.creating
 
@@ -11,12 +12,12 @@ val widenMinecraft by tasks.registering(JavaExec::class) {
     val gameJar = files(Callable { minecraft.files.filter { it.name == "client.jar" } })
     val out = layout.buildDirectory.file("widened/client-widened.jar")
     dependsOn(":boot:installMinecraft")
-    inputs.files(gameJar, accessWidener)
+    inputs.files(gameJar, accessWidener, eraAccessWidener)
     outputs.file(out)
     classpath = widenerTool
     mainClass.set("rose.loader.AccessWidenerMain")
     argumentProviders.add(CommandLineArgumentProvider {
-        listOf(gameJar.singleFile.absolutePath, out.get().asFile.absolutePath, accessWidener.absolutePath)
+        listOf(gameJar.singleFile.absolutePath, out.get().asFile.absolutePath, accessWidener.absolutePath, eraAccessWidener.absolutePath)
     })
 }
 
@@ -28,4 +29,5 @@ dependencies {
     compileOnly(libs.bundles.asm) // provided by the launcher's class loader
     compileOnly(project(":loader")) // shared from the parent class loader at runtime
     compileOnly(project(":api"))    // ships inside the "rose" core mod
+    compileOnly(project(":eras:era-1.20.1")) // the 1.20.1 era bridge, loaded next to the dialect
 }

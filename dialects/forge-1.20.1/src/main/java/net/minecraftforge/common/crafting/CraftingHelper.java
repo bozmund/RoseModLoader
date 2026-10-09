@@ -25,6 +25,7 @@ public final class CraftingHelper {
 
     public static <T extends net.minecraft.world.item.crafting.Ingredient> IIngredientSerializer<T> register(Identifier key, IIngredientSerializer<T> serializer) {
         if (INGREDIENTS.putIfAbsent(key, serializer) != null) throw new IllegalStateException("Duplicate ingredient serializer: " + key);
+        rose.era.v1_20_1.shim.IngredientShim.registerCustom(key.toString(), serializer::parse);
         return serializer;
     }
 

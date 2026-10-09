@@ -30,6 +30,27 @@ public final class RegistryValues {
         return entries.stream().map(Map.Entry::getKey).toList();
     }
 
+    /**
+     * Intrusive holders (blocks, items, ...) that exist now, for {@link #dropNewIntrusiveHolders}. A block whose
+     * creation failed halfway still made one, and vanilla refuses to freeze a registry with orphaned holders.
+     */
+    public static java.util.Set<Object> intrusiveHolderOwners() {
+        java.util.Set<Object> out = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+        for (Registry<?> registry : all(net.minecraft.core.registries.BuiltInRegistries.REGISTRY)) {
+            var pending = registry instanceof MappedRegistryAccessor<?> a ? a.rose$unregisteredIntrusiveHolders() : null;
+            if (pending != null) out.addAll(pending.keySet());
+        }
+        return out;
+    }
+
+    /** Removes intrusive holders created since {@code before} (by a registration that failed). */
+    public static void dropNewIntrusiveHolders(java.util.Set<Object> before) {
+        for (Registry<?> registry : all(net.minecraft.core.registries.BuiltInRegistries.REGISTRY)) {
+            var pending = registry instanceof MappedRegistryAccessor<?> a ? a.rose$unregisteredIntrusiveHolders() : null;
+            if (pending != null) pending.keySet().removeIf(owner -> !before.contains(owner));
+        }
+    }
+
     @SuppressWarnings("unchecked")
     private static <T> Map<T, Holder.Reference<T>> byValue(Registry<T> registry) {
         return ((MappedRegistryAccessor<T>) registry).rose$byValue();

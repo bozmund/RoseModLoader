@@ -1,0 +1,12 @@
+{
+  "values": [
+    {
+      "id": "#forge:dusts/redstone",
+      "required": false
+    },
+    {
+      "id": "#forge:dusts/glowstone",
+      "required": false
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "values": [
+    {
+      "id": "minecraft:glass",
+      "required": false
+    },
+    {
+      "id": "minecraft:tinted_glass",
+      "required": false
+    }
+  ]
+}

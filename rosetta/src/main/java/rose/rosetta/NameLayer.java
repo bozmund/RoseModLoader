@@ -21,6 +21,7 @@ import java.util.TreeMap;
  * c  oldClass  newClass  how
  * m  oldName   readableOldName  newName  how
  * f  oldName   readableOldName  newName  how
+ * r  owner.oldName  newName       (member renamed by name in a 26.3 class, for names that are not SRG names)
  * </pre>
  * {@code newName} is {@code -} when the member no longer exists. {@code how} records where the answer came from.
  */
@@ -53,14 +54,29 @@ public final class NameLayer {
     private final Map<String, ClassEntry> classes;
     private final Map<String, MemberEntry> methods;
     private final Map<String, MemberEntry> fields;
+    private final Map<String, String> memberRenames;
 
     public NameLayer(String source, Map<String, ClassEntry> classes, Map<String, MemberEntry> methods,
                      Map<String, MemberEntry> fields) {
+        this(source, classes, methods, fields, Map.of());
+    }
+
+    /** @param memberRenames {@code owner26.oldName -> newName} for members kept by name in old bytecode (enum constants) */
+    public NameLayer(String source, Map<String, ClassEntry> classes, Map<String, MemberEntry> methods,
+                     Map<String, MemberEntry> fields, Map<String, String> memberRenames) {
         this.source = source;
         this.classes = Collections.unmodifiableMap(new TreeMap<>(classes));
         this.methods = Collections.unmodifiableMap(new TreeMap<>(methods));
         this.fields = Collections.unmodifiableMap(new TreeMap<>(fields));
+        this.memberRenames = Collections.unmodifiableMap(new TreeMap<>(memberRenames));
     }
+
+    /** The 26.3 name of member {@code name} of 26.3 class {@code owner}, if it was renamed by name; else {@code null}. */
+    public String renamedMember(String owner, String name) {
+        return memberRenames.get(owner + "." + name);
+    }
+
+    public Map<String, String> memberRenames() { return memberRenames; }
 
     public String source() { return source; }
 
@@ -110,6 +126,9 @@ public final class NameLayer {
             for (MemberEntry f : fields.values()) {
                 out.write(String.join("\t", "f", f.oldName(), f.readableOldName(), f.newName(), f.how().name()) + "\n");
             }
+            for (var r : memberRenames.entrySet()) {
+                out.write(String.join("\t", "r", r.getKey(), r.getValue()) + "\n");
+            }
         }
     }
 
@@ -118,6 +137,7 @@ public final class NameLayer {
         Map<String, ClassEntry> classes = new LinkedHashMap<>();
         Map<String, MemberEntry> methods = new LinkedHashMap<>();
         Map<String, MemberEntry> fields = new LinkedHashMap<>();
+        Map<String, String> renames = new LinkedHashMap<>();
         for (String line : Files.readAllLines(file)) {
             if (line.startsWith("# Rose name layer")) {
                 for (String part : line.split("\t")) if (part.startsWith("source=")) source = part.substring(7);
@@ -129,9 +149,10 @@ public final class NameLayer {
                 case "c" -> classes.put(p[1], new ClassEntry(p[1], p[2], How.valueOf(p[3])));
                 case "m" -> methods.put(p[1], new MemberEntry(p[1], p[2], p[3], How.valueOf(p[4])));
                 case "f" -> fields.put(p[1], new MemberEntry(p[1], p[2], p[3], How.valueOf(p[4])));
+                case "r" -> renames.put(p[1], p[2]);
                 default -> throw new IOException(file + ": unknown line kind '" + p[0] + "'");
             }
         }
-        return new NameLayer(source, classes, methods, fields);
+        return new NameLayer(source, classes, methods, fields, renames);
     }
 }

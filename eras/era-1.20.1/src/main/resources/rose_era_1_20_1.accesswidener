@@ -1,0 +1,15 @@
+accessWidener v2 named
+
+# Vanilla classes 1.20.1 mods extend that 26.3 made final. Reopening them lets the mod classes load; what they
+# construct is adapted (or reported) elsewhere in the era bridge.
+
+# Enchantments became data-driven records in 1.21; a mod enchantment class must still load for its mod to load.
+extendable class net/minecraft/world/item/enchantment/Enchantment
+
+# Mods create their own simple particle types; 26.3 made the constructor protected.
+accessible method net/minecraft/core/particles/SimpleParticleType <init> (Z)V
+
+# 1.20.1 mods (and Forge's CompoundIngredient) extend Ingredient; 1.21.2 made it final with a private constructor.
+extendable class net/minecraft/world/item/crafting/Ingredient
+accessible method net/minecraft/world/item/crafting/Ingredient <init> (Lnet/minecraft/core/HolderSet;)V
+accessible field net/minecraft/world/item/crafting/Ingredient values Lnet/minecraft/core/HolderSet;

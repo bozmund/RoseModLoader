@@ -11,4 +11,8 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 public interface MappedRegistryAccessor<T> {
     @Accessor("byValue")
     Map<T, Holder.Reference<T>> rose$byValue();
+
+    /** Holders of blocks/items created but not registered yet; {@code null} once frozen. */
+    @Accessor("unregisteredIntrusiveHolders")
+    Map<T, Holder.Reference<T>> rose$unregisteredIntrusiveHolders();
 }

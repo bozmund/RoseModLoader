@@ -1,0 +1,7 @@
+# Value conversions for Forge 1.20.1 mods (26.3 names): from<TAB>to (or *)<TAB>helper<TAB>evidence
+# The call adapter inserts these where an API changed a parameter, return or field type without changing meaning.
+net/minecraft/world/effect/MobEffect	net/minecraft/core/Holder	rose/era/v1_20_1/shim/Holders.mobEffect	1.20.5: MobEffectInstance, LivingEntity.hasEffect/getEffect/removeEffect and MobEffects take Holder<MobEffect> instead of MobEffect
+net/minecraft/world/entity/ai/attributes/Attribute	net/minecraft/core/Holder	rose/era/v1_20_1/shim/Holders.attribute	1.20.5: Attributes fields and AttributeMap/LivingEntity.getAttribute take Holder<Attribute> instead of Attribute
+net/minecraft/world/item/alchemy/Potion	net/minecraft/core/Holder	rose/era/v1_20_1/shim/Holders.potion	1.20.5: Potions fields and PotionContents use Holder<Potion> instead of Potion
+net/minecraft/sounds/SoundEvent	net/minecraft/core/Holder	rose/era/v1_20_1/shim/Holders.soundEvent	1.20.5+: several sound APIs (e.g. SoundEvents music, jukebox) take Holder<SoundEvent>
+net/minecraft/core/Holder	*	rose/era/v1_20_1/shim/Holders.value	a 1.20.1 caller expects the value where 26.3 returns or stores its Holder; Holder.value() gives it

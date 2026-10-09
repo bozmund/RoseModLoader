@@ -9,8 +9,9 @@ import rose.rosetta.NameLayer;
  *
  * <p>Members are only renamed when they carry an obfuscation-tool name (SRG {@code m_123_}/{@code f_123_} for
  * Forge). Those names identify a whole override family, so overriding methods in mod classes are renamed with the
- * method they override, without needing the class hierarchy. Members that no longer exist in 26.3 keep their old
- * name, so the static verifier reports them instead of the JVM failing later.
+ * method they override, without needing the class hierarchy. Members that no longer exist in 26.3 get their
+ * readable 1.20.1 name: era-bridge classes that re-create removed classes declare those names, and crash reports
+ * stay readable. (The analyzer reports such members from the name layer, not from this renaming.)
  */
 public final class RosettaRemapper extends Remapper {
     public static final Pattern SRG_METHOD = Pattern.compile("m_\\d+_");
@@ -32,12 +33,18 @@ public final class RosettaRemapper extends Remapper {
 
     @Override
     public String mapMethodName(String owner, String name, String descriptor) {
-        return SRG_METHOD.matcher(name).matches() ? member(layer.method(name), name) : name;
+        return SRG_METHOD.matcher(name).matches() ? member(layer.method(name), name) : byOwner(owner, name);
     }
 
     @Override
     public String mapFieldName(String owner, String name, String descriptor) {
-        return SRG_FIELD.matcher(name).matches() ? member(layer.field(name), name) : name;
+        return SRG_FIELD.matcher(name).matches() ? member(layer.field(name), name) : byOwner(owner, name);
+    }
+
+    /** Names that aren't SRG names (enum constants keep theirs) can still have been renamed in their 26.3 class. */
+    private String byOwner(String owner, String name) {
+        String renamed = layer.renamedMember(map(owner), name);
+        return renamed != null ? renamed : name;
     }
 
     @Override
@@ -60,6 +67,7 @@ public final class RosettaRemapper extends Remapper {
     }
 
     private static String member(NameLayer.MemberEntry entry, String oldName) {
-        return entry != null && entry.exists() ? entry.newName() : oldName;
+        if (entry == null) return oldName;
+        return entry.exists() ? entry.newName() : entry.readableOldName();
     }
 }

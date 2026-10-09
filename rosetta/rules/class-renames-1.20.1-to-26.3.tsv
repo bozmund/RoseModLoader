@@ -1,3 +1,5 @@
 # Class renames from Minecraft 1.20.1 (Mojang names) straight to 26.3, for classes Fabric intermediary did not
 # carry across versions (so the 1.21.11 step cannot find them). One rename per line: old<TAB>new<TAB>evidence
 net/minecraft/client/particle/ParticleEngine$SpriteParticleRegistration	net/minecraft/client/particle/ParticleResources$SpriteParticleRegistration	Mojang 1.21.11 mappings: ParticleResources$SpriteParticleRegistration (ParticleResources.register takes it); 26.3 ParticleResources.java declares it with the same single method ParticleProvider<T> create(SpriteSet)
+net/minecraft/world/level/block/state/properties/DirectionProperty	net/minecraft/world/level/block/state/properties/EnumProperty	1.21.2 removed DirectionProperty (it was EnumProperty<Direction>); 26.3 BlockStateProperties.FACING/HORIZONTAL_FACING are EnumProperty<Direction>, so fields and descriptors keep working
+net/minecraft/world/item/crafting/RecipeSerializer	rose/era/v1_20_1/crafting/LegacyRecipeSerializer	26.3 RecipeSerializer is a final record (MapCodec, StreamCodec); 1.20.1 mods implement the old JSON/buffer interface, kept as LegacyRecipeSerializer

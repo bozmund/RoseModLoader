@@ -2,10 +2,7 @@ accessWidener v2 named
 
 # Forge 1.20.1 API classes that extend vanilla classes 26.3 made final or closed.
 
-# CompoundIngredient (and mods' own Ingredient subclasses): Ingredient became final with a private constructor in 1.21.2.
-extendable class net/minecraft/world/item/crafting/Ingredient
-accessible method net/minecraft/world/item/crafting/Ingredient <init> (Lnet/minecraft/core/HolderSet;)V
-accessible field net/minecraft/world/item/crafting/Ingredient values Lnet/minecraft/core/HolderSet;
+# (Ingredient is reopened by the era bridge's access widener; CompoundIngredient relies on it.)
 
 # IForgeMenuType.create builds menu types; 26.3 made the MenuType constructor and its supplier interface private.
 accessible method net/minecraft/world/inventory/MenuType <init> (Lnet/minecraft/world/inventory/MenuType$MenuSupplier;Lnet/minecraft/world/flag/FeatureFlagSet;)V
@@ -17,3 +14,7 @@ accessible method net/minecraft/client/renderer/blockentity/BlockEntityRenderers
 accessible class net/minecraft/client/particle/ParticleResources$SpriteParticleRegistration
 accessible method net/minecraft/client/particle/ParticleResources register (Lnet/minecraft/core/particles/ParticleType;Lnet/minecraft/client/particle/ParticleProvider;)V
 accessible method net/minecraft/client/particle/ParticleResources register (Lnet/minecraft/core/particles/ParticleType;Lnet/minecraft/client/particle/ParticleResources$SpriteParticleRegistration;)V
+
+# Properties.lootFrom (Forge) sets which loot table a block drops.
+accessible field net/minecraft/world/level/block/state/BlockBehaviour$Properties drops Lnet/minecraft/resources/DependantName;
+mutable field net/minecraft/world/level/block/state/BlockBehaviour$Properties drops Lnet/minecraft/resources/DependantName;

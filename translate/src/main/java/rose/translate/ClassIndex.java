@@ -29,9 +29,20 @@ public final class ClassIndex {
      * @param staticMethods the subset of {@code methods} that are static
      * @param fields        {@code name:desc} and bare {@code name} of every declared field
      * @param signatures    generic signatures by {@code name+desc}, for methods that have one
+     * @param access          the class's access flags
+     * @param abstractMethods the subset of {@code methods} without a body
      */
     public record Info(String name, String superName, List<String> interfaces, Set<String> methods, Set<String> fields,
-                Set<String> methodNames, Set<String> staticMethods, Map<String, String> signatures) {}
+                Set<String> methodNames, Set<String> staticMethods, Map<String, String> signatures,
+                int access, Set<String> abstractMethods) {
+        public boolean isInterface() {
+            return (access & Opcodes.ACC_INTERFACE) != 0;
+        }
+
+        public boolean isAbstract() {
+            return (access & Opcodes.ACC_ABSTRACT) != 0;
+        }
+    }
 
     private final Map<String, Info> classes = new HashMap<>();
     private final boolean includeJdk;
@@ -118,6 +129,8 @@ public final class ClassIndex {
         Set<String> fields = new HashSet<>();
         Set<String> staticMethods = new HashSet<>();
         Map<String, String> signatures = new HashMap<>();
+        Set<String> abstractMethods = new HashSet<>();
+        int[] classAccess = new int[1];
         String[] header = new String[2];
         List<String> interfaces = new ArrayList<>();
         new ClassReader(bytes).accept(new ClassVisitor(Opcodes.ASM9) {
@@ -125,6 +138,7 @@ public final class ClassIndex {
             public void visit(int version, int access, String name, String signature, String superName, String[] ifaces) {
                 header[0] = name;
                 header[1] = superName;
+                classAccess[0] = access;
                 if (ifaces != null) interfaces.addAll(List.of(ifaces));
             }
 
@@ -133,6 +147,7 @@ public final class ClassIndex {
                 methods.add(name + desc);
                 methodNames.add(name);
                 if ((access & Opcodes.ACC_STATIC) != 0) staticMethods.add(name + desc);
+                if ((access & Opcodes.ACC_ABSTRACT) != 0) abstractMethods.add(name + desc);
                 if (signature != null) signatures.put(name + desc, signature);
                 return null;
             }
@@ -144,6 +159,7 @@ public final class ClassIndex {
                 return null;
             }
         }, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
-        return new Info(header[0], header[1], List.copyOf(interfaces), methods, fields, methodNames, staticMethods, signatures);
+        return new Info(header[0], header[1], List.copyOf(interfaces), methods, fields, methodNames, staticMethods, signatures,
+                classAccess[0], abstractMethods);
     }
 }

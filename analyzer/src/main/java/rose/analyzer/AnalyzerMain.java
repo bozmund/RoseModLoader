@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import rose.rosetta.NameLayer;
+import rose.rosetta.ConversionRules;
 import rose.rosetta.RedirectRules;
 import rose.rosetta.RosettaMain;
 
@@ -44,7 +45,9 @@ public final class AnalyzerMain {
         ClassIndex target = ClassIndex.of(targetJars, true);
         ClassIndex old = ClassIndex.of(List.of(vanillaOld), true);
 
-        Report report = new Analyzer(layer, redirects, target, old).analyze(jar);
+        Report report = new Analyzer(layer, redirects, target, old)
+                .withConversions(ConversionRules.read(REDIRECTS.resolveSibling("conversions.tsv")))
+                .analyze(jar);
         String base = jar.getFileName().toString().replaceAll("\\.jar$", "");
         Path json = out.resolve(base + ".rose.json");
         Path md = out.resolve(base + ".rose.md");

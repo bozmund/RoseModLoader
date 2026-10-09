@@ -1,0 +1,11 @@
+# Members renamed by Mojang between 1.21.11 and 26.3 (26.x keeps Mojang names, so intermediary cannot see these).
+# Also applied to plain (non-SRG) names in old bytecode, such as enum constants.
+# owner (26.3 name)<TAB>1.21.11 name<TAB>26.3 name<TAB>evidence
+net/minecraft/world/level/material/PushReaction	NORMAL	PUSH_PULL	26.3 PushReaction declares PUSH_PULL, PUSH, POPPED, IMMOVEABLE, IGNORE_ENTITY; 1.21.11 NORMAL meant "pushed and pulled by pistons" = PUSH_PULL
+net/minecraft/world/level/material/PushReaction	DESTROY	POPPED	26.3 PushReaction declares PUSH_PULL, PUSH, POPPED, IMMOVEABLE, IGNORE_ENTITY; 1.21.11 DESTROY meant "broken (popped off) when pushed" = POPPED
+net/minecraft/world/level/material/PushReaction	BLOCK	IMMOVEABLE	26.3 PushReaction declares PUSH_PULL, PUSH, POPPED, IMMOVEABLE, IGNORE_ENTITY; 1.21.11 BLOCK meant "pistons cannot move it" = IMMOVEABLE
+net/minecraft/world/level/material/PushReaction	IGNORE	IGNORE_ENTITY	26.3 PushReaction declares PUSH_PULL, PUSH, POPPED, IMMOVEABLE, IGNORE_ENTITY; 1.21.11 IGNORE meant "entities are not moved by it" = IGNORE_ENTITY
+net/minecraft/world/level/material/PushReaction	PUSH_ONLY	PUSH	26.3 PushReaction declares PUSH_PULL, PUSH, POPPED, IMMOVEABLE, IGNORE_ENTITY; 1.21.11 PUSH_ONLY meant "can be pushed but not pulled" = PUSH
+net/minecraft/world/entity/ai/attributes/AttributeModifier$Operation	ADDITION	ADD_VALUE	1.20.5 renamed AttributeModifier.Operation.ADDITION to ADD_VALUE; enum constants keep plain names in Forge 1.20.1 bytecode, so only an owner rename reaches them
+net/minecraft/world/entity/ai/attributes/AttributeModifier$Operation	MULTIPLY_BASE	ADD_MULTIPLIED_BASE	1.20.5 renamed AttributeModifier.Operation.MULTIPLY_BASE to ADD_MULTIPLIED_BASE; enum constants keep plain names in Forge 1.20.1 bytecode, so only an owner rename reaches them
+net/minecraft/world/entity/ai/attributes/AttributeModifier$Operation	MULTIPLY_TOTAL	ADD_MULTIPLIED_TOTAL	1.20.5 renamed AttributeModifier.Operation.MULTIPLY_TOTAL to ADD_MULTIPLIED_TOTAL; enum constants keep plain names in Forge 1.20.1 bytecode, so only an owner rename reaches them

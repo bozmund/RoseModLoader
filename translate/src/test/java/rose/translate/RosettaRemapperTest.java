@@ -44,7 +44,7 @@ class RosettaRemapperTest {
     }
 
     @Test
-    void renamesClassesOverridesAndCallsButKeepsGoneMembers() {
+    void renamesClassesOverridesAndCalls() {
         byte[] translated = new JarTranslator(new RosettaRemapper(LAYER)).translateClass(modClass());
         ClassNode node = new ClassNode();
         new ClassReader(translated).accept(node, 0);
@@ -58,15 +58,15 @@ class RosettaRemapperTest {
         for (var insn = override.instructions.getFirst(); insn != null; insn = insn.getNext()) {
             if (insn instanceof MethodInsnNode mi) calls.add(mi.owner + "." + mi.name + mi.desc);
         }
-        assertEquals(List.of("new/Thing.doItNow(Lnew/Thing;)V", "new/Thing.m_11_()V"), calls,
-                "a gone member keeps its old name so the verifier reports it");
+        assertEquals(List.of("new/Thing.doItNow(Lnew/Thing;)V", "new/Thing.removed()V"), calls,
+                "a gone member gets its readable old name (era-bridge classes declare it; the analyzer reports it)");
     }
 
     @Test
     void srgNamesInStringConstantsAreRenamedForReflection() {
         RosettaRemapper remapper = new RosettaRemapper(LAYER);
         assertEquals("doItNow", remapper.mapValue("m_10_"));
-        assertEquals("m_11_", remapper.mapValue("m_11_"), "gone members keep their name");
+        assertEquals("removed", remapper.mapValue("m_11_"), "gone members get their readable old name");
         assertEquals("m_10_ and more", remapper.mapValue("m_10_ and more"), "only whole-string SRG names");
     }
 }

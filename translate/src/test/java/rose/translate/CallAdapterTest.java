@@ -84,4 +84,43 @@ class CallAdapterTest {
         // A wider return type without a type variable in the signature is a real API change, not erasure.
         assertNull(adapter.find("game/State", "setBlock", "(Lgame/Block;)Lgame/Block;", false));
     }
+
+    @Test
+    void holderConversionsAreUsedForArgumentsReturnsAndGenericChecks(@TempDir Path dir) throws IOException {
+        Path jar = dir.resolve("holders.jar");
+        try (ZipOutputStream out = new ZipOutputStream(Files.newOutputStream(jar))) {
+            for (var e : Map.of(
+                    "game/Holder", type("game/Holder", "java/lang/Object", true),
+                    "game/Effect", type("game/Effect", "java/lang/Object", false),
+                    "game/Attribute", type("game/Attribute", "java/lang/Object", false),
+                    "game/Instance", type("game/Instance", "java/lang/Object", false,
+                            new String[] {"apply", "(Lgame/Holder;I)V", "(Lgame/Holder<Lgame/Effect;>;I)V"},
+                            new String[] {"getEffect", "()Lgame/Holder;"})).entrySet()) {
+                out.putNextEntry(new ZipEntry(e.getKey() + ".class"));
+                out.write(e.getValue());
+                out.closeEntry();
+            }
+        }
+        var conversions = new rose.rosetta.ConversionRules(Map.of(
+                "game/Effect->game/Holder", new rose.rosetta.ConversionRules.Conversion("game/Effect", "game/Holder", "h/H", "wrap", "test"),
+                "game/Holder->*", new rose.rosetta.ConversionRules.Conversion("game/Holder", "*", "h/H", "value", "test")));
+        CallAdapter adapter = new CallAdapter(new ClassIndex(false), ClassIndex.of(java.util.List.of(jar), true), conversions);
+
+        CallAdapter.Adaptation apply = adapter.find("game/Instance", "apply", "(Lgame/Effect;I)V", false);
+        assertEquals("(Lgame/Holder;I)V", apply.newDesc());
+        assertEquals("wrap", apply.argConversions().get(0).helperName());
+        assertNull(apply.argConversions().get(1));
+
+        CallAdapter.Adaptation get = adapter.find("game/Instance", "getEffect", "()Lgame/Effect;", false);
+        assertEquals("value", get.returnConversion().helperName());
+        assertEquals("game/Effect", get.castTo(), "Holder.value() is cast back to the old type");
+
+        assertNull(adapter.find("game/Instance", "apply", "(Lgame/Attribute;I)V", false), "Holder<Effect> doesn't take an Attribute");
+    }
+
+    @Test
+    void genericParameterTypeArgumentsAreRead() {
+        assertEquals(java.util.Arrays.asList("game/Effect", null, "T"),
+                CallAdapter.paramTypeArguments("<T:Ljava/lang/Object;>(Lgame/Holder<Lgame/Effect;>;ILgame/Holder<TT;>;)V", 3));
+    }
 }

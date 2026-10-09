@@ -37,6 +37,7 @@ import org.objectweb.asm.tree.MultiANewArrayInsnNode;
 import org.objectweb.asm.tree.TypeInsnNode;
 import rose.analyzer.Finding.Status;
 import rose.rosetta.NameLayer;
+import rose.rosetta.ConversionRules;
 import rose.rosetta.RedirectRules;
 import rose.translate.ClassIndex;
 import rose.translate.CallAdapter;
@@ -61,6 +62,7 @@ public final class Analyzer {
     private int redirected;
     private int adapted;
     private CallAdapter adapter;
+    private ConversionRules conversions = ConversionRules.empty();
     private final ClassIndex target;
     private final ClassIndex vanillaOld;
     private final Map<String, Finding> findings = new LinkedHashMap<>();
@@ -87,10 +89,16 @@ public final class Analyzer {
         this.vanillaOld = vanillaOld;
     }
 
+    /** Value conversions the translator may insert (see CallAdapter); calls they fix aren't reported. */
+    public Analyzer withConversions(ConversionRules conversions) {
+        this.conversions = conversions;
+        return this;
+    }
+
     public Report analyze(Path modJar) throws IOException {
         modOriginal = ClassIndex.of(List.of(modJar), false);
         modTranslated = translatedIndex(modJar);
-        adapter = new CallAdapter(modTranslated, target);
+        adapter = new CallAdapter(modTranslated, target, conversions);
         List<String> nested = new ArrayList<>();
         String modId;
         try (ZipFile zip = new ZipFile(modJar.toFile())) {
@@ -152,11 +160,14 @@ public final class Analyzer {
         switch (insn) {
             case MethodInsnNode mi -> {
                 if (!redirect(mi, where)) {
-                    Boolean isStatic = mi.getOpcode() == Opcodes.INVOKESPECIAL ? null : mi.getOpcode() == Opcodes.INVOKESTATIC;
+                    Boolean isStatic = mi.getOpcode() == Opcodes.INVOKESPECIAL ? (mi.name.equals("<init>") ? Boolean.FALSE : null)
+                            : mi.getOpcode() == Opcodes.INVOKESTATIC;
                     methodRef(mi.owner, mi.name, mi.desc, where, "method", isStatic);
                 }
             }
-            case FieldInsnNode fi -> fieldRef(fi.owner, fi.name, fi.desc, where, "field");
+            case FieldInsnNode fi -> {
+                if (!fieldRedirect(fi, where)) fieldRef(fi.owner, fi.name, fi.desc, where, "field");
+            }
             case TypeInsnNode ti -> typeRef(ti.desc, where);
             case MultiANewArrayInsnNode ma -> descRefs(Type.getType(ma.desc), where);
             case LdcInsnNode ldc when ldc.cst instanceof Type t -> descRefs(t, where);
@@ -175,9 +186,10 @@ public final class Analyzer {
      *         shim is missing or has the wrong signature)
      */
     private boolean redirect(MethodInsnNode call, String where) {
-        if (call.getOpcode() == Opcodes.INVOKESPECIAL) return false;
+        if (call.getOpcode() == Opcodes.INVOKESPECIAL && !call.name.equals("<init>")) return false;
         RedirectRules.Redirect rule = redirects.find(call.owner, call.name, call.desc);
         if (rule == null) return false;
+        if (rule.isConstructor() && !isConstruction(call)) return false; // super(...) in a subclass can't be redirected
         references++;
         String shimDesc = remapper.mapMethodDesc(rule.shimDescriptor(call.getOpcode() == Opcodes.INVOKESTATIC));
         ClassIndex.Info shim = target.get(rule.shimOwner());
@@ -191,6 +203,36 @@ public final class Analyzer {
                     rule.shimOwner() + "." + rule.shimName() + shimDesc + " (expected, static)", where);
         }
         return true;
+    }
+
+    /** Like {@link #redirect} for field reads. */
+    private boolean fieldRedirect(FieldInsnNode field, String where) {
+        if (field.getOpcode() != Opcodes.GETSTATIC && field.getOpcode() != Opcodes.GETFIELD) return false;
+        RedirectRules.Redirect rule = redirects.findField(field.owner, field.name, field.desc);
+        if (rule == null) return false;
+        references++;
+        String shimDesc = remapper.mapMethodDesc(rule.shimDescriptor(field.getOpcode() == Opcodes.GETSTATIC));
+        ClassIndex.Info shim = target.get(rule.shimOwner());
+        if (shim != null && shim.methods().contains(rule.shimName() + shimDesc)) {
+            redirected++;
+        } else {
+            add(Status.RULE_BROKEN, "field", rule.symbol(), rule.symbol(),
+                    rule.shimOwner() + "." + rule.shimName() + shimDesc + " (expected, static)", where);
+        }
+        return true;
+    }
+
+    /** Whether a constructor call creates a new object (as opposed to a subclass constructor's super(...) call). */
+    private static boolean isConstruction(MethodInsnNode call) {
+        int depth = 0;
+        for (var insn = call.getPrevious(); insn != null; insn = insn.getPrevious()) {
+            if (insn instanceof MethodInsnNode m && m.getOpcode() == Opcodes.INVOKESPECIAL && m.name.equals("<init>") && m.owner.equals(call.owner)) depth++;
+            if (insn instanceof org.objectweb.asm.tree.TypeInsnNode t && t.getOpcode() == Opcodes.NEW && t.desc.equals(call.owner)) {
+                if (depth == 0) return true;
+                depth--;
+            }
+        }
+        return false;
     }
 
     private void handleRef(Handle h, String where) {
@@ -288,6 +330,10 @@ public final class Analyzer {
         List<ClassIndex.Info> hierarchy = ClassIndex.hierarchy(newOwner, modTranslated, target);
         if (hierarchy.stream().anyMatch(i -> i.fields().contains(newName + ":" + newDesc))) return;
         if (!hierarchyComplete(newOwner) || !signatureResolves(newDesc)) return;
+        if (adapter.findField(newOwner, newName, newDesc, true) != null) {
+            adapted++; // read through a conversion (e.g. the field became a Holder)
+            return;
+        }
 
         String symbol = owner + "." + name + ":" + desc;
         if (RosettaRemapper.SRG_FIELD.matcher(name).matches()) {

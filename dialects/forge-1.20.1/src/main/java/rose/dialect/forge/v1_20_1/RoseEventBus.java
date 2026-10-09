@@ -219,7 +219,13 @@ public final class RoseEventBus implements IEventBus {
             if (!l.type.isInstance(event)) continue;
             if (event.isCanceled() && !l.receiveCanceled) continue;
             event.setPhase(l.priority);
-            l.handler.accept(event);
+            try {
+                l.handler.accept(event);
+            } catch (RuntimeException | LinkageError e) {
+                // A translated listener hitting an API Rose doesn't bridge yet shouldn't take the game down.
+                if (Unsupported.STRICT) throw e;
+                Unsupported.listener(String.valueOf(l.owner), e);
+            }
         }
         return event.isCanceled();
     }

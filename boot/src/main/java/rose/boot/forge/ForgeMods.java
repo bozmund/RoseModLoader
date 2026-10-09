@@ -19,10 +19,14 @@ import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Opcodes;
 import rose.loader.ModMetadata;
+import rose.packfix.v1_20_1.DataPackFix;
+import rose.rosetta.BridgeRules;
+import rose.rosetta.ConversionRules;
 import rose.rosetta.NameLayer;
 import rose.rosetta.RedirectRules;
 import rose.translate.ClassIndex;
 import rose.translate.ModTranslator;
+import rose.translate.SuperclassRebaser;
 import rose.translate.forge.TypedListenerTransform;
 
 /**
@@ -40,15 +44,21 @@ public final class ForgeMods {
 
     private final Path nameLayer;
     private final Path redirects;
+    private final Path bridges;
+    private final Path superclasses;
+    private final Path conversions;
     private final List<Path> gameJars;
     private final Path cacheDir;
 
     /**
      * @param gameJars the game, its libraries and Rose's own mods: what translated code will link against
      */
-    public ForgeMods(Path nameLayer, Path redirects, List<Path> gameJars, Path cacheDir) {
+    public ForgeMods(Path nameLayer, Path rulesDir, List<Path> gameJars, Path cacheDir) {
         this.nameLayer = nameLayer;
-        this.redirects = redirects;
+        this.redirects = rulesDir.resolve("redirects.tsv");
+        this.bridges = rulesDir.resolve("bridges.tsv");
+        this.superclasses = rulesDir.resolve("superclasses.tsv");
+        this.conversions = rulesDir.resolve("conversions.tsv");
         this.gameJars = List.copyOf(gameJars);
         this.cacheDir = cacheDir;
     }
@@ -74,20 +84,34 @@ public final class ForgeMods {
                     + " (run ./gradlew :rosetta:buildNameLayers)");
         }
         long start = System.nanoTime();
-        String inputsHash = ModTranslator.sha256(concat(Files.readAllBytes(nameLayer),
-                Files.exists(redirects) ? Files.readAllBytes(redirects) : new byte[0]));
+        String inputsHash = ModTranslator.sha256(concat(concat(concat(Files.readAllBytes(nameLayer), readOrEmpty(redirects)), readOrEmpty(bridges)), concat(readOrEmpty(superclasses), readOrEmpty(conversions))));
         NameLayer layer = NameLayer.read(nameLayer);
-        RedirectRules rules = RedirectRules.read(redirects);
         ClassIndex game = ClassIndex.of(gameJars, true);
-        ModTranslator translator = new ModTranslator(layer, rules, game, inputsHash, List.of(new TypedListenerTransform()));
+        ModTranslator translator = new ModTranslator(layer, RedirectRules.read(redirects), BridgeRules.read(bridges),
+                ConversionRules.read(conversions), game,
+                inputsHash, List.of(new TypedListenerTransform(), new SuperclassRebaser(SuperclassRebaser.read(superclasses))));
 
         List<ModMetadata> mods = new ArrayList<>();
         for (Path jar : jars) {
-            Path translated = translator.translate(jar, cacheDir);
+            String modId = modIdOf(jar);
+            DataPackFix packFix = new DataPackFix(java.util.Set.of(modId, "forge", "minecraft"));
+            Path translated = translator.translate(jar, cacheDir, (path, content) -> {
+                DataPackFix.Fixed fixed = packFix.fix(path, content);
+                return fixed == null ? null : new ModTranslator.Resource(fixed.path(), fixed.content());
+            });
+            if (!packFix.report().isEmpty()) {
+                Files.write(translated.resolveSibling(translated.getFileName() + ".packfix.txt"), packFix.report());
+            }
             mods.add(describe(jar, translated));
         }
         System.out.printf("[rose] translated %d Forge mod(s) in %d ms%n", mods.size(), (System.nanoTime() - start) / 1_000_000);
         return mods;
+    }
+
+    private static String modIdOf(Path jar) throws IOException {
+        try (ZipFile zip = new ZipFile(jar.toFile())) {
+            return firstMod(read(zip, "META-INF/mods.toml")).getOrDefault("modId", "unknown");
+        }
     }
 
     static ModMetadata describe(Path original, Path translated) throws IOException {
@@ -190,6 +214,10 @@ public final class ForgeMods {
         try (InputStream in = zip.getInputStream(e)) {
             return new Manifest(in);
         }
+    }
+
+    private static byte[] readOrEmpty(Path file) throws IOException {
+        return Files.exists(file) ? Files.readAllBytes(file) : new byte[0];
     }
 
     private static byte[] concat(byte[] a, byte[] b) {

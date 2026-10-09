@@ -21,8 +21,14 @@ public final class VersionManifest {
      * Downloads (or reuses) the version JSON for {@code id} into {@code target} and parses it.
      */
     public JsonObject versionJson(String id, Path target) throws IOException, InterruptedException {
-        JsonObject entry = entry(id);
-        downloader.download(entry.get("url").getAsString(), target, entry.get("sha1").getAsString());
+        try {
+            JsonObject entry = entry(id);
+            downloader.download(entry.get("url").getAsString(), target, entry.get("sha1").getAsString());
+        } catch (IOException offline) {
+            // Released versions don't change: a cached version JSON is fine without the network.
+            if (!Files.exists(target)) throw offline;
+            System.out.println("[rose] offline, using cached " + target.getFileName() + " (" + offline + ")");
+        }
         return JsonParser.parseString(Files.readString(target)).getAsJsonObject();
     }
 

@@ -13,6 +13,8 @@ import org.slf4j.Logger;
  */
 public final class Unsupported {
     private static final Logger LOG = LogUtils.getLogger();
+    /** {@code -Drose.forge.strict=true}: fail on the first entry or listener that can't be loaded. */
+    public static final boolean STRICT = Boolean.getBoolean("rose.forge.strict");
     private static final Set<String> SEEN = ConcurrentHashMap.newKeySet();
     private static final Map<String, String> ALL = new ConcurrentHashMap<>();
 
@@ -26,6 +28,15 @@ public final class Unsupported {
 
     public static void untypedListener(String lambdaClass) {
         report("untyped:" + lambdaClass, "listener " + lambdaClass + " has no known event type; it receives all events");
+    }
+
+    /** A registry entry whose creation failed; the cause chain's innermost message says what's missing. */
+    public static void entry(String id, String registry, Throwable cause) {
+        Throwable root = cause;
+        while (root.getCause() != null) root = root.getCause();
+        String key = "entry:" + id;
+        ALL.putIfAbsent(key, registry + " entry " + id + " skipped: " + root);
+        if (SEEN.add(key)) LOG.warn("[rose/forge] {} entry {} skipped: {}", registry, id, root.toString(), cause);
     }
 
     public static void registry(String registry, String detail) {

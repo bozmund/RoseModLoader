@@ -12,7 +12,9 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.tags.TagKey;
 import net.minecraftforge.eventbus.api.IEventBus;
 import rose.dialect.forge.v1_20_1.ForgeRegistryLookup;
+import rose.era.v1_20_1.RegistryAdapters;
 import rose.dialect.forge.v1_20_1.RegistrationKeys;
+import rose.dialect.forge.v1_20_1.RegistryValues;
 import rose.dialect.forge.v1_20_1.Unsupported;
 
 /** Collects entries a mod wants registered and registers them when its registry's {@link RegisterEvent} fires. */
@@ -72,8 +74,25 @@ public class DeferredRegister<T> {
         for (var entry : entries.entrySet()) {
             RegistryObject<T> object = entry.getKey();
             ResourceKey key = object.getKey();
-            T value = RegistrationKeys.supplying(key, entry.getValue());
-            Registry.register((Registry) registry.vanilla(), key, value);
+            T value;
+            Object registered;
+            var holdersBefore = RegistryValues.intrusiveHolderOwners();
+            var initializers = ((rose.dialect.forge.v1_20_1.mixin.DataComponentInitializersAccessor) (Object)
+                    net.minecraft.core.registries.BuiltInRegistries.DATA_COMPONENT_INITIALIZERS).rose$initializers();
+            int initializersBefore = initializers.size();
+            try {
+                value = RegistrationKeys.supplying(key, entry.getValue());
+                // The registry gets the 26.3 form of the value; the mod keeps the object it created.
+                registered = RegistryAdapters.adapt(value);
+            } catch (RuntimeException | LinkageError e) {
+                // One entry Rose can't build yet (e.g. it uses a vanilla API that changed) shouldn't stop the mod.
+                if (Unsupported.STRICT) throw e;
+                RegistryValues.dropNewIntrusiveHolders(holdersBefore);
+                while (initializers.size() > initializersBefore) initializers.removeLast();
+                Unsupported.entry(object.getId().toString(), registry.getRegistryName().toString(), e);
+                continue;
+            }
+            Registry.register((Registry) registry.vanilla(), key, registered);
             object.bind(value);
         }
     }

@@ -26,9 +26,11 @@ public final class NameLayerBuilder {
     /**
      * @param ruleFiles    renames from 1.21.11 names to 26.3 names
      * @param oldRuleFiles renames from 1.20.1 names straight to 26.3 names, for classes intermediary lost track of
+     * @param memberRenames members 26.x renamed after 1.21.11 ({@code owner26<TAB>old<TAB>new<TAB>evidence})
      */
     public record Inputs(Path mcpConfig, Path intermediaryOld, Path mojangOld,
-                         Path intermediaryNew, Path mojangNew, Path targetJar, List<Path> ruleFiles, List<Path> oldRuleFiles) {
+                         Path intermediaryNew, Path mojangNew, Path targetJar, List<Path> ruleFiles, List<Path> oldRuleFiles,
+                         Path memberRenames) {
 
         /** The standard corpus layout for Forge 1.20.1. */
         public static Inputs forge1201(Path corpus, Path rulesDir) {
@@ -40,7 +42,8 @@ public final class NameLayerBuilder {
                     corpus.resolve("minecraft/1.21.11/client-mappings.txt"),
                     corpus.resolve("minecraft/26.3/client.jar"),
                     List.of(rulesDir.resolve("class-renames-1.21.11-to-26.3.tsv")),
-                    List.of(rulesDir.resolve("class-renames-1.20.1-to-26.3.tsv")));
+                    List.of(rulesDir.resolve("class-renames-1.20.1-to-26.3.tsv")),
+                    rulesDir.resolve("member-renames-1.21.11-to-26.3.tsv"));
         }
     }
 
@@ -83,13 +86,22 @@ public final class NameLayerBuilder {
             return c != null && c.how() != How.GONE ? c.newName() : name;
         };
 
+        Map<String, String> memberRenames = readMemberRenames(in.memberRenames());
+        // 1.21.11 member name -> 26.3 name, for members renamed in 26.x (keyed by the 26.3 owner).
+        java.util.function.BiFunction<String, String, String> renamed26 = (officialKey, name1211) -> {
+            if (name1211 == null || memberRenames.isEmpty()) return name1211;
+            String oldOwner = mojOld.classes.get(officialKey.substring(0, officialKey.indexOf('.')));
+            String owner26 = oldOwner != null ? toNew.apply(oldOwner) : null;
+            return owner26 != null ? memberRenames.getOrDefault(owner26 + "." + name1211, name1211) : name1211;
+        };
+
         Map<String, MemberEntry> methods = new HashMap<>();
         for (var e : srg.methods.entrySet()) {
             String srgName = e.getValue();
             if (!srgName.startsWith("m_")) continue; // only obfuscated methods have SRG names
             String readable = mojOld.methods.getOrDefault(e.getKey(), srgName);
             String intName = intOld.methods.get(e.getKey());
-            String newName = intName != null ? methodByInt.get(intName) : null;
+            String newName = renamed26.apply(e.getKey(), intName != null ? methodByInt.get(intName) : null);
             MemberEntry entry = member(srgName, readable, newName);
             if (!entry.exists() && sameSignatureExists(e.getKey(), readable, mojOld.classes, toNew, targetMembers, true)) {
                 entry = new MemberEntry(srgName, readable, readable, How.NAME_MATCH);
@@ -103,7 +115,7 @@ public final class NameLayerBuilder {
             if (!srgName.startsWith("f_")) continue;
             String readable = mojOld.fields.getOrDefault(e.getKey(), srgName);
             String intName = intOld.fields.get(e.getKey());
-            String newName = intName != null ? fieldByInt.get(intName) : null;
+            String newName = renamed26.apply(e.getKey(), intName != null ? fieldByInt.get(intName) : null);
             MemberEntry entry = member(srgName, readable, newName);
             String fieldDesc = intOld.fieldDescs.get(e.getKey());
             if (!entry.exists() && fieldDesc != null
@@ -113,7 +125,22 @@ public final class NameLayerBuilder {
             putPreferResolved(fields, entry);
         }
 
-        return new NameLayer("forge-1.20.1", classes, methods, fields);
+        return new NameLayer("forge-1.20.1", classes, methods, fields, memberRenames);
+    }
+
+    /** {@code owner26.oldName -> newName} from a member rename rule file (missing file: none). */
+    static Map<String, String> readMemberRenames(Path file) throws IOException {
+        Map<String, String> out = new HashMap<>();
+        if (file == null || !java.nio.file.Files.exists(file)) return out;
+        int lineNo = 0;
+        for (String line : java.nio.file.Files.readAllLines(file)) {
+            lineNo++;
+            if (line.isBlank() || line.startsWith("#")) continue;
+            String[] p = line.split("	");
+            if (p.length < 4 || p[3].isBlank()) throw new IOException(file + ":" + lineNo + ": expected owner<TAB>old<TAB>new<TAB>evidence");
+            out.put(p[0] + "." + p[1], p[2]);
+        }
+        return out;
     }
 
     private static ClassEntry classEntry(String oldName, String in1211, Map<String, String> renames,
