@@ -17,9 +17,17 @@ import net.minecraftforge.registries.ForgeRegistry;
  */
 public final class ForgeRegistryLookup {
     private static final Map<Identifier, ForgeRegistry<?>> CACHE = new ConcurrentHashMap<>();
+    /**
+     * 1.20.1 built-in registries whose contents moved to another 26.3 registry: feature types are 26.3's
+     * {@code worldgen/feature_type} ({@code worldgen/feature} now holds configured features, from data).
+     */
+    private static final Map<Identifier, Identifier> MOVED = Map.of(
+            Identifier.withDefaultNamespace("worldgen/feature"), Identifier.withDefaultNamespace("worldgen/feature_type"));
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     public static <V> ForgeRegistry<V> get(Identifier registryName) {
+        Identifier renamed = MOVED.get(registryName);
+        if (renamed != null) return get(renamed);
         return (ForgeRegistry<V>) CACHE.computeIfAbsent(registryName, id -> {
             Registry<?> vanilla = (Registry<?>) RegistryValues.get((Registry) BuiltInRegistries.REGISTRY, id);
             if (vanilla != null) return new ForgeRegistry<>(vanilla, false);

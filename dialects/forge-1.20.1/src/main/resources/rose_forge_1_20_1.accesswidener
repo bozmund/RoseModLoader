@@ -18,3 +18,9 @@ accessible method net/minecraft/client/particle/ParticleResources register (Lnet
 # Properties.lootFrom (Forge) sets which loot table a block drops.
 accessible field net/minecraft/world/level/block/state/BlockBehaviour$Properties drops Lnet/minecraft/resources/DependantName;
 mutable field net/minecraft/world/level/block/state/BlockBehaviour$Properties drops Lnet/minecraft/resources/DependantName;
+
+# BiomeModifiers: biome modifiers replace a biome's generation settings, then chunk generators re-sort features.
+accessible field net/minecraft/world/level/biome/Biome generationSettings Lnet/minecraft/world/level/biome/BiomeGenerationSettings;
+mutable field net/minecraft/world/level/biome/Biome generationSettings Lnet/minecraft/world/level/biome/BiomeGenerationSettings;
+accessible field net/minecraft/world/level/chunk/ChunkGenerator featuresPerStep Ljava/util/function/Supplier;
+mutable field net/minecraft/world/level/chunk/ChunkGenerator featuresPerStep Ljava/util/function/Supplier;

@@ -73,6 +73,16 @@ public final class DataPackFix {
         if (!m.matches()) return new Fixed(path, null);
         String namespace = m.group(1);
         String rest = m.group(2);
+        if (rest.startsWith("worldgen/configured_feature/") || rest.startsWith("worldgen/placed_feature/")) {
+            JsonObject feature = parse(content);
+            if (feature == null) return null;
+            if (feature.has("type") && WorldgenFix.UNSUPPORTED_FEATURES.contains(feature.get("type").getAsString())) {
+                report.add("dropped " + path + " (" + feature.get("type").getAsString() + " not bridged yet)");
+                return null;
+            }
+            String folder = rest.replaceFirst("^worldgen/configured_feature/", "worldgen/feature/");
+            return new Fixed("data/" + namespace + "/" + folder, GSON.toJson(WorldgenFix.upgrade(feature)).getBytes(StandardCharsets.UTF_8));
+        }
         if (rest.startsWith("worldgen/")) {
             report.add("dropped " + path + " (worldgen not bridged yet)");
             return null;

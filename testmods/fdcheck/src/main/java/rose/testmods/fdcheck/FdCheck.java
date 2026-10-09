@@ -8,6 +8,9 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.InteractionHand;
@@ -40,6 +43,7 @@ public final class FdCheck implements ModInitializer {
         RoseGameTests.register(id("crops_are_compostable"), FdCheck::cropsAreCompostable);
         RoseGameTests.register(id("animals_eat_fd_food"), FdCheck::animalsEatFdFood);
         RoseGameTests.register(id("crops_drop_by_loot_table"), FdCheck::cropsDropByLootTable);
+        RoseGameTests.register(id("wild_cabbages_generate_on_beaches"), FdCheck::wildCabbagesGenerateOnBeaches);
     }
 
     private static Identifier id(String path) {
@@ -161,6 +165,38 @@ public final class FdCheck implements ModInitializer {
             for (ItemStack s : Block.getDrops(state, level, pos, null, null, tool)) items.add(s.getItem());
         }
         return items;
+    }
+
+    /**
+     * FD's worldgen: its biome modifier adds patch_wild_cabbages to beaches, and its wild_crop feature (a 1.20.1
+     * Feature subclass with inline placed features) grows wild cabbages on sand.
+     */
+    private static void wildCabbagesGenerateOnBeaches(GameTestHelper helper) {
+        if (skip(helper)) return;
+        ServerLevel level = helper.getLevel();
+        var access = level.registryAccess();
+        Identifier patch = Identifier.fromNamespaceAndPath("farmersdelight", "patch_wild_cabbages");
+        var placed = access.lookupOrThrow(Registries.PLACED_FEATURE).getValue(patch);
+        helper.assertTrue(placed != null, "placed feature missing: " + patch);
+        Biome beach = access.lookupOrThrow(Registries.BIOME).getValue(Biomes.BEACH);
+        helper.assertTrue(beach.getGenerationSettings().hasFeature(placed), "beaches should have " + patch + " (biome modifier)");
+
+        var feature = access.lookupOrThrow(Registries.FEATURE).getValue(patch);
+        helper.assertTrue(feature != null, "configured feature missing: " + patch);
+        BlockPos center = helper.absolutePos(POS).above(2);
+        for (int x = -7; x <= 7; x++) {
+            for (int z = -7; z <= 7; z++) {
+                for (int y = -3; y <= 3; y++) level.setBlock(center.offset(x, y, z), net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), 2);
+                level.setBlock(center.offset(x, -1, z), net.minecraft.world.level.block.Blocks.SAND.defaultBlockState(), 2);
+            }
+        }
+        feature.place(level, level.getChunkSource().getGenerator(), level.getRandom(), center);
+        int grown = 0;
+        for (BlockPos p : BlockPos.betweenClosed(center.offset(-7, 0, -7), center.offset(7, 0, 7))) {
+            if (level.getBlockState(p).is(block("wild_cabbages"))) grown++;
+        }
+        helper.assertTrue(grown > 0, "no wild cabbages grew on the sand");
+        helper.succeed();
     }
 
     private static void setSlot(Object handler, int slot, ItemStack stack) {

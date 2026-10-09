@@ -33,7 +33,10 @@ public final class RosettaRemapper extends Remapper {
 
     @Override
     public String mapMethodName(String owner, String name, String descriptor) {
-        return SRG_METHOD.matcher(name).matches() ? member(layer.method(name), name) : byOwner(owner, name);
+        if (SRG_METHOD.matcher(name).matches()) return member(layer.method(name), name);
+        // A record's accessor methods carry its fields' SRG names (RandomPatchConfiguration.f_67907_() is tries()).
+        if (SRG_FIELD.matcher(name).matches()) return member(layer.field(name), name);
+        return byOwner(owner, name);
     }
 
     @Override

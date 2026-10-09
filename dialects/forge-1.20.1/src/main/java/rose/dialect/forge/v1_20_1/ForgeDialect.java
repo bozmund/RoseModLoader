@@ -58,6 +58,7 @@ public final class ForgeDialect implements ModInitializer {
         if (MODS.isEmpty()) return;
         MenuData.register();
         net.minecraftforge.common.loot.CanToolPerformAction.register();
+        BiomeModifiers.registerForgeTypes();
         ForgeServerEvents.register();
         LOG.info("[rose/forge] loading {} Forge 1.20.1 mod(s): {}", MODS.size(), MODS.stream().map(ForgeModContainer::modId).toList());
         for (ForgeModContainer mod : MODS) construct(mod);

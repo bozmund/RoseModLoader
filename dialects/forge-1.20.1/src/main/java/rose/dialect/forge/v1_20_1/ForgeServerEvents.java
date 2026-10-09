@@ -25,7 +25,9 @@ public final class ForgeServerEvents {
 
     public static void aboutToStart(MinecraftServer server) {
         RegistryAccessHolder.setServer(server);
-        if (!ForgeDialect.mods().isEmpty()) MinecraftForge.EVENT_BUS.post(new ServerAboutToStartEvent(server));
+        if (ForgeDialect.mods().isEmpty()) return;
+        MinecraftForge.EVENT_BUS.post(new ServerAboutToStartEvent(server));
+        BiomeModifiers.apply(server);
     }
 
     private ForgeServerEvents() {}

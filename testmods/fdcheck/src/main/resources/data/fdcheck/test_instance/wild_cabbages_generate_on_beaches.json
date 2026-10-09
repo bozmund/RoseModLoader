@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "fdcheck:wild_cabbages_generate_on_beaches",
+  "structure": "minecraft:empty",
+  "max_ticks": 20,
+  "padding": 2
+}

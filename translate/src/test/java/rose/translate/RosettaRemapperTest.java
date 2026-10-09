@@ -69,4 +69,12 @@ class RosettaRemapperTest {
         assertEquals("removed", remapper.mapValue("m_11_"), "gone members get their readable old name");
         assertEquals("m_10_ and more", remapper.mapValue("m_10_ and more"), "only whole-string SRG names");
     }
+
+    @Test
+    void recordAccessorsWithFieldSrgNamesFollowTheirField() {
+        // Forge names a record's accessor after its field: RandomPatchConfiguration.f_67907_() is tries()
+        NameLayer layer = new NameLayer("test", Map.of(), Map.of(),
+                Map.of("f_20_", new MemberEntry("f_20_", "tries", "tries", How.SAME)));
+        assertEquals("tries", new RosettaRemapper(layer).mapMethodName("old/Config", "f_20_", "()I"));
+    }
 }

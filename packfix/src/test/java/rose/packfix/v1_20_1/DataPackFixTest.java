@@ -89,4 +89,23 @@ class DataPackFixTest {
         JsonObject recipe = upgrade("data/fd/recipes/sign.json", json);
         assertEquals("minecraft:iron_chain", recipe.getAsJsonObject("key").get("X").getAsString());
     }
+
+    @Test
+    void configuredFeaturesMoveToFeatureAndFlatten() {
+        // evidence: vanilla 1.20.1 configured_feature/patch_berry_bush (inner simple_block) vs 26.3 feature/berry_bush
+        String json = """
+                {"type":"fd:wild_crop","config":{"tries":64,"primary_feature":{"feature":{"type":"minecraft:simple_block","config":{
+                  "to_place":{"type":"minecraft:randomized_int_state_provider","property":"age",
+                    "source":{"type":"minecraft:simple_state_provider","state":{"Name":"fd:colony","Properties":{"age":"0"}}},
+                    "values":{"type":"minecraft:uniform","value":{"min_inclusive":0,"max_inclusive":3}}}}},"placement":[]}}}""";
+        DataPackFix.Fixed fixed = fix.fix("data/fd/worldgen/configured_feature/patch.json", json.getBytes(StandardCharsets.UTF_8));
+        assertEquals("data/fd/worldgen/feature/patch.json", fixed.path());
+        JsonObject feature = JsonParser.parseString(new String(fixed.content(), StandardCharsets.UTF_8)).getAsJsonObject();
+        JsonObject inner = feature.getAsJsonObject("config").getAsJsonObject("primary_feature").getAsJsonObject("feature");
+        assertEquals("minecraft:simple_block", inner.get("type").getAsString());
+        JsonObject provider = inner.getAsJsonObject("to_place");
+        assertEquals("minecraft:randomized_int", provider.get("type").getAsString());
+        assertEquals("{\"id\":\"fd:colony\",\"properties\":{\"age\":\"0\"}}", provider.get("source").toString());
+        assertEquals(3, provider.getAsJsonObject("values").get("max_inclusive").getAsInt());
+    }
 }
