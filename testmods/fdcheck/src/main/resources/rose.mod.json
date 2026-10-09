@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "id": "fdcheck",
+  "name": "Farmer's Delight checks",
+  "version": "0.0.1",
+  "entrypoints": {
+    "main": ["rose.testmods.fdcheck.FdCheck"]
+  }
+}

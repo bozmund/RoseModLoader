@@ -95,7 +95,9 @@ class CallAdapterTest {
                     "game/Attribute", type("game/Attribute", "java/lang/Object", false),
                     "game/Instance", type("game/Instance", "java/lang/Object", false,
                             new String[] {"apply", "(Lgame/Holder;I)V", "(Lgame/Holder<Lgame/Effect;>;I)V"},
-                            new String[] {"getEffect", "()Lgame/Holder;"})).entrySet()) {
+                            new String[] {"getEffect", "()Lgame/Holder;"},
+                            new String[] {"play", "(Lgame/Holder;)V", "(Lgame/Holder<Lgame/Effect;>;)V"},
+                            new String[] {"play", "(Ljava/lang/Object;)V"})).entrySet()) {
                 out.putNextEntry(new ZipEntry(e.getKey() + ".class"));
                 out.write(e.getValue());
                 out.closeEntry();
@@ -116,6 +118,9 @@ class CallAdapterTest {
         assertEquals("game/Effect", get.castTo(), "Holder.value() is cast back to the old type");
 
         assertNull(adapter.find("game/Instance", "apply", "(Lgame/Attribute;I)V", false), "Holder<Effect> doesn't take an Attribute");
+
+        CallAdapter.Adaptation play = adapter.find("game/Instance", "play", "(Lgame/Effect;)V", false);
+        assertEquals("(Ljava/lang/Object;)V", play.newDesc(), "plain widening beats an overload that needs a conversion");
     }
 
     @Test

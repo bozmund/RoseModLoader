@@ -45,7 +45,7 @@ public final class RedirectingClassVisitor extends ClassVisitor {
         return new MethodVisitor(Opcodes.ASM9, next) {
             @Override
             public void visitMethodInsn(int opcode, String owner, String method, String desc, boolean isInterface) {
-                RedirectRules.Redirect rule = opcode == Opcodes.INVOKESPECIAL ? null : rules.find(owner, method, desc);
+                RedirectRules.Redirect rule = method.equals("<init>") ? null : rules.find(owner, method, desc);
                 if (rule == null) {
                     super.visitMethodInsn(opcode, owner, method, desc, isInterface);
                     return;
@@ -82,7 +82,7 @@ public final class RedirectingClassVisitor extends ClassVisitor {
                 }
                 continue;
             }
-            if (!(insn instanceof MethodInsnNode call) || call.getOpcode() == Opcodes.INVOKESPECIAL) continue;
+            if (!(insn instanceof MethodInsnNode call) || call.name.equals("<init>")) continue;
             RedirectRules.Redirect rule = rules.find(call.owner, call.name, call.desc);
             if (rule == null) continue;
             boolean isStatic = call.getOpcode() == Opcodes.INVOKESTATIC;

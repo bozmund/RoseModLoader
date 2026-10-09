@@ -137,12 +137,12 @@ public final class ForgeDialect implements ModInitializer {
         }
     }
 
-    /** Blocks, then fluids and items (other content refers to them), then every other registry. */
+    /**
+     * Vanilla's registry order, as Forge fired RegisterEvent (sounds and mob effects come before blocks, blocks before
+     * items), then registries 26.3 doesn't have built in.
+     */
     private static List<ResourceKey<? extends Registry<?>>> registrationOrder() {
         Set<ResourceKey<? extends Registry<?>>> order = new LinkedHashSet<>();
-        order.add(Registries.BLOCK);
-        order.add(Registries.FLUID);
-        order.add(Registries.ITEM);
         for (Registry<?> registry : RegistryValues.all(BuiltInRegistries.REGISTRY)) order.add(registry.key());
         // Registries mods asked for that 26.3 doesn't have built in (Forge's own, now data-driven ones).
         for (ForgeRegistry<?> registry : ForgeRegistryLookup.known()) order.add(registry.getRegistryKey());

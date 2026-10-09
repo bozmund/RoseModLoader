@@ -161,7 +161,7 @@ public final class Analyzer {
             case MethodInsnNode mi -> {
                 if (!redirect(mi, where)) {
                     Boolean isStatic = mi.getOpcode() == Opcodes.INVOKESPECIAL ? (mi.name.equals("<init>") ? Boolean.FALSE : null)
-                            : mi.getOpcode() == Opcodes.INVOKESTATIC;
+                            : Boolean.valueOf(mi.getOpcode() == Opcodes.INVOKESTATIC); // boxed: a ternary with a primitive would unbox null
                     methodRef(mi.owner, mi.name, mi.desc, where, "method", isStatic);
                 }
             }
@@ -186,8 +186,7 @@ public final class Analyzer {
      *         shim is missing or has the wrong signature)
      */
     private boolean redirect(MethodInsnNode call, String where) {
-        if (call.getOpcode() == Opcodes.INVOKESPECIAL && !call.name.equals("<init>")) return false;
-        RedirectRules.Redirect rule = redirects.find(call.owner, call.name, call.desc);
+                RedirectRules.Redirect rule = redirects.find(call.owner, call.name, call.desc);
         if (rule == null) return false;
         if (rule.isConstructor() && !isConstruction(call)) return false; // super(...) in a subclass can't be redirected
         references++;

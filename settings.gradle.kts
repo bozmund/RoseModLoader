@@ -24,3 +24,4 @@ include("dialects:forge-1.20.1")
 // Small mods used to test Rose itself.
 include("testmods:hello")
 include("testmods:sample")
+include("testmods:fdcheck")

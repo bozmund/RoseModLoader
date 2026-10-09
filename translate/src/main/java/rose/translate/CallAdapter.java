@@ -112,7 +112,11 @@ public final class CallAdapter {
             Adaptation a = applicable(desc, candidate.getKey(), candidate.getValue(), constructor);
             if (a != null) applicable.add(a);
         }
-        return applicable.size() == 1 ? applicable.getFirst() : null;
+        if (applicable.size() == 1) return applicable.getFirst();
+        // Like Java's overload resolution: an overload reached by widening alone beats ones needing conversions
+        // (playSound(Player, ..., SoundEvent, ...) picks the SoundEvent overload, not the Holder one).
+        List<Adaptation> plain = applicable.stream().filter(a -> !a.needsTrampoline() && !a.swap()).toList();
+        return plain.size() == 1 ? plain.getFirst() : null;
     }
 
     /** True if a generic method signature's return type is a type variable (e.g. {@code (TT;)TT;}). */
@@ -264,6 +268,10 @@ public final class CallAdapter {
                 if (!f.startsWith(name + ":")) continue;
                 Type newType = Type.getType(f.substring(name.length() + 1));
                 if (newType.getSort() != Type.OBJECT) return null;
+                // Narrowed type (InteractionResult.SUCCESS is an InteractionResult.Success now): reading needs no conversion.
+                if (isRead && ClassIndex.isAssignable(newType.getInternalName(), oldType.getInternalName(), first, fallback)) {
+                    return new FieldAdaptation(newType.getDescriptor(), null, null);
+                }
                 Conversion c = isRead ? conversions.find(newType.getInternalName(), oldType.getInternalName())
                         : conversions.find(oldType.getInternalName(), newType.getInternalName());
                 if (c == null || (!isRead && c.anyTarget())) return null;
@@ -369,6 +377,7 @@ public final class CallAdapter {
                 InsnList list = method.instructions;
                 FieldInsnNode replacement = new FieldInsnNode(opcode, field.owner, field.name, f.newDesc());
                 list.set(field, replacement);
+                if (f.conversion() == null) return;
                 InsnList conversion = new InsnList();
                 conversion.add(new MethodInsnNode(Opcodes.INVOKESTATIC, f.conversion().helperOwner(), f.conversion().helperName(),
                         f.conversion().helperDescriptor(), false));

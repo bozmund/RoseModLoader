@@ -6,6 +6,7 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.item.alchemy.Potion;
+import net.minecraft.world.level.gameevent.GameEvent;
 
 /**
  * Conversions between registry values and holders (rules/forge-1.20.1/conversions.tsv). 1.20.5 changed many APIs
@@ -29,9 +30,18 @@ public final class Holders {
         return BuiltInRegistries.SOUND_EVENT.wrapAsHolder(value);
     }
 
+    public static Holder<GameEvent> gameEvent(GameEvent value) {
+        return BuiltInRegistries.GAME_EVENT.wrapAsHolder(value);
+    }
+
     /** {@code Holder<T>} to {@code T} (the caller casts). */
     public static Object value(Holder<?> holder) {
         return holder == null ? null : rose.era.v1_20_1.PreFreeze.value(holder);
+    }
+
+    /** {@code Holder.Reference<T>} to {@code T}: fields such as {@code GameEvent.BLOCK_CHANGE} are references. */
+    public static Object referenceValue(Holder.Reference<?> holder) {
+        return value(holder);
     }
 
     private Holders() {}

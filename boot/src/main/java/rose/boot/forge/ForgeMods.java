@@ -25,6 +25,7 @@ import rose.rosetta.ConversionRules;
 import rose.rosetta.NameLayer;
 import rose.rosetta.RedirectRules;
 import rose.translate.ClassIndex;
+import rose.translate.AccessorReplacer;
 import rose.translate.ModTranslator;
 import rose.translate.SuperclassRebaser;
 import rose.translate.forge.TypedListenerTransform;
@@ -47,6 +48,7 @@ public final class ForgeMods {
     private final Path bridges;
     private final Path superclasses;
     private final Path conversions;
+    private final Path accessors;
     private final List<Path> gameJars;
     private final Path cacheDir;
 
@@ -59,6 +61,7 @@ public final class ForgeMods {
         this.bridges = rulesDir.resolve("bridges.tsv");
         this.superclasses = rulesDir.resolve("superclasses.tsv");
         this.conversions = rulesDir.resolve("conversions.tsv");
+        this.accessors = rulesDir.resolve("accessors.tsv");
         this.gameJars = List.copyOf(gameJars);
         this.cacheDir = cacheDir;
     }
@@ -84,12 +87,13 @@ public final class ForgeMods {
                     + " (run ./gradlew :rosetta:buildNameLayers)");
         }
         long start = System.nanoTime();
-        String inputsHash = ModTranslator.sha256(concat(concat(concat(Files.readAllBytes(nameLayer), readOrEmpty(redirects)), readOrEmpty(bridges)), concat(readOrEmpty(superclasses), readOrEmpty(conversions))));
+        String inputsHash = ModTranslator.sha256(concat(concat(concat(Files.readAllBytes(nameLayer), readOrEmpty(redirects)), readOrEmpty(bridges)), concat(concat(readOrEmpty(superclasses), readOrEmpty(conversions)), readOrEmpty(accessors))));
         NameLayer layer = NameLayer.read(nameLayer);
         ClassIndex game = ClassIndex.of(gameJars, true);
         ModTranslator translator = new ModTranslator(layer, RedirectRules.read(redirects), BridgeRules.read(bridges),
                 ConversionRules.read(conversions), game,
-                inputsHash, List.of(new TypedListenerTransform(), new SuperclassRebaser(SuperclassRebaser.read(superclasses))));
+                inputsHash, List.of(new TypedListenerTransform(), new SuperclassRebaser(SuperclassRebaser.read(superclasses)),
+                        new AccessorReplacer(AccessorReplacer.read(accessors))));
 
         List<ModMetadata> mods = new ArrayList<>();
         for (Path jar : jars) {

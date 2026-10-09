@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "fdcheck:cooking_pot_cooks_beef_stew",
+  "structure": "minecraft:empty",
+  "max_ticks": 400,
+  "padding": 2
+}

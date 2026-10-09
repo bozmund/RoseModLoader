@@ -13,3 +13,17 @@ accessible method net/minecraft/core/particles/SimpleParticleType <init> (Z)V
 extendable class net/minecraft/world/item/crafting/Ingredient
 accessible method net/minecraft/world/item/crafting/Ingredient <init> (Lnet/minecraft/core/HolderSet;)V
 accessible field net/minecraft/world/item/crafting/Ingredient values Lnet/minecraft/core/HolderSet;
+
+# Properties.copy (1.20.1) guards copied state-dependent functions.
+accessible field net/minecraft/world/level/block/state/BlockBehaviour$Properties mapColor Ljava/util/function/Function;
+accessible field net/minecraft/world/level/block/state/BlockBehaviour$Properties lightEmission Ljava/util/function/ToIntFunction;
+accessible field net/minecraft/world/level/block/state/BlockBehaviour$Properties soundType Lnet/minecraft/world/level/block/SoundType;
+
+# LegacyBlockEntity reads the CompoundTag behind a ValueInput for 1.20.1 load(tag).
+accessible field net/minecraft/world/level/storage/TagValueInput input Lnet/minecraft/nbt/CompoundTag;
+
+# RecipeShim.getResultItem reads single-item recipes' results.
+accessible method net/minecraft/world/item/crafting/SingleItemRecipe result ()Lnet/minecraft/world/item/ItemStackTemplate;
+
+# ItemNbtShim stores the live tag 1.20.1 code edits in place (CustomData.of copies it).
+accessible method net/minecraft/world/item/component/CustomData <init> (Lnet/minecraft/nbt/CompoundTag;)V

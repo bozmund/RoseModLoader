@@ -17,7 +17,7 @@ val gameJvmArgs = listOf(
 )
 
 // Mods loaded on every runClient/runServer/runGameTests: Rose's own core mod plus the test mods (see testmods/).
-val devMods = listOf(":core", ":agent-bridge", ":eras:era-1.20.1", ":dialects:forge-1.20.1", ":testmods:hello", ":testmods:sample")
+val devMods = listOf(":core", ":agent-bridge", ":eras:era-1.20.1", ":dialects:forge-1.20.1", ":testmods:hello", ":testmods:sample", ":testmods:fdcheck")
 
 fun JavaExec.roseLaunch(side: String) {
     group = "rose"

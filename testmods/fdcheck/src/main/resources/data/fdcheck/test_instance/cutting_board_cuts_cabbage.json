@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "fdcheck:cutting_board_cuts_cabbage",
+  "structure": "minecraft:empty",
+  "max_ticks": 40,
+  "padding": 2
+}
