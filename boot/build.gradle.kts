@@ -3,6 +3,7 @@ import java.io.ByteArrayInputStream
 dependencies {
     api(project(":loader"))
     api(project(":mixin-service"))
+    implementation(project(":translate")) // translates mods from other loaders/versions at launch
     api(libs.gson)
 }
 
@@ -16,7 +17,7 @@ val gameJvmArgs = listOf(
 )
 
 // Mods loaded on every runClient/runServer/runGameTests: Rose's own core mod plus the test mods (see testmods/).
-val devMods = listOf(":core", ":agent-bridge", ":testmods:hello", ":testmods:sample")
+val devMods = listOf(":core", ":agent-bridge", ":eras:era-1.20.1", ":dialects:forge-1.20.1", ":testmods:hello", ":testmods:sample")
 
 fun JavaExec.roseLaunch(side: String) {
     group = "rose"
@@ -29,8 +30,13 @@ fun JavaExec.roseLaunch(side: String) {
     jvmArgs(gameJvmArgs)
     val modJars = files(devMods.map { project(it).tasks.named("jar") })
     inputs.files(modJars)
+    // Old mods are translated with Rosetta's name layer (built from corpus/) and rules (rosetta/rules/).
+    val nameLayer = rootProject.file("corpus/rosetta/names-forge-1.20.1.tsv")
+    if (rootProject.file("corpus/mappings").isDirectory) dependsOn(":rosetta:buildNameLayers")
     jvmArgumentProviders.add(CommandLineArgumentProvider {
-        listOf("-Drose.dev.mods=" + modJars.files.joinToString(File.pathSeparator) { it.absolutePath })
+        listOf("-Drose.dev.mods=" + modJars.files.joinToString(File.pathSeparator) { it.absolutePath },
+            "-Drose.rosetta.home=" + rootProject.file("rosetta").absolutePath,
+            "-Drose.rosetta.names=" + nameLayer.absolutePath)
     })
     args("--side", side, "--runDir", rootProject.file("run").absolutePath)
     standardInput = System.`in`

@@ -1,4 +1,6 @@
 # Call redirects for Forge 1.20.1 mods: symbol<TAB>shimOwner.shimName<TAB>evidence
-# symbol = the call exactly as in old bytecode (see rose analyze). Shims live in eras/era-1.20.1 (rose.era.v1_20_1.shim).
+# symbol = the call exactly as in old bytecode (see rose analyze). Shims for vanilla changes live in eras/era-1.20.1
+# (rose.era.v1_20_1.shim); shims for Forge extensions of vanilla classes live in the dialect (rose.dialect.forge.v1_20_1.shim).
 # Instance calls pass the receiver as the shim's first argument. Every rule needs evidence.
 net/minecraft/world/item/ItemStack.m_150930_(Lnet/minecraft/world/item/Item;)Z	rose/era/v1_20_1/shim/ItemStackShim.is	1.20.1 ItemStack.is(Item) = getItem() == item; 26.3 only has is(Predicate<Holder<Item>>); getItem() unchanged
+net/minecraft/world/inventory/RecipeBookType.create(Ljava/lang/String;)Lnet/minecraft/world/inventory/RecipeBookType;	rose/dialect/forge/v1_20_1/shim/RecipeBookTypeShim.create	Forge 1.20.1 RecipeBookType implements IExtensibleEnum (create adds a constant); 26.3 RecipeBookType is a closed enum {CRAFTING, FURNACE, BLAST_FURNACE, SMOKER} sent in ServerboundRecipeBookChangeSettingsPacket

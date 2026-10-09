@@ -221,6 +221,7 @@ public final class Analyzer {
         if (modOriginal.contains(old) || startsWithAny(old, PROVIDED_PREFIXES)) return true;
         if (startsWithAny(old, FORGE_PREFIXES)) {
             forgeSurface.merge(old, 1, Integer::sum);
+            if (target.contains(old)) return true; // the Forge dialect provides it; its members are checked below
             add(Status.FORGE_API, "class", old, old, "-", where);
             return false;
         }
@@ -268,6 +269,8 @@ public final class Analyzer {
             } else {
                 add(Status.METHOD_MISSING, kind, symbol, readable, newOwner + "." + newName + newDesc, where);
             }
+        } else if (startsWithAny(owner, FORGE_PREFIXES)) {
+            add(Status.FORGE_API, kind, symbol, symbol, "-", where);
         } else if (existsInVanillaOld(owner, name + desc)) {
             add(hasMethodNamed(hierarchy, name) ? Status.SIGNATURE_CHANGED : Status.METHOD_MISSING,
                     kind, symbol, symbol, newOwner + "." + newName + newDesc, where);
@@ -299,6 +302,8 @@ public final class Analyzer {
             } else {
                 add(Status.FIELD_MISSING, kind, symbol, readable, newOwner + "." + newName + ":" + newDesc, where);
             }
+        } else if (startsWithAny(owner, FORGE_PREFIXES)) {
+            add(Status.FORGE_API, kind, symbol, symbol, "-", where);
         } else if (startsWithAny(owner, MINECRAFT_PREFIXES) || isMinecraftSubclass(owner)) {
             boolean typeChanged = hasFieldNamed(hierarchy, name);
             Status status = typeChanged ? Status.SIGNATURE_CHANGED

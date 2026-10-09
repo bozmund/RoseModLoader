@@ -39,7 +39,8 @@ public final class AnalyzerMain {
         RedirectRules redirects = RedirectRules.read(REDIRECTS);
         List<Path> targetJars = new ArrayList<>();
         for (String line : Files.readAllLines(classpathFile)) if (!line.isBlank()) targetJars.add(Path.of(line));
-        targetJars.addAll(eraJars()); // redirect shims live here
+        targetJars.addAll(builtJars("eras/era-1.20.1"));         // redirect shims for vanilla changes
+        targetJars.addAll(builtJars("dialects/forge-1.20.1"));   // the Forge API Rose provides
         ClassIndex target = ClassIndex.of(targetJars, true);
         ClassIndex old = ClassIndex.of(List.of(vanillaOld), true);
 
@@ -62,9 +63,9 @@ public final class AnalyzerMain {
 
     static final Path REDIRECTS = Path.of("rosetta", "rules", "forge-1.20.1", "redirects.tsv");
 
-    /** The built era-bridge jar(s) for Forge 1.20.1 (built by :eras:era-1.20.1:jar, which the run task depends on). */
-    private static List<Path> eraJars() throws java.io.IOException {
-        Path libs = Path.of("eras", "era-1.20.1", "build", "libs");
+    /** A Rose module's built jar (the run task builds the era bridge and the dialect first). */
+    private static List<Path> builtJars(String module) throws java.io.IOException {
+        Path libs = Path.of(module, "build", "libs");
         if (!Files.isDirectory(libs)) return List.of();
         try (var files = Files.list(libs)) {
             return files.filter(p -> p.toString().endsWith(".jar") && !p.toString().endsWith("-sources.jar")).toList();

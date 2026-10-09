@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "id": "rose_forge_1_20_1",
+  "name": "Rose Forge 1.20.1 Dialect",
+  "version": "0.0.1",
+  "mixins": ["rose_forge_1_20_1.mixins.json"],
+  "accessWidener": "rose_forge_1_20_1.accesswidener",
+  "entrypoints": {
+    "main": ["rose.dialect.forge.v1_20_1.ForgeDialect"],
+    "client": ["rose.dialect.forge.v1_20_1.ForgeDialectClient"]
+  }
+}

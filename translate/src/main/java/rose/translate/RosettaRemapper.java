@@ -46,6 +46,19 @@ public final class RosettaRemapper extends Remapper {
         return SRG_METHOD.matcher(name).matches() ? member(layer.method(name), name) : name;
     }
 
+    /**
+     * String constants that are exactly an SRG name are reflection targets ({@code ObfuscationReflectionHelper},
+     * access transformers in code); they name the same member as in bytecode, so they get the same new name.
+     */
+    @Override
+    public Object mapValue(Object value) {
+        if (value instanceof String s) {
+            if (SRG_METHOD.matcher(s).matches()) return member(layer.method(s), s);
+            if (SRG_FIELD.matcher(s).matches()) return member(layer.field(s), s);
+        }
+        return super.mapValue(value);
+    }
+
     private static String member(NameLayer.MemberEntry entry, String oldName) {
         return entry != null && entry.exists() ? entry.newName() : oldName;
     }

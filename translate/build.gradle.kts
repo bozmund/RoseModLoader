@@ -2,4 +2,5 @@
 dependencies {
     api(project(":rosetta"))
     api(libs.bundles.asm)
+    implementation(libs.gson) // Mixin refmaps
 }

@@ -69,7 +69,8 @@ public final class ModDiscovery {
                 required(json, "version", root),
                 strings(json.getAsJsonArray("mixins")),
                 entrypoints(json.getAsJsonObject("entrypoints")),
-                root);
+                root, ModMetadata.NATIVE, root,
+                json.has("accessWidener") ? json.get("accessWidener").getAsString() : null);
     }
 
     private static Map<String, List<String>> entrypoints(JsonObject json) {
@@ -89,6 +90,24 @@ public final class ModDiscovery {
         List<String> out = new ArrayList<>();
         for (JsonElement e : array) out.add(e.getAsString());
         return List.copyOf(out);
+    }
+
+    /** One transformer for every mod's access widener; {@code null} if no mod has one. */
+    public static AccessWidener accessWideners(List<ModMetadata> mods) throws IOException {
+        AccessWidener widener = new AccessWidener();
+        for (ModMetadata mod : mods) {
+            if (mod.accessWidener() == null) continue;
+            String text;
+            if (Files.isDirectory(mod.root())) {
+                text = Files.readString(mod.root().resolve(mod.accessWidener()));
+            } else {
+                try (FileSystem jar = FileSystems.newFileSystem(URI.create("jar:" + mod.root().toUri()), Map.of())) {
+                    text = Files.readString(jar.getPath(mod.accessWidener()));
+                }
+            }
+            widener.read(text, mod.id() + ":" + mod.accessWidener());
+        }
+        return widener.isEmpty() ? null : widener;
     }
 
     /** Parses a path list such as the {@code rose.dev.mods} system property. */

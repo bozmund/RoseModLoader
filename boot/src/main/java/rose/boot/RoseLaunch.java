@@ -11,8 +11,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import rose.boot.forge.ForgeMods;
 import rose.boot.mojang.GameInstaller;
 import rose.boot.mojang.InstalledGame;
+import rose.loader.AccessWidener;
 import rose.loader.ModDiscovery;
 import rose.loader.ModMetadata;
 import rose.loader.RoseClassLoader;
@@ -33,6 +35,7 @@ import rose.mixin.RoseMixin;
 public final class RoseLaunch {
     public static final String MINECRAFT_VERSION = "26.3";
     private static final String GAMETEST_MAIN = "net.minecraft.gametest.Main";
+    private static final String FORGE_DIALECT_MOD = "rose_forge_1_20_1";
 
     public static void main(String[] args) throws Throwable {
         LaunchOptions options = LaunchOptions.parse(args);
@@ -54,13 +57,16 @@ public final class RoseLaunch {
         classpath.addAll(game.libraries());
         RoseClassLoader loader = new RoseClassLoader(classpath, RoseLaunch.class.getClassLoader());
 
-        List<ModMetadata> mods = ModDiscovery.discover(gameDir.resolve("mods"),
-                snapshotDevMods(ModDiscovery.parsePathList(System.getProperty("rose.dev.mods")), gameDir));
+        List<ModMetadata> mods = new ArrayList<>(ModDiscovery.discover(gameDir.resolve("mods"),
+                snapshotDevMods(ModDiscovery.parsePathList(System.getProperty("rose.dev.mods")), gameDir)));
+        mods.addAll(forgeMods(gameDir.resolve("mods"), runDir, classpath, mods));
         List<String> mixinConfigs = new ArrayList<>();
         for (ModMetadata mod : mods) {
             loader.addPath(mod.root());
             mixinConfigs.addAll(mod.mixins());
         }
+        AccessWidener widener = ModDiscovery.accessWideners(mods);
+        if (widener != null) loader.addTransformer(widener);
         System.out.println("[rose] " + mods.size() + " mod(s): "
                 + mods.stream().map(m -> m.id() + " " + m.version()).toList());
         RoseLoader.initialize(target.side(), mods, loader);
@@ -81,6 +87,24 @@ public final class RoseLaunch {
         MethodHandles.publicLookup()
                 .findStatic(main, "main", MethodType.methodType(void.class, String[].class))
                 .invokeExact(gameArgs.toArray(String[]::new));
+    }
+
+    /** Forge 1.20.1 mods in the mods folder, translated to 26.3 (cached in run/.rose-cache). */
+    private static List<ModMetadata> forgeMods(Path modsDir, Path runDir, List<Path> classpath, List<ModMetadata> nativeMods)
+            throws java.io.IOException {
+        List<Path> jars = ForgeMods.find(modsDir);
+        if (jars.isEmpty()) return List.of();
+        if (nativeMods.stream().noneMatch(m -> m.id().equals(FORGE_DIALECT_MOD))) {
+            System.out.println("[rose] WARNING: skipping " + jars.size() + " Forge mod(s): the Forge 1.20.1 dialect ("
+                    + FORGE_DIALECT_MOD + ") is not installed");
+            return List.of();
+        }
+        List<Path> linkTargets = new ArrayList<>(classpath);
+        nativeMods.forEach(m -> linkTargets.add(m.root()));
+        Path rosetta = Path.of(System.getProperty("rose.rosetta.home", "rosetta"));
+        Path names = Path.of(System.getProperty("rose.rosetta.names", "corpus/rosetta/names-forge-1.20.1.tsv"));
+        return new ForgeMods(names, rosetta.resolve("rules/forge-1.20.1/redirects.tsv"), linkTargets,
+                runDir.resolve(".rose-cache/translated/" + ForgeMods.DIALECT)).load(jars);
     }
 
     /**

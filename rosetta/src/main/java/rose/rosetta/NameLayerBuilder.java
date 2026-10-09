@@ -23,8 +23,12 @@ import rose.rosetta.NameLayer.MemberEntry;
  * </ol>
  */
 public final class NameLayerBuilder {
+    /**
+     * @param ruleFiles    renames from 1.21.11 names to 26.3 names
+     * @param oldRuleFiles renames from 1.20.1 names straight to 26.3 names, for classes intermediary lost track of
+     */
     public record Inputs(Path mcpConfig, Path intermediaryOld, Path mojangOld,
-                         Path intermediaryNew, Path mojangNew, Path targetJar, List<Path> ruleFiles) {
+                         Path intermediaryNew, Path mojangNew, Path targetJar, List<Path> ruleFiles, List<Path> oldRuleFiles) {
 
         /** The standard corpus layout for Forge 1.20.1. */
         public static Inputs forge1201(Path corpus, Path rulesDir) {
@@ -35,7 +39,8 @@ public final class NameLayerBuilder {
                     corpus.resolve("mappings/intermediary-1.21.11-v2.jar"),
                     corpus.resolve("minecraft/1.21.11/client-mappings.txt"),
                     corpus.resolve("minecraft/26.3/client.jar"),
-                    List.of(rulesDir.resolve("class-renames-1.21.11-to-26.3.tsv")));
+                    List.of(rulesDir.resolve("class-renames-1.21.11-to-26.3.tsv")),
+                    List.of(rulesDir.resolve("class-renames-1.20.1-to-26.3.tsv")));
         }
     }
 
@@ -49,6 +54,8 @@ public final class NameLayerBuilder {
 
         Map<String, String> renames = new HashMap<>();
         for (Path rules : in.ruleFiles()) renames.putAll(RenameRules.read(rules).renames());
+        Map<String, String> oldRenames = new HashMap<>();
+        for (Path rules : in.oldRuleFiles()) if (java.nio.file.Files.exists(rules)) oldRenames.putAll(RenameRules.read(rules).renames());
 
         // Intermediary name -> Mojang name in 1.21.11, for classes, methods and fields.
         Map<String, String> classByInt = join(intNew.classes, mojNew.classes);
@@ -57,13 +64,17 @@ public final class NameLayerBuilder {
 
         Set<String> newMojangClasses = new HashSet<>(mojNew.classes.values());
         Map<String, List<String>> appearedBySimpleName = appearedClassesBySimpleName(targetClasses, newMojangClasses);
+        Set<String> targetMembers = membersIn(in.targetJar());
+        Map<String, String> structural = structuralRenames(mojNew, targetClasses, newMojangClasses, targetMembers);
 
         Map<String, ClassEntry> classes = new HashMap<>();
         for (var e : mojOld.classes.entrySet()) {
             String oldName = e.getValue();
             String intName = intOld.classes.get(e.getKey());
             String in1211 = intName != null ? classByInt.get(intName) : null;
-            classes.put(oldName, classEntry(oldName, in1211, renames, targetClasses, appearedBySimpleName));
+            String direct = oldRenames.get(oldName);
+            classes.put(oldName, direct != null ? new ClassEntry(oldName, direct, How.RULE)
+                    : classEntry(oldName, in1211, renames, targetClasses, appearedBySimpleName, structural));
         }
 
         // Old (Mojang 1.20.1) class name -> 26.3 class name, for translating descriptors.
@@ -71,7 +82,6 @@ public final class NameLayerBuilder {
             ClassEntry c = classes.get(name);
             return c != null && c.how() != How.GONE ? c.newName() : name;
         };
-        Set<String> targetMembers = membersIn(in.targetJar());
 
         Map<String, MemberEntry> methods = new HashMap<>();
         for (var e : srg.methods.entrySet()) {
@@ -107,7 +117,8 @@ public final class NameLayerBuilder {
     }
 
     private static ClassEntry classEntry(String oldName, String in1211, Map<String, String> renames,
-                                         Set<String> targetClasses, Map<String, List<String>> appearedBySimpleName) {
+                                         Set<String> targetClasses, Map<String, List<String>> appearedBySimpleName,
+                                         Map<String, String> structural) {
         if (in1211 == null) return new ClassEntry(oldName, "-", How.GONE);
         String ruled = renames.get(in1211);
         if (ruled != null) return new ClassEntry(oldName, ruled, How.RULE);
@@ -118,7 +129,50 @@ public final class NameLayerBuilder {
         // it most likely moved packages.
         List<String> candidates = appearedBySimpleName.getOrDefault(simpleName(in1211), List.of());
         if (candidates.size() == 1) return new ClassEntry(oldName, candidates.getFirst(), How.HEURISTIC);
+        // Renamed in 26.x but still declaring mostly the same members.
+        String renamed = renamedIn26(in1211, renames, targetClasses, structural);
+        if (renamed != null) return new ClassEntry(oldName, renamed, How.HEURISTIC);
         return new ClassEntry(oldName, "-", How.GONE);
+    }
+
+    /** A structural match for the class, or for its outer class with the same inner name. */
+    private static String renamedIn26(String in1211, Map<String, String> renames, Set<String> targetClasses, Map<String, String> structural) {
+        String direct = structural.get(in1211);
+        if (direct != null) return direct;
+        int dollar = in1211.lastIndexOf('$');
+        if (dollar < 0) return null;
+        String outer = in1211.substring(0, dollar);
+        String newOuter = renames.containsKey(outer) ? renames.get(outer)
+                : targetClasses.contains(outer) ? outer : renamedIn26(outer, renames, targetClasses, structural);
+        if (newOuter == null || newOuter.equals(outer)) return null;
+        String candidate = newOuter + in1211.substring(dollar);
+        return targetClasses.contains(candidate) ? candidate : null;
+    }
+
+    /**
+     * 1.21.11 classes missing from 26.3 matched to classes that appeared in 26.x, by declared member names
+     * (see {@link StructuralMatcher}).
+     */
+    private static Map<String, String> structuralRenames(Mappings mojNew, Set<String> targetClasses,
+                                                         Set<String> newMojangClasses, Set<String> targetMembers) {
+        Map<String, Set<String>> all = new HashMap<>();
+        for (String member : targetMembers) {
+            int dot = member.indexOf('.');
+            String name = member.substring(dot + 1).replaceAll("[(:].*", "");
+            if (StructuralMatcher.isDistinctive(name)) all.computeIfAbsent(member.substring(0, dot), k -> new HashSet<>()).add(name);
+        }
+        Map<String, Set<String>> appeared = new HashMap<>();
+        for (var e : all.entrySet()) if (!newMojangClasses.contains(e.getKey())) appeared.put(e.getKey(), e.getValue());
+
+        Map<String, Set<String>> gone = new HashMap<>();
+        for (Map<String, String> members : List.of(mojNew.methods, mojNew.fields)) {
+            for (var e : members.entrySet()) {
+                String owner = mojNew.classes.get(e.getKey().substring(0, e.getKey().indexOf('.')));
+                if (owner == null || targetClasses.contains(owner) || !StructuralMatcher.isDistinctive(e.getValue())) continue;
+                gone.computeIfAbsent(owner, k -> new HashSet<>()).add(e.getValue());
+            }
+        }
+        return StructuralMatcher.match(gone, appeared, all);
     }
 
     /**

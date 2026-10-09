@@ -61,4 +61,12 @@ class RosettaRemapperTest {
         assertEquals(List.of("new/Thing.doItNow(Lnew/Thing;)V", "new/Thing.m_11_()V"), calls,
                 "a gone member keeps its old name so the verifier reports it");
     }
+
+    @Test
+    void srgNamesInStringConstantsAreRenamedForReflection() {
+        RosettaRemapper remapper = new RosettaRemapper(LAYER);
+        assertEquals("doItNow", remapper.mapValue("m_10_"));
+        assertEquals("m_11_", remapper.mapValue("m_11_"), "gone members keep their name");
+        assertEquals("m_10_ and more", remapper.mapValue("m_10_ and more"), "only whole-string SRG names");
+    }
 }

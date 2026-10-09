@@ -23,6 +23,7 @@ public final class JarTranslator {
     private final Remapper remapper;
     private final RedirectRules redirects;
     private final CallAdapter adapter;
+    private final java.util.List<ModTranslator.ExtraTransform> extras;
 
     public JarTranslator(Remapper remapper) {
         this(remapper, RedirectRules.empty(), null);
@@ -34,9 +35,15 @@ public final class JarTranslator {
 
     /** @param adapter rewrites calls to methods whose signature widened; {@code null} to skip */
     public JarTranslator(Remapper remapper, RedirectRules redirects, CallAdapter adapter) {
+        this(remapper, redirects, adapter, java.util.List.of());
+    }
+
+    /** @param extras dialect rewrites that see renamed code, applied in list order before call adaptation */
+    public JarTranslator(Remapper remapper, RedirectRules redirects, CallAdapter adapter, java.util.List<ModTranslator.ExtraTransform> extras) {
         this.remapper = remapper;
         this.redirects = redirects;
         this.adapter = adapter;
+        this.extras = java.util.List.copyOf(extras);
     }
 
     public void translate(Path input, Path output) throws IOException {
@@ -64,9 +71,10 @@ public final class JarTranslator {
     public byte[] translateClass(byte[] bytes) {
         ClassReader reader = new ClassReader(bytes);
         // Frames stay valid (no control flow changes); max stack may grow when an adapted call now returns a value.
-        ClassWriter writer = new ClassWriter(adapter != null ? ClassWriter.COMPUTE_MAXS : 0);
-        // reader -> redirects (old names) -> remapper -> call adapter (new names) -> writer
-        var afterRename = adapter != null ? adapter.visitor(writer) : writer;
+        ClassWriter writer = new ClassWriter(adapter != null || !extras.isEmpty() ? ClassWriter.COMPUTE_MAXS : 0);
+        // reader -> redirects (old names) -> remapper -> extras -> call adapter (new names) -> writer
+        org.objectweb.asm.ClassVisitor afterRename = adapter != null ? adapter.visitor(writer) : writer;
+        for (int i = extras.size() - 1; i >= 0; i--) afterRename = extras.get(i).wrap(afterRename);
         reader.accept(new RedirectingClassVisitor(new ClassRemapper(afterRename, remapper), redirects), 0);
         return writer.toByteArray();
     }
