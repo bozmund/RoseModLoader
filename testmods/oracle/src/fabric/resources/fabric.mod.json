@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "rose_oracle",
+  "version": "0.0.1",
+  "name": "Rose oracle dumper",
+  "description": "Dumps registries, recipes, loot tables and tags for Rose's oracle comparison.",
+  "license": "LGPL-2.1",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["rose.testmods.oracle.FabricOracle"]
+  },
+  "depends": {
+    "minecraft": "26.3",
+    "fabric-lifecycle-events-v1": "*"
+  }
+}

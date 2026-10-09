@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "id": "oracle",
+  "name": "Rose oracle dumper",
+  "version": "0.0.1",
+  "entrypoints": {
+    "main": ["rose.testmods.oracle.RoseOracle"]
+  }
+}

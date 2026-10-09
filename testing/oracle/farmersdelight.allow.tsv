@@ -1,0 +1,55 @@
+# Farmer's Delight: differences between FD 1.20.1-1.3.4 (what Rose runs) and FD Refabricated 26.3-3.6.27 (the
+# answer key) that come from FD itself, not from Rose. Format: <pattern><TAB><reason with evidence>; see
+# testing/src/main/java/rose/testing/oracle/AllowList.java. Evidence is a port-pair diff of the two jars
+# (corpus/mods/ and corpus/reference/fabric-26.3/). Keep patterns narrow: an entry must never hide a Rose bug.
+
+blocks farmersdelight:pale_oak_cabinet	added after 1.3.4: no lang entry or data file for it in FarmersDelight-1.20.1-1.3.4.jar
+blocks farmersdelight:poplar_cabinet	added after 1.3.4: no lang entry or data file for it in FarmersDelight-1.20.1-1.3.4.jar
+blocks farmersdelight:straw_bed	added after 1.3.4: no lang entry or data file for it in FarmersDelight-1.20.1-1.3.4.jar
+items farmersdelight:copper_knife	added after 1.3.4: no lang entry or data file for it in FarmersDelight-1.20.1-1.3.4.jar
+items farmersdelight:pale_oak_cabinet	added after 1.3.4: no lang entry or data file for it in FarmersDelight-1.20.1-1.3.4.jar
+items farmersdelight:poplar_cabinet	added after 1.3.4: no lang entry or data file for it in FarmersDelight-1.20.1-1.3.4.jar
+items farmersdelight:straw_bed	added after 1.3.4: no lang entry or data file for it in FarmersDelight-1.20.1-1.3.4.jar
+loot_tables farmersdelight:blocks/pale_oak_cabinet	added after 1.3.4: no lang entry or data file for it in FarmersDelight-1.20.1-1.3.4.jar
+loot_tables farmersdelight:blocks/poplar_cabinet	added after 1.3.4: no lang entry or data file for it in FarmersDelight-1.20.1-1.3.4.jar
+recipes farmersdelight:copper_knife	added after 1.3.4: data/farmersdelight/recipe/copper_knife.json is in FarmersDelight-26.3-3.6.27+refabricated.jar, not in FarmersDelight-1.20.1-1.3.4.jar
+recipes farmersdelight:copper_nugget_from_blasting_knife	added after 1.3.4: data/farmersdelight/recipe/copper_nugget_from_blasting_knife.json is in FarmersDelight-26.3-3.6.27+refabricated.jar, not in FarmersDelight-1.20.1-1.3.4.jar
+recipes farmersdelight:copper_nugget_from_smelting_knife	added after 1.3.4: data/farmersdelight/recipe/copper_nugget_from_smelting_knife.json is in FarmersDelight-26.3-3.6.27+refabricated.jar, not in FarmersDelight-1.20.1-1.3.4.jar
+recipes farmersdelight:pale_oak_cabinet	added after 1.3.4: data/farmersdelight/recipe/pale_oak_cabinet.json is in FarmersDelight-26.3-3.6.27+refabricated.jar, not in FarmersDelight-1.20.1-1.3.4.jar
+recipes farmersdelight:poplar_cabinet	added after 1.3.4: data/farmersdelight/recipe/poplar_cabinet.json is in FarmersDelight-26.3-3.6.27+refabricated.jar, not in FarmersDelight-1.20.1-1.3.4.jar
+recipes farmersdelight:straw_bed	added after 1.3.4: data/farmersdelight/recipe/straw_bed.json is in FarmersDelight-26.3-3.6.27+refabricated.jar, not in FarmersDelight-1.20.1-1.3.4.jar
+recipes farmersdelight:cutting/cactus_flower	added after 1.3.4: data/farmersdelight/recipe/cutting/cactus_flower.json is in FarmersDelight-26.3-3.6.27+refabricated.jar, not in FarmersDelight-1.20.1-1.3.4.jar
+recipes farmersdelight:cutting/closed_eyeblossom	added after 1.3.4: data/farmersdelight/recipe/cutting/closed_eyeblossom.json is in FarmersDelight-26.3-3.6.27+refabricated.jar, not in FarmersDelight-1.20.1-1.3.4.jar
+recipes farmersdelight:cutting/golden_dandelion	added after 1.3.4: data/farmersdelight/recipe/cutting/golden_dandelion.json is in FarmersDelight-26.3-3.6.27+refabricated.jar, not in FarmersDelight-1.20.1-1.3.4.jar
+recipes farmersdelight:cutting/open_eyeblossom	added after 1.3.4: data/farmersdelight/recipe/cutting/open_eyeblossom.json is in FarmersDelight-26.3-3.6.27+refabricated.jar, not in FarmersDelight-1.20.1-1.3.4.jar
+recipes farmersdelight:cutting/pale_oak_log	added after 1.3.4: data/farmersdelight/recipe/cutting/pale_oak_log.json is in FarmersDelight-26.3-3.6.27+refabricated.jar, not in FarmersDelight-1.20.1-1.3.4.jar
+recipes farmersdelight:cutting/pale_oak_wood	added after 1.3.4: data/farmersdelight/recipe/cutting/pale_oak_wood.json is in FarmersDelight-26.3-3.6.27+refabricated.jar, not in FarmersDelight-1.20.1-1.3.4.jar
+recipes farmersdelight:cutting/poplar_log	added after 1.3.4: data/farmersdelight/recipe/cutting/poplar_log.json is in FarmersDelight-26.3-3.6.27+refabricated.jar, not in FarmersDelight-1.20.1-1.3.4.jar
+recipes farmersdelight:cutting/poplar_wood	added after 1.3.4: data/farmersdelight/recipe/cutting/poplar_wood.json is in FarmersDelight-26.3-3.6.27+refabricated.jar, not in FarmersDelight-1.20.1-1.3.4.jar
+recipes farmersdelight:salvaging/pale_oak_chest_boat	added after 1.3.4: data/farmersdelight/recipe/salvaging/pale_oak_chest_boat.json is in FarmersDelight-26.3-3.6.27+refabricated.jar, not in FarmersDelight-1.20.1-1.3.4.jar
+recipes farmersdelight:salvaging/pale_oak_furniture	added after 1.3.4: data/farmersdelight/recipe/salvaging/pale_oak_furniture.json is in FarmersDelight-26.3-3.6.27+refabricated.jar, not in FarmersDelight-1.20.1-1.3.4.jar
+recipes farmersdelight:salvaging/poplar_chest_boat	added after 1.3.4: data/farmersdelight/recipe/salvaging/poplar_chest_boat.json is in FarmersDelight-26.3-3.6.27+refabricated.jar, not in FarmersDelight-1.20.1-1.3.4.jar
+recipes farmersdelight:salvaging/poplar_furniture	added after 1.3.4: data/farmersdelight/recipe/salvaging/poplar_furniture.json is in FarmersDelight-26.3-3.6.27+refabricated.jar, not in FarmersDelight-1.20.1-1.3.4.jar
+recipes farmersdelight:salvaging/amethyst_block	renamed by the port to cutting/amethyst_block: data/farmersdelight/recipes/salvaging/amethyst_block.json in FarmersDelight-1.20.1-1.3.4.jar, recipe/cutting/amethyst_block.json in FarmersDelight-26.3-3.6.27+refabricated.jar
+recipes farmersdelight:cutting/amethyst_block	renamed by the port from salvaging/amethyst_block (see the salvaging/amethyst_block entry)
+recipes farmersdelight:salvaging/bricks	renamed by the port to cutting/bricks: data/farmersdelight/recipes/salvaging/bricks.json in FarmersDelight-1.20.1-1.3.4.jar, recipe/cutting/bricks.json in FarmersDelight-26.3-3.6.27+refabricated.jar
+recipes farmersdelight:cutting/bricks	renamed by the port from salvaging/bricks (see the salvaging/bricks entry)
+recipes farmersdelight:salvaging/deepslate	renamed by the port to cutting/deepslate: data/farmersdelight/recipes/salvaging/deepslate.json in FarmersDelight-1.20.1-1.3.4.jar, recipe/cutting/deepslate.json in FarmersDelight-26.3-3.6.27+refabricated.jar
+recipes farmersdelight:cutting/deepslate	renamed by the port from salvaging/deepslate (see the salvaging/deepslate entry)
+recipes farmersdelight:salvaging/nether_bricks	renamed by the port to cutting/nether_bricks: data/farmersdelight/recipes/salvaging/nether_bricks.json in FarmersDelight-1.20.1-1.3.4.jar, recipe/cutting/nether_bricks.json in FarmersDelight-26.3-3.6.27+refabricated.jar
+recipes farmersdelight:cutting/nether_bricks	renamed by the port from salvaging/nether_bricks (see the salvaging/nether_bricks entry)
+recipes farmersdelight:salvaging/quartz_block	renamed by the port to cutting/quartz_block: data/farmersdelight/recipes/salvaging/quartz_block.json in FarmersDelight-1.20.1-1.3.4.jar, recipe/cutting/quartz_block.json in FarmersDelight-26.3-3.6.27+refabricated.jar
+recipes farmersdelight:cutting/quartz_block	renamed by the port from salvaging/quartz_block (see the salvaging/quartz_block entry)
+recipes farmersdelight:salvaging/stone	renamed by the port to cutting/stone: data/farmersdelight/recipes/salvaging/stone.json in FarmersDelight-1.20.1-1.3.4.jar, recipe/cutting/stone.json in FarmersDelight-26.3-3.6.27+refabricated.jar
+recipes farmersdelight:cutting/stone	renamed by the port from salvaging/stone (see the salvaging/stone entry)
+recipes farmersdelight:cutting/tag_dough	renamed by the port to tag_dough: recipes/cutting/tag_dough.json in FarmersDelight-1.20.1-1.3.4.jar, recipe/tag_dough.json in FarmersDelight-26.3-3.6.27+refabricated.jar
+recipes farmersdelight:tag_dough	renamed by the port from cutting/tag_dough (see the cutting/tag_dough entry)
+loot_tables farmersdelight:* /random_sequence	FD 1.20.1's datagen writes random_sequence into every loot table (FarmersDelight-1.20.1-1.3.4.jar data/farmersdelight/loot_tables/blocks/acacia_cabinet.json), the port's doesn't; it only seeds the table's random sequence
+registries * farmersdelight:copper_knife	added after 1.3.4 (see the items/blocks entry)
+tags * farmersdelight:copper_knife	added after 1.3.4 (see the items/blocks entry)
+registries * farmersdelight:pale_oak_cabinet	added after 1.3.4 (see the items/blocks entry)
+tags * farmersdelight:pale_oak_cabinet	added after 1.3.4 (see the items/blocks entry)
+registries * farmersdelight:poplar_cabinet	added after 1.3.4 (see the items/blocks entry)
+tags * farmersdelight:poplar_cabinet	added after 1.3.4 (see the items/blocks entry)
+registries * farmersdelight:straw_bed	added after 1.3.4 (see the items/blocks entry)
+tags * farmersdelight:straw_bed	added after 1.3.4 (see the items/blocks entry)

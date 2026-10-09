@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "oracle:dump_written",
+  "structure": "minecraft:empty",
+  "max_ticks": 20,
+  "padding": 2
+}

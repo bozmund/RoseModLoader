@@ -33,7 +33,7 @@ An old mod jar goes through the translation pipeline once. The result is cached 
 | `analyzer` | `rose.analyzer` | `rose analyze <mod.jar>`: resolves every reference against 26.3 and writes the compatibility report |
 | `agent-bridge` | `rose.bridge` | Built-in mod `rose_bridge`: JSON-RPC endpoint inside the game (see docs/agent-bridge.md) |
 | `bridge-cli` | `rose.cli` | The `rose` command: launch, `ctl`, events, GameTests, and the MCP server (`rose mcp`) |
-| `testing` | `rose.testing` | Server/client harnesses, GameTests, oracle dumper |
+| `testing` | `rose.testing` | Oracle comparison: `OracleDiff` + allow-lists (`testing/oracle/`), Fabric reference server; the dumper mod is `testmods/oracle` |
 | `corpus-tools` | `rose.corpus` | Builds the local `corpus/` (game jars, mappings, decompiled source) |
 | `foundry` | `rose.foundry` | The AI foundry: findings → tasks → agent in a worktree → gates → `develop` (see docs/FOUNDRY.md) |
 

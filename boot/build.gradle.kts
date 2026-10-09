@@ -17,7 +17,8 @@ val gameJvmArgs = listOf(
 )
 
 // Mods loaded on every runClient/runServer/runGameTests: Rose's own core mod plus the test mods (see testmods/).
-val devMods = listOf(":core", ":agent-bridge", ":eras:era-1.20.1", ":dialects:forge-1.20.1", ":testmods:hello", ":testmods:sample", ":testmods:fdcheck")
+val devMods = listOf(":core", ":agent-bridge", ":eras:era-1.20.1", ":dialects:forge-1.20.1", ":testmods:hello", ":testmods:sample", ":testmods:fdcheck",
+    ":testmods:oracle")
 
 fun JavaExec.roseLaunch(side: String) {
     group = "rose"
@@ -75,5 +76,23 @@ tasks.register<JavaExec>("runGameTests") {
     val selection = providers.gradleProperty("rose.tests").orElse("sample:*")
     argumentProviders.add(CommandLineArgumentProvider {
         listOf("--", "--report", report.absolutePath, "--tests", selection.get())
+    })
+}
+
+// Oracle comparison, Rose side: the GameTest server dumps what the mods in run/gametest/mods/ registered
+// (testmods/oracle). `./gradlew oracle` runs this, the Fabric reference and the diff.
+tasks.register<JavaExec>("dumpOracle") {
+    description = "Dump the registries, recipes, loot tables and tags of mods running on Rose. Output: build/oracle/rose/"
+    roseLaunch("gametest")
+    standardInput = ByteArrayInputStream(ByteArray(0))
+    outputs.upToDateWhen { false }
+    val oracleDir = rootProject.layout.buildDirectory.dir("oracle").get().asFile
+    val namespaces = providers.gradleProperty("rose.oracle.namespaces").orElse("farmersdelight")
+    doFirst { oracleDir.resolve("rose").deleteRecursively() }
+    jvmArgumentProviders.add(CommandLineArgumentProvider {
+        listOf("-Drose.oracle.out=" + oracleDir.resolve("rose").absolutePath, "-Drose.oracle.namespaces=" + namespaces.get())
+    })
+    argumentProviders.add(CommandLineArgumentProvider {
+        listOf("--", "--report", oracleDir.resolve("rose-gametest.xml").absolutePath, "--tests", "oracle:dump_written")
     })
 }

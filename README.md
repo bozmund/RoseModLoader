@@ -37,7 +37,8 @@ Requirements: JDK 25. The Gradle wrapper is included.
 ./gradlew runClient     # starts the 26.3 client through Rose (offline dev account), with the test mods
 ./gradlew runServer     # starts the dedicated server; accept Mojang's EULA in run/server/eula.txt first
 ./gradlew runGameTests  # runs mods' GameTests headless; fails if any required test fails (report: build/gametest/report.xml)
-./gradlew corpusInputs  # mapping files + pilot mods for Rosetta (local only)
+./gradlew corpusInputs  # mapping files + pilot mods for Rosetta, + native ports for the oracle (local only)
+./gradlew oracle        # Rose's FD content vs. FD Refabricated on Fabric 26.3 (report: build/oracle/farmersdelight.md)
 ./rose analyze corpus/mods/FarmersDelight-1.20.1-1.3.4.jar   # what stands between an old mod and 26.3
 ```
 
