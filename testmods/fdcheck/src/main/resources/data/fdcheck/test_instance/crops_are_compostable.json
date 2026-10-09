@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "fdcheck:crops_are_compostable",
+  "structure": "minecraft:empty",
+  "max_ticks": 20,
+  "padding": 2
+}

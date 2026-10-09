@@ -20,7 +20,8 @@ import java.util.Map;
  * {@code ItemStack.is(Item)} becomes {@code static boolean is(ItemStack self, Item item)}.
  * A constructor ({@code owner.<init>(args)V}) becomes a factory {@code static Owner name(args)}. A field read
  * ({@code owner.name:desc}) becomes {@code static Desc name()} for static fields, {@code static Desc name(Owner self)}
- * for instance fields; writes are not redirected.
+ * for instance fields. A field write ({@code owner.name=desc}) becomes {@code static void name(Desc value)}, or
+ * {@code static void name(Owner self, Desc value)}.
  */
 public final class RedirectRules {
     public record Redirect(String symbol, String shimOwner, String shimName, String evidence) {
@@ -30,6 +31,10 @@ public final class RedirectRules {
          */
         public String shimDescriptor(boolean isStatic) {
             String owner = owner();
+            if (isFieldWrite()) {
+                String type = symbol.substring(symbol.indexOf('=') + 1);
+                return isStatic ? "(" + type + ")V" : "(L" + owner + ";" + type + ")V";
+            }
             if (isField()) {
                 String type = symbol.substring(symbol.indexOf(':') + 1);
                 return isStatic ? "()" + type : "(L" + owner + ";)" + type;
@@ -41,12 +46,16 @@ public final class RedirectRules {
         }
 
         public String owner() {
-            int end = isField() ? symbol.indexOf(':') : symbol.indexOf('(');
+            int end = isFieldWrite() ? symbol.indexOf('=') : isField() ? symbol.indexOf(':') : symbol.indexOf('(');
             return symbol.substring(0, symbol.lastIndexOf('.', end));
         }
 
         public boolean isField() {
             return !symbol.contains("(");
+        }
+
+        public boolean isFieldWrite() {
+            return isField() && symbol.contains("=");
         }
 
         public boolean isConstructor() {
@@ -64,7 +73,7 @@ public final class RedirectRules {
         this.hasConstructorRules = bySymbol.values().stream().anyMatch(Redirect::isConstructor);
         for (Redirect r : bySymbol.values()) {
             String member = r.symbol().substring(r.owner().length() + 1);
-            if (member.matches("[mf]_\\d+_[(:].*")) bySrgMember.put(member, r);
+            if (member.matches("[mf]_\\d+_[(:=].*")) bySrgMember.put(member, r);
         }
     }
 
@@ -83,7 +92,7 @@ public final class RedirectRules {
             if (p.length < 3 || p[2].isBlank()) {
                 throw new IOException(file + ":" + lineNo + ": expected symbol<TAB>shimOwner.shimName<TAB>evidence (evidence is required)");
             }
-            if (!p[0].contains(".") || !(p[0].contains("(") || p[0].contains(":"))) throw new IOException(file + ":" + lineNo + ": bad symbol " + p[0]);
+            if (!p[0].contains(".") || !(p[0].contains("(") || p[0].contains(":") || p[0].contains("="))) throw new IOException(file + ":" + lineNo + ": bad symbol " + p[0]);
             int dot = p[1].lastIndexOf('.');
             if (dot <= 0) throw new IOException(file + ":" + lineNo + ": shim must be owner/Class.method, got " + p[1]);
             Redirect r = new Redirect(p[0], p[1].substring(0, dot), p[1].substring(dot + 1), p[2]);
@@ -98,10 +107,11 @@ public final class RedirectRules {
         return exact != null ? exact : bySrgMember.get(name + desc);
     }
 
-    /** The redirect for reading field {@code owner.name:desc} in old names, or {@code null}. */
-    public Redirect findField(String owner, String name, String desc) {
-        Redirect exact = bySymbol.get(owner + "." + name + ":" + desc);
-        return exact != null ? exact : bySrgMember.get(name + ":" + desc);
+    /** The redirect for reading ({@code owner.name:desc}) or writing ({@code owner.name=desc}) a field, or {@code null}. */
+    public Redirect findField(String owner, String name, String desc, boolean write) {
+        String sep = write ? "=" : ":";
+        Redirect exact = bySymbol.get(owner + "." + name + sep + desc);
+        return exact != null ? exact : bySrgMember.get(name + sep + desc);
     }
 
     public boolean hasConstructorRules() {

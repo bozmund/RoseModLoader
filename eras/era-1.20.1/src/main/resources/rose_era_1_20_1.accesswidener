@@ -27,3 +27,7 @@ accessible method net/minecraft/world/item/crafting/SingleItemRecipe result ()Ln
 
 # ItemNbtShim stores the live tag 1.20.1 code edits in place (CustomData.of copies it).
 accessible method net/minecraft/world/item/component/CustomData <init> (Lnet/minecraft/nbt/CompoundTag;)V
+
+# LateRegistration binds a holder registered after its registry was frozen.
+accessible method net/minecraft/core/Holder$Reference bindValue (Ljava/lang/Object;)V
+accessible method net/minecraft/core/Holder$Reference bindTags (Ljava/util/Collection;)V

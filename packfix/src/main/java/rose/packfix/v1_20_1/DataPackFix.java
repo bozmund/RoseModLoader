@@ -6,6 +6,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,6 +43,10 @@ public final class DataPackFix {
             Map.entry("tags/fluids", "tags/fluid"),
             Map.entry("tags/game_events", "tags/game_event"),
             Map.entry("tags/functions", "tags/function"));
+    /** Criterion fields that were 1.20.1 ContextAwarePredicates (a condition list, or a bare entity predicate). */
+    private static final Set<String> ENTITY_CONTEXT_KEYS = Set.of("player", "entity", "child", "parent", "partner", "zombie",
+            "villager", "projectile", "shooter", "lightning", "bystander", "source");
+    private static final Pattern DAMAGE_NBT = Pattern.compile("\\{\\s*Damage\\s*:\\s*(\\d+)\\s*}");
     private static final Pattern DATA_PATH = Pattern.compile("data/([^/]+)/(.+)");
     private static final Set<String> COOKING = Set.of("minecraft:smelting", "minecraft:blasting", "minecraft:smoking",
             "minecraft:campfire_cooking");
@@ -92,13 +97,26 @@ public final class DataPackFix {
             if (upgraded == null) return null;
             return new Fixed(newPath, GSON.toJson(upgraded).getBytes(StandardCharsets.UTF_8));
         }
+        if (folder.startsWith("loot_table/") && path.endsWith(".json")) {
+            JsonObject table = parse(content);
+            if (table == null) return new Fixed(newPath, null);
+            return new Fixed(newPath, GSON.toJson(LootTableFix.table(table)).getBytes(StandardCharsets.UTF_8));
+        }
+        if (folder.startsWith("advancement/") && path.endsWith(".json")) {
+            JsonObject advancement = parse(content);
+            if (advancement == null) return new Fixed(newPath, null);
+            JsonObject upgraded = upgradeAdvancement(advancement, path);
+            if (upgraded == null) return null;
+            return new Fixed(newPath, GSON.toJson(upgraded).getBytes(StandardCharsets.UTF_8));
+        }
         return new Fixed(newPath, null);
     }
 
+    /** Parses a JSON object, with vanilla ids renamed since 1.20.1 already applied. */
     private static JsonObject parse(byte[] content) {
         try {
             JsonElement e = JsonParser.parseString(new String(content, StandardCharsets.UTF_8));
-            return e.isJsonObject() ? e.getAsJsonObject() : null;
+            return e.isJsonObject() ? VanillaIds.rename(e).getAsJsonObject() : null;
         } catch (RuntimeException e) {
             return null;
         }
@@ -220,6 +238,106 @@ public final class DataPackFix {
     }
 
     /** Forge 1.20.1 conditions; other mods count as absent (the translated jar is cached without the mod list). */
+    /**
+     * A 26.3 advancement, or {@code null} if it shouldn't load. Changes since 1.20.1 (26.3 codecs): Forge conditions
+     * are resolved; the icon is an item stack template ({@code id}); criterion player/location/entity predicates are
+     * one loot condition, not a list; {@code recipe_unlocked} takes {@code recipes}; item predicates name tags in
+     * {@code items} ({@code #tag}) and match NBT through components.
+     */
+    JsonObject upgradeAdvancement(JsonObject advancement, String path) {
+        if (advancement.has("advancements") && advancement.get("advancements").isJsonArray()) {
+            for (JsonElement option : advancement.getAsJsonArray("advancements")) {
+                JsonObject o = option.getAsJsonObject();
+                if (conditionsMet(o.getAsJsonArray("conditions"), path)) return upgradeAdvancement(o.getAsJsonObject("advancement"), path);
+            }
+            report.add("dropped " + path + " (no conditional branch applies)");
+            return null;
+        }
+        if (advancement.has("conditions") && advancement.get("conditions").isJsonArray()) {
+            if (!conditionsMet(advancement.getAsJsonArray("conditions"), path)) {
+                report.add("dropped " + path + " (conditions: needs another mod)");
+                return null;
+            }
+            advancement.remove("conditions");
+        }
+        JsonObject display = advancement.getAsJsonObject("display");
+        if (display != null && display.get("icon") instanceof JsonObject icon && icon.has("item")) {
+            JsonObject upgraded = new JsonObject();
+            upgraded.add("id", icon.get("item"));
+            if (icon.has("count")) upgraded.add("count", icon.get("count"));
+            display.add("icon", upgraded);
+        }
+        JsonObject criteria = advancement.getAsJsonObject("criteria");
+        if (criteria != null) {
+            for (String name : criteria.keySet()) {
+                JsonObject criterion = criteria.getAsJsonObject(name);
+                if (criterion.get("conditions") instanceof JsonObject conditions) {
+                    upgradeCriterionConditions(criterion.has("trigger") ? criterion.get("trigger").getAsString() : "", conditions);
+                }
+            }
+        }
+        return advancement;
+    }
+
+    static void upgradeCriterionConditions(String trigger, JsonObject conditions) {
+        if (trigger.equals("minecraft:recipe_unlocked") && conditions.get("recipe") instanceof JsonPrimitive recipe) {
+            JsonArray recipes = new JsonArray();
+            recipes.add(recipe);
+            conditions.remove("recipe");
+            conditions.add("recipes", recipes);
+        }
+        for (String key : List.copyOf(conditions.keySet())) {
+            JsonElement value = conditions.get(key);
+            if (ENTITY_CONTEXT_KEYS.contains(key) && value instanceof JsonObject entity && !entity.has("condition")) {
+                conditions.add(key, LootTableFix.entityCondition(entity));
+            } else if (key.equals("damage") && value instanceof JsonObject damage) {
+                if (damage.get("type") instanceof JsonObject source) LootTableFix.damageSourcePredicate(source);
+                if (damage.get("source_entity") instanceof JsonObject entity) damage.add("source_entity", LootTableFix.entityPredicate(entity));
+            } else if (key.equals("killing_blow") && value instanceof JsonObject source) {
+                LootTableFix.damageSourcePredicate(source);
+            } else if (isConditionList(value)) {
+                conditions.add(key, LootTableFix.conditions(value.getAsJsonArray()));
+            } else if (key.equals("items") && value.isJsonArray()) {
+                JsonArray out = new JsonArray();
+                for (JsonElement item : value.getAsJsonArray()) out.add(item.isJsonObject() ? itemPredicate(item.getAsJsonObject()) : item);
+                conditions.add(key, out);
+            } else if (key.equals("item") && value.isJsonObject()) {
+                conditions.add(key, itemPredicate(value.getAsJsonObject()));
+            }
+        }
+    }
+
+    /** 1.20.1 ContextAwarePredicate: a list of loot conditions (all must pass). */
+    private static boolean isConditionList(JsonElement value) {
+        if (!value.isJsonArray() || value.getAsJsonArray().isEmpty()) return false;
+        for (JsonElement e : value.getAsJsonArray()) {
+            if (!e.isJsonObject() || !e.getAsJsonObject().has("condition")) return false;
+        }
+        return true;
+    }
+
+    /** 1.20.1 item predicate: {@code tag} becomes {@code items: "#tag"}, {@code nbt} a custom_data component match. */
+    static JsonObject itemPredicate(JsonObject predicate) {
+        if (predicate.has("tag")) {
+            predicate.addProperty("items", "#" + predicate.remove("tag").getAsString());
+        }
+        if (predicate.has("nbt")) {
+            String nbt = predicate.remove("nbt").getAsString();
+            JsonObject predicates = new JsonObject();
+            Matcher damage = DAMAGE_NBT.matcher(nbt);
+            if (damage.matches()) {
+                // Damage moved out of the tag into the minecraft:damage component.
+                JsonObject d = new JsonObject();
+                d.addProperty("damage", Integer.parseInt(damage.group(1)));
+                predicates.add("minecraft:damage", d);
+            } else {
+                predicates.addProperty("minecraft:custom_data", nbt);
+            }
+            predicate.add("predicates", predicates);
+        }
+        return predicate;
+    }
+
     private boolean conditionsMet(JsonArray conditions, String path) {
         if (conditions == null) return true;
         for (JsonElement c : conditions) {

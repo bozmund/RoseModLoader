@@ -2,9 +2,13 @@ package rose.testmods.fdcheck;
 
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Set;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
@@ -15,6 +19,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.block.state.properties.Property;
 import rose.api.ModInitializer;
 import rose.api.gametest.RoseGameTests;
@@ -32,6 +37,9 @@ public final class FdCheck implements ModInitializer {
         RoseGameTests.register(id("content_registered"), FdCheck::contentRegistered);
         RoseGameTests.register(id("cutting_board_cuts_cabbage"), FdCheck::cuttingBoardCutsCabbage);
         RoseGameTests.register(id("cooking_pot_cooks_beef_stew"), FdCheck::cookingPotCooksBeefStew);
+        RoseGameTests.register(id("crops_are_compostable"), FdCheck::cropsAreCompostable);
+        RoseGameTests.register(id("animals_eat_fd_food"), FdCheck::animalsEatFdFood);
+        RoseGameTests.register(id("crops_drop_by_loot_table"), FdCheck::cropsDropByLootTable);
     }
 
     private static Identifier id(String path) {
@@ -63,6 +71,8 @@ public final class FdCheck implements ModInitializer {
                 "tomato_seeds", "skillet", "cooking_pot", "hamburger")) {
             helper.assertTrue(BuiltInRegistries.ITEM.containsKey(Identifier.fromNamespaceAndPath("farmersdelight", i)), "item missing: " + i);
         }
+        helper.assertTrue(BuiltInRegistries.TRIGGER_TYPES.containsKey(Identifier.fromNamespaceAndPath("farmersdelight", "use_cutting_board")),
+                "criterion trigger missing: use_cutting_board");
         helper.succeed();
     }
 
@@ -100,6 +110,57 @@ public final class FdCheck implements ModInitializer {
             ItemStack meal = (ItemStack) call(pot, "getMeal");
             helper.assertTrue(meal.is(item("beef_stew")), "no beef stew yet, meal slot has " + meal);
         });
+    }
+
+    /** FD's common setup registers its crops with the composter (1.20.1 ComposterBlock.COMPOSTABLES). */
+    private static void cropsAreCompostable(GameTestHelper helper) {
+        if (skip(helper)) return;
+        for (String i : List.of("cabbage", "tomato", "onion", "rice", "cabbage_leaf", "tree_bark")) {
+            helper.assertTrue(new ItemStack(item(i)).has(DataComponents.COMPOSTABLE), "not compostable: " + i);
+        }
+        helper.succeed();
+    }
+
+    /** FD's common setup adds its crops to animal and villager food (26.3: item tags and villager_food). */
+    private static void animalsEatFdFood(GameTestHelper helper) {
+        if (skip(helper)) return;
+        helper.assertTrue(new ItemStack(item("cabbage_seeds")).is(ItemTags.CHICKEN_FOOD), "chickens should eat cabbage seeds");
+        helper.assertTrue(new ItemStack(item("cabbage")).is(ItemTags.PIG_FOOD), "pigs should eat cabbage");
+        helper.assertTrue(new ItemStack(item("cod_slice")).is(ItemTags.CAT_FOOD), "cats should eat cod slices");
+        helper.assertTrue(new ItemStack(item("rice")).is(ItemTags.PARROT_FOOD), "parrots should eat rice");
+        helper.assertTrue(new ItemStack(item("onion")).is(ItemTags.VILLAGER_PICKS_UP), "villagers should pick up onions");
+        helper.assertTrue(new ItemStack(item("tomato")).has(DataComponents.VILLAGER_FOOD), "tomatoes should be villager food");
+        helper.assertTrue(new ItemStack(net.minecraft.world.item.Items.WHEAT_SEEDS).is(ItemTags.CHICKEN_FOOD), "vanilla chicken food kept");
+        helper.succeed();
+    }
+
+    /** FD's 1.20.1 loot tables, upgraded by packfix: age and tool conditions decide the drops. */
+    private static void cropsDropByLootTable(GameTestHelper helper) {
+        if (skip(helper)) return;
+        ServerLevel level = helper.getLevel();
+        BlockPos pos = helper.absolutePos(POS);
+        BlockState young = block("cabbages").defaultBlockState();
+        BlockState mature = young;
+        for (Property<?> p : young.getProperties()) {
+            if (p.getName().equals("age") && p instanceof IntegerProperty age) mature = young.setValue(age, 7);
+        }
+        helper.assertFalse(dropped(young, level, pos, ItemStack.EMPTY).contains(item("cabbage")), "young cabbages must not drop a cabbage");
+        helper.assertTrue(dropped(young, level, pos, ItemStack.EMPTY).contains(item("cabbage_seeds")), "young cabbages drop seeds");
+        helper.assertTrue(dropped(mature, level, pos, ItemStack.EMPTY).contains(item("cabbage")), "mature cabbages drop a cabbage");
+
+        BlockState wild = block("wild_cabbages").defaultBlockState();
+        ItemStack shears = new ItemStack(net.minecraft.world.item.Items.SHEARS);
+        helper.assertTrue(dropped(wild, level, pos, shears).contains(item("wild_cabbages")), "shears harvest wild cabbages (forge:can_tool_perform_action)");
+        helper.assertFalse(dropped(wild, level, pos, ItemStack.EMPTY).contains(item("wild_cabbages")), "bare hands don't");
+        helper.succeed();
+    }
+
+    private static Set<Item> dropped(BlockState state, ServerLevel level, BlockPos pos, ItemStack tool) {
+        Set<Item> items = new java.util.HashSet<>();
+        for (int i = 0; i < 20; i++) { // drops are random; 20 rolls cover the guaranteed ones
+            for (ItemStack s : Block.getDrops(state, level, pos, null, null, tool)) items.add(s.getItem());
+        }
+        return items;
     }
 
     private static void setSlot(Object handler, int slot, ItemStack stack) {

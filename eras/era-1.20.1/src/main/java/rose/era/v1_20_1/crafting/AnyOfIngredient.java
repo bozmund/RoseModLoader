@@ -20,6 +20,10 @@ public class AnyOfIngredient extends Ingredient {
         this.parts = List.copyOf(parts);
     }
 
+    public List<Ingredient> getChildren() {
+        return parts;
+    }
+
     @Override
     public boolean test(ItemStack stack) {
         for (Ingredient part : parts) if (part.test(stack)) return true;

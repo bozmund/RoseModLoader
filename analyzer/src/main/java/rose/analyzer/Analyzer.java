@@ -204,13 +204,14 @@ public final class Analyzer {
         return true;
     }
 
-    /** Like {@link #redirect} for field reads. */
+    /** Like {@link #redirect} for field reads and writes. */
     private boolean fieldRedirect(FieldInsnNode field, String where) {
-        if (field.getOpcode() != Opcodes.GETSTATIC && field.getOpcode() != Opcodes.GETFIELD) return false;
-        RedirectRules.Redirect rule = redirects.findField(field.owner, field.name, field.desc);
+        boolean write = field.getOpcode() == Opcodes.PUTSTATIC || field.getOpcode() == Opcodes.PUTFIELD;
+        RedirectRules.Redirect rule = redirects.findField(field.owner, field.name, field.desc, write);
         if (rule == null) return false;
         references++;
-        String shimDesc = remapper.mapMethodDesc(rule.shimDescriptor(field.getOpcode() == Opcodes.GETSTATIC));
+        boolean isStatic = field.getOpcode() == Opcodes.GETSTATIC || field.getOpcode() == Opcodes.PUTSTATIC;
+        String shimDesc = remapper.mapMethodDesc(rule.shimDescriptor(isStatic));
         ClassIndex.Info shim = target.get(rule.shimOwner());
         if (shim != null && shim.methods().contains(rule.shimName() + shimDesc)) {
             redirected++;

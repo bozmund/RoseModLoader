@@ -4,12 +4,14 @@
   "package": "rose.era.v1_20_1.mixin",
   "compatibilityLevel": "JAVA_25",
   "mixins": [
+    "MappedRegistryAccess",
     "RecipeIdMixin",
     "RecipeManagerAccess",
     "RecipeManagerMixin",
     "RecipeMapInvoker",
     "RegistryLoadTaskMixin",
-    "RegistryValuesAccessor"
+    "RegistryValuesAccessor",
+    "TagLoaderMixin"
   ],
   "injectors": {
     "defaultRequire": 1

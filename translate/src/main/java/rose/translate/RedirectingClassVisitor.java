@@ -57,13 +57,13 @@ public final class RedirectingClassVisitor extends ClassVisitor {
 
             @Override
             public void visitFieldInsn(int opcode, String owner, String field, String desc) {
-                RedirectRules.Redirect rule = isRead(opcode) ? rules.findField(owner, field, desc) : null;
+                RedirectRules.Redirect rule = rules.findField(owner, field, desc, !isRead(opcode));
                 if (rule == null) {
                     super.visitFieldInsn(opcode, owner, field, desc);
                     return;
                 }
                 super.visitMethodInsn(Opcodes.INVOKESTATIC, rule.shimOwner(), rule.shimName(),
-                        rule.shimDescriptor(opcode == Opcodes.GETSTATIC), false);
+                        rule.shimDescriptor(isStatic(opcode)), false);
             }
         };
     }
@@ -72,13 +72,17 @@ public final class RedirectingClassVisitor extends ClassVisitor {
         return opcode == Opcodes.GETSTATIC || opcode == Opcodes.GETFIELD;
     }
 
+    private static boolean isStatic(int opcode) {
+        return opcode == Opcodes.GETSTATIC || opcode == Opcodes.PUTSTATIC;
+    }
+
     private void redirectCalls(MethodNode method) {
         for (AbstractInsnNode insn : method.instructions.toArray()) {
-            if (insn instanceof org.objectweb.asm.tree.FieldInsnNode field && isRead(field.getOpcode())) {
-                RedirectRules.Redirect rule = rules.findField(field.owner, field.name, field.desc);
+            if (insn instanceof org.objectweb.asm.tree.FieldInsnNode field) {
+                RedirectRules.Redirect rule = rules.findField(field.owner, field.name, field.desc, !isRead(field.getOpcode()));
                 if (rule != null) {
                     method.instructions.set(field, new MethodInsnNode(Opcodes.INVOKESTATIC, rule.shimOwner(), rule.shimName(),
-                            rule.shimDescriptor(field.getOpcode() == Opcodes.GETSTATIC), false));
+                            rule.shimDescriptor(isStatic(field.getOpcode())), false));
                 }
                 continue;
             }
