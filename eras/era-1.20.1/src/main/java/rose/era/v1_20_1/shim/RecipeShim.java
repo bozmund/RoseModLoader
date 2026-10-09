@@ -44,8 +44,17 @@ public final class RecipeShim {
         if (level instanceof ServerLevel server) return server.recipeAccess();
         MinecraftServer server = EraContext.server();
         if (server != null) return server.getRecipeManager();
-        throw new IllegalStateException("Recipes live on the server in 26.3; this client has no access to them");
+        // A client of a remote server: 26.3 sends clients no recipes. Old code asking on the client (to predict an
+        // interaction) finds none and leaves the decision to the server, which has them.
+        return NO_RECIPES.get();
     }
+
+    /** A recipe manager over an empty recipe registry (26.3's RecipeManager is built from one). */
+    private static final java.util.function.Supplier<RecipeManager> NO_RECIPES = com.google.common.base.Suppliers.memoize(() -> {
+        var empty = new net.minecraft.core.MappedRegistry<Recipe<?>>(Registries.RECIPE, com.mojang.serialization.Lifecycle.stable());
+        empty.freeze();
+        return new RecipeManager(net.minecraft.core.HolderLookup.Provider.create(java.util.stream.Stream.of(empty)));
+    });
 
     public static <T extends Recipe<?>> Optional<T> getRecipeFor(RecipeManager manager, RecipeType<T> type, Container container, Level level) {
         for (RecipeHolder<T> holder : byTypeHolders(manager, type)) {
