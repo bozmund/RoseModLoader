@@ -88,6 +88,7 @@ Call `rose.methods` for the live list. Each method lists its parameters and a de
 | `client.disconnect` | | back to the title screen |
 | `client.player` | | position, rotation, health, food, held item, inventory |
 | `client.useBlock` | `x y z face?` | a real right-click: client → network → server, including reach checks |
+| `client.getBlock` | `x y z` | the block and its block entity data as the **client** has them; compare with `world.getBlock` to see whether data reached the client (sync bugs show up here) |
 | `client.chat` | `message` | chat, or a command when it starts with `/` |
 | `client.quit` | | closes the client |
 
