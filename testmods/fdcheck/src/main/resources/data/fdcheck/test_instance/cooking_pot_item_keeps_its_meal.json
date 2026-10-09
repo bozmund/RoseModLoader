@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "fdcheck:cooking_pot_item_keeps_its_meal",
+  "structure": "minecraft:empty",
+  "max_ticks": 20,
+  "padding": 2
+}

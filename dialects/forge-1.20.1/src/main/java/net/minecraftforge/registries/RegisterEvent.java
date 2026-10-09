@@ -38,7 +38,7 @@ public class RegisterEvent extends Event implements IModBusEvent {
         if (!registryKey.equals(key)) return;
         ResourceKey entryKey = ResourceKey.create((ResourceKey) key, name);
         T value = RegistrationKeys.supplying(entryKey, valueSupplier);
-        Registry.register((Registry) registry.vanilla(), entryKey, value);
+        rose.dialect.forge.v1_20_1.VanillaRegistration.register(registry.vanilla(), entryKey, value);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -47,12 +47,12 @@ public class RegisterEvent extends Event implements IModBusEvent {
         consumer.accept(new RegisterHelper<T>() {
             @Override
             public void register(Identifier name, T value) {
-                Registry.register((Registry) registry.vanilla(), name, value);
+                rose.dialect.forge.v1_20_1.VanillaRegistration.register(registry.vanilla(), name, value);
             }
 
             @Override
             public void register(ResourceKey<T> entryKey, T value) {
-                Registry.register((Registry) registry.vanilla(), entryKey, value);
+                rose.dialect.forge.v1_20_1.VanillaRegistration.register(registry.vanilla(), entryKey, value);
             }
         });
     }

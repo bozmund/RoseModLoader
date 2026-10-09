@@ -44,6 +44,7 @@ public final class FdCheck implements ModInitializer {
         RoseGameTests.register(id("animals_eat_fd_food"), FdCheck::animalsEatFdFood);
         RoseGameTests.register(id("crops_drop_by_loot_table"), FdCheck::cropsDropByLootTable);
         RoseGameTests.register(id("wild_cabbages_generate_on_beaches"), FdCheck::wildCabbagesGenerateOnBeaches);
+        RoseGameTests.register(id("cooking_pot_item_keeps_its_meal"), FdCheck::cookingPotItemKeepsItsMeal);
     }
 
     private static Identifier id(String path) {
@@ -74,6 +75,9 @@ public final class FdCheck implements ModInitializer {
         for (String i : List.of("cabbage", "tomato", "onion", "rice", "iron_knife", "flint_knife", "beef_stew", "cabbage_leaf",
                 "tomato_seeds", "skillet", "cooking_pot", "hamburger")) {
             helper.assertTrue(BuiltInRegistries.ITEM.containsKey(Identifier.fromNamespaceAndPath("farmersdelight", i)), "item missing: " + i);
+        }
+        for (String b : List.of("cooking_pot", "stove", "cutting_board", "rich_soil")) {
+            helper.assertTrue(block(b).asItem() == item(b), "block " + b + " isn't linked to its item (Item.BY_BLOCK)");
         }
         helper.assertTrue(BuiltInRegistries.TRIGGER_TYPES.containsKey(Identifier.fromNamespaceAndPath("farmersdelight", "use_cutting_board")),
                 "criterion trigger missing: use_cutting_board");
@@ -200,6 +204,24 @@ public final class FdCheck implements ModInitializer {
             if (level.getBlockState(p).is(block("wild_cabbages"))) grown++;
         }
         helper.assertTrue(grown > 0, "no wild cabbages grew on the sand");
+        helper.succeed();
+    }
+
+    /** A cooking pot picked up as an item keeps its meal (1.20.1 BlockEntityTag), and placing it restores it. */
+    private static void cookingPotItemKeepsItsMeal(GameTestHelper helper) {
+        if (skip(helper)) return;
+        BlockState potState = block("cooking_pot").defaultBlockState();
+        helper.setBlock(POS, potState);
+        BlockEntity pot = helper.getBlockEntity(POS, BlockEntity.class);
+        setSlot(call(pot, "getInventory"), 6, new ItemStack(item("beef_stew"), 2)); // the meal slot
+        ItemStack potItem = potState.getCloneItemStack(helper.getLevel(), helper.absolutePos(POS), true);
+        helper.assertTrue(potItem.is(item("cooking_pot")), "pick-block gives a cooking pot, gave " + potItem);
+
+        BlockPos other = POS.east(2);
+        helper.setBlock(other, potState);
+        boolean applied = net.minecraft.world.item.BlockItem.updateCustomBlockEntityTag(helper.getLevel(), null, helper.absolutePos(other), potItem);
+        ItemStack meal = (ItemStack) call(helper.getBlockEntity(other, BlockEntity.class), "getMeal");
+        helper.assertTrue(applied && meal.is(item("beef_stew")) && meal.getCount() == 2, "placed pot should hold 2 beef stew, holds " + meal);
         helper.succeed();
     }
 

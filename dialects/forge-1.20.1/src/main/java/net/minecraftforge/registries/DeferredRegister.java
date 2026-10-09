@@ -92,7 +92,7 @@ public class DeferredRegister<T> {
                 Unsupported.entry(object.getId().toString(), registry.getRegistryName().toString(), e);
                 continue;
             }
-            Registry.register((Registry) registry.vanilla(), key, registered);
+            rose.dialect.forge.v1_20_1.VanillaRegistration.register(registry.vanilla(), key, registered);
             object.bind(value);
         }
     }

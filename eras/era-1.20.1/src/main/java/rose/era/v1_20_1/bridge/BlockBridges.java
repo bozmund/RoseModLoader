@@ -65,6 +65,14 @@ public final class BlockBridges {
                 self, state, level, level, pos, direction, neighborPos, neighborState, level.getRandom());
     }
 
+    private static final MethodType CLONE_ITEM = MethodType.methodType(ItemStack.class, LevelReader.class, BlockPos.class, BlockState.class, boolean.class);
+
+    /** 1.20.1 {@code super.getCloneItemStack(level, pos, state)} from a mod block (no block entity data). */
+    public static ItemStack superGetCloneItemStack(BlockBehaviour self, BlockGetter level, BlockPos pos, BlockState state) {
+        if (!(level instanceof LevelReader reader)) return new ItemStack(self.asItem());
+        return (ItemStack) Legacy.invoke(Legacy.superMethod(self, "getCloneItemStack", CLONE_ITEM), self, reader, pos, state, false);
+    }
+
     /** 1.20.1 {@code onRemove(state, level, pos, newState, isMoving)}: after the block was replaced. */
     public static void affectNeighborsAfterRemoval(BlockBehaviour self, BlockState state, ServerLevel level, BlockPos pos, boolean movedByPiston) {
         var old = Legacy.require(self, "onRemove", MethodType.methodType(void.class, BlockState.class, Level.class, BlockPos.class,

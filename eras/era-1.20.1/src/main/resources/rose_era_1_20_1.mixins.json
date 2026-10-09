@@ -4,6 +4,7 @@
   "package": "rose.era.v1_20_1.mixin",
   "compatibilityLevel": "JAVA_25",
   "mixins": [
+    "BlockItemMixin",
     "MappedRegistryAccess",
     "RecipeIdMixin",
     "RecipeManagerAccess",

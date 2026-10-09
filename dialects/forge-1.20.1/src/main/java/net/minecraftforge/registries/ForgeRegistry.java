@@ -53,7 +53,7 @@ public class ForgeRegistry<V> implements IForgeRegistry<V> {
 
     @Override
     public void register(Identifier key, V value) {
-        Registry.register(vanilla, key, value);
+        rose.dialect.forge.v1_20_1.VanillaRegistration.register(vanilla, key, value);
     }
 
     @Override
