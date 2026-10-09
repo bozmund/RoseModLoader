@@ -45,6 +45,7 @@ public final class FdCheck implements ModInitializer {
         RoseGameTests.register(id("crops_drop_by_loot_table"), FdCheck::cropsDropByLootTable);
         RoseGameTests.register(id("wild_cabbages_generate_on_beaches"), FdCheck::wildCabbagesGenerateOnBeaches);
         RoseGameTests.register(id("cooking_pot_item_keeps_its_meal"), FdCheck::cookingPotItemKeepsItsMeal);
+        RoseGameTests.register(id("meals_feed_and_give_effects"), FdCheck::mealsFeedAndGiveEffects);
     }
 
     private static Identifier id(String path) {
@@ -223,6 +224,25 @@ public final class FdCheck implements ModInitializer {
         ItemStack meal = (ItemStack) call(helper.getBlockEntity(other, BlockEntity.class), "getMeal");
         helper.assertTrue(applied && meal.is(item("beef_stew")) && meal.getCount() == 2, "placed pot should hold 2 beef stew, holds " + meal);
         helper.succeed();
+    }
+
+    /** Eating an FD meal: beef stew feeds, gives a bowl back and Nourishment (FD's FoodValues.BEEF_STEW). */
+    private static void mealsFeedAndGiveEffects(GameTestHelper helper) {
+        if (skip(helper)) return;
+        Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        player.getFoodData().setFoodLevel(2);
+        ItemStack stew = new ItemStack(item("beef_stew"));
+        ItemStack left = stew.finishUsingItem(helper.getLevel(), player);
+        helper.assertTrue(player.getFoodData().getFoodLevel() > 2, "stew didn't feed: food " + player.getFoodData().getFoodLevel());
+        helper.assertTrue(left.is(net.minecraft.world.item.Items.BOWL) || player.getInventory().contains(new ItemStack(net.minecraft.world.item.Items.BOWL)),
+                "no bowl back, left " + left);
+        helper.assertTrue(hasEffect(player, "nourishment"), "beef stew should give Nourishment, effects: " + player.getActiveEffects());
+        helper.succeed();
+    }
+
+    private static boolean hasEffect(Player player, String path) {
+        var effect = BuiltInRegistries.MOB_EFFECT.get(Identifier.fromNamespaceAndPath("farmersdelight", path));
+        return effect.isPresent() && player.hasEffect(effect.get());
     }
 
     private static void setSlot(Object handler, int slot, ItemStack stack) {
