@@ -53,3 +53,4 @@ registries * farmersdelight:poplar_cabinet	added after 1.3.4 (see the items/bloc
 tags * farmersdelight:poplar_cabinet	added after 1.3.4 (see the items/blocks entry)
 registries * farmersdelight:straw_bed	added after 1.3.4 (see the items/blocks entry)
 tags * farmersdelight:straw_bed	added after 1.3.4 (see the items/blocks entry)
+items farmersdelight:debug_pumpkin_pie /components/minecraft:item_name/translate	debug block item: 1.20.1 BlockItem was named after its block, Refabricated names it after the item; neither jar's lang has an entry for it

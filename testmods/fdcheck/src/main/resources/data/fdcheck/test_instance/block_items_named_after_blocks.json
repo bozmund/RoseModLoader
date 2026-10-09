@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "fdcheck:block_items_named_after_blocks",
+  "structure": "minecraft:empty",
+  "max_ticks": 20,
+  "padding": 2
+}

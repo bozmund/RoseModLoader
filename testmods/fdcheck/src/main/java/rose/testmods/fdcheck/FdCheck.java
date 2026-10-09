@@ -46,6 +46,7 @@ public final class FdCheck implements ModInitializer {
         RoseGameTests.register(id("wild_cabbages_generate_on_beaches"), FdCheck::wildCabbagesGenerateOnBeaches);
         RoseGameTests.register(id("cooking_pot_item_keeps_its_meal"), FdCheck::cookingPotItemKeepsItsMeal);
         RoseGameTests.register(id("meals_feed_and_give_effects"), FdCheck::mealsFeedAndGiveEffects);
+        RoseGameTests.register(id("block_items_named_after_blocks"), FdCheck::blockItemsNamedAfterBlocks);
     }
 
     private static Identifier id(String path) {
@@ -237,6 +238,23 @@ public final class FdCheck implements ModInitializer {
         helper.assertTrue(left.is(net.minecraft.world.item.Items.BOWL) || player.getInventory().contains(new ItemStack(net.minecraft.world.item.Items.BOWL)),
                 "no bowl back, left " + left);
         helper.assertTrue(hasEffect(player, "nourishment"), "beef stew should give Nourishment, effects: " + player.getActiveEffects());
+        helper.succeed();
+    }
+
+    /**
+     * Block items are named after their block, as in 1.20.1 (FD's lang file has only block.farmersdelight.* for them):
+     * plain BlockItem (rich soil), BlockItem subclasses (cooking pot; rope extends FD's FuelBlockItem), double-high
+     * (wild rice), sign and hanging sign. Rice is an ItemNameBlockItem and keeps its item name.
+     */
+    private static void blockItemsNamedAfterBlocks(GameTestHelper helper) {
+        if (skip(helper)) return;
+        for (String name : List.of("rich_soil", "cooking_pot", "rope", "wild_rice", "canvas_sign", "hanging_canvas_sign")) {
+            Item item = item(name);
+            helper.assertTrue(item instanceof net.minecraft.world.item.BlockItem, name + " isn't a block item");
+            String expected = ((net.minecraft.world.item.BlockItem) item).getBlock().getDescriptionId();
+            helper.assertTrue(item.getDescriptionId().equals(expected), name + " is named " + item.getDescriptionId() + ", expected " + expected);
+        }
+        helper.assertTrue(item("rice").getDescriptionId().equals("item.farmersdelight.rice"), "rice is named " + item("rice").getDescriptionId());
         helper.succeed();
     }
 
