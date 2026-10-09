@@ -26,8 +26,11 @@ public abstract class LegacyBlockEntity extends BlockEntity {
     protected void saveAdditional(CompoundTag tag) {
     }
 
-    /** 1.20.1: read this block entity's data from {@code tag}. Subclasses override and call super. */
-    public void load(CompoundTag tag) {
+    /**
+     * 1.20.1 {@code load(tag)}: read this block entity's data. Translated mods override it under 26.3's name for the
+     * same method ({@code m_142466_} became {@code loadAdditional}); they call super under that name too.
+     */
+    public void loadAdditional(CompoundTag tag) {
     }
 
     @Override
@@ -41,7 +44,7 @@ public abstract class LegacyBlockEntity extends BlockEntity {
     @Override
     protected void loadAdditional(ValueInput input) {
         super.loadAdditional(input);
-        load(input instanceof TagValueInput tagInput ? tagInput.input : new CompoundTag());
+        loadAdditional(input instanceof TagValueInput tagInput ? tagInput.input : new CompoundTag());
     }
 
     /** 1.20.1 {@code getUpdateTag()}: data sent to clients when the chunk loads (empty unless overridden). */

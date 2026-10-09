@@ -127,6 +127,11 @@ public final class ForgeDialect implements ModInitializer {
         (sub.bus() == Mod.EventBusSubscriber.Bus.MOD ? mod.modBus() : MinecraftForge.EVENT_BUS).register(type);
     }
 
+    /** Posts a mod-bus event to every Forge mod. */
+    static void postToMods(Event event, String what) {
+        for (ForgeModContainer mod : MODS) postToMod(mod, event, what);
+    }
+
     private static void postToMod(ForgeModContainer mod, Event event, String what) {
         ForgeModContainer previous = active;
         active = mod;

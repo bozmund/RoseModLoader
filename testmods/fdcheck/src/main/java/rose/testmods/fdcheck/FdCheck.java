@@ -90,6 +90,10 @@ public final class FdCheck implements ModInitializer {
         BlockEntity board = helper.getBlockEntity(POS, BlockEntity.class);
         ItemStack stored = (ItemStack) call(board, "getStoredItem");
         helper.assertTrue(stored.is(item("cabbage")), "board should hold the cabbage, holds " + stored);
+        // Saved and loaded again (world reload, client sync): the data survives.
+        var registries = helper.getLevel().registryAccess();
+        BlockEntity reloaded = BlockEntity.loadStatic(board.getBlockPos(), board.getBlockState(), board.saveWithFullMetadata(registries), registries);
+        helper.assertTrue(reloaded != null && ((ItemStack) call(reloaded, "getStoredItem")).is(item("cabbage")), "board lost its cabbage when reloaded");
 
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(item("iron_knife")));
         helper.useBlock(POS, player);

@@ -11,6 +11,8 @@ public final class ForgeDialectClient implements ClientModInitializer {
     public void onInitializeClient() {
         if (ForgeDialect.mods().isEmpty()) return;
         RoseClientNetworking.receiveOnClient(MenuData.TYPE, (payload, client) -> MenuData.received(payload.data()));
+        // Forge fired this before renderers are built (the first resource reload builds them from the registrations).
+        ForgeDialect.postToMods(new net.minecraftforge.client.event.EntityRenderersEvent.RegisterRenderers(), "RegisterRenderers");
         ForgeDialect.dispatchLifecycle(FMLClientSetupEvent::new);
         ForgeDialect.dispatchLifecycle(FMLLoadCompleteEvent::new);
     }

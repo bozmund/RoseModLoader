@@ -113,12 +113,18 @@ public final class ClientMethods {
                 "Creates and opens a new creative flat test world (no mobs, no time or weather changes), like vanilla's "
                         + "debug test world. Waits until the player is in it.", p -> {
                     Minecraft mc = Minecraft.getInstance();
+                    // Right after launch the game may still be loading resources; when it finishes it opens the
+                    // title screen, which would replace the create-world screen.
+                    waitFor("the game to finish loading", 180, () -> mc.gui.overlay() == null && mc.gui.screen() instanceof TitleScreen);
                     onClient(() -> {
                         CreateWorldScreen.testWorld(mc, () -> mc.gui.setScreen(new TitleScreen()));
                         return null;
                     });
                     waitFor("the create-world screen", 30, () -> mc.gui.screen() instanceof CreateWorldScreen);
                     String create = Component.translatable("selectWorld.create").getString();
+                    // The screen lays out its widgets after it opens; wait for the button rather than failing.
+                    waitFor("the '" + create + "' button", 30, () -> mc.gui.screen() != null
+                            && widgets(mc.gui.screen()).stream().anyMatch(w -> w.getMessage().getString().equals(create)));
                     onClient(() -> {
                         Screen screen = requireScreen();
                         AbstractWidget button = widgets(screen).stream()
@@ -205,6 +211,23 @@ public final class ClientMethods {
                         inventory.add(entry);
                     }
                     out.add("inventory", inventory);
+                    return out;
+                }));
+
+        bridge.register("client.getBlock", "x:int, y:int, z:int",
+                "The block state at a position and its block entity data (SNBT) as the client sees them (what is "
+                        + "synced to and rendered by the client; compare with world.getBlock on the server).", p -> onClient(() -> {
+                    Minecraft mc = Minecraft.getInstance();
+                    if (mc.level == null) throw new IllegalStateException("not in a world");
+                    BlockPos pos = new BlockPos(p.integer("x"), p.integer("y"), p.integer("z"));
+                    var state = mc.level.getBlockState(pos);
+                    JsonObject out = new JsonObject();
+                    out.addProperty("block", net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString());
+                    out.addProperty("state", state.toString());
+                    var blockEntity = mc.level.getBlockEntity(pos);
+                    if (blockEntity != null) {
+                        out.addProperty("blockEntity", blockEntity.saveWithFullMetadata(mc.level.registryAccess()).toString());
+                    }
                     return out;
                 }));
 

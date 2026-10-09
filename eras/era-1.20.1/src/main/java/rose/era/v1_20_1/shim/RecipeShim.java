@@ -85,8 +85,10 @@ public final class RecipeShim {
 
     /** 1.20.1 {@code RecipeManager.CachedCheck.getRecipeFor(container, level)}. */
     public static <T extends Recipe<?>> Optional<T> cachedGetRecipeFor(RecipeManager.CachedCheck<?, T> check, Container container, Level level) {
+        // 26.3 clients have no recipes (block use also runs there, to predict): the server decides.
+        if (!(level instanceof ServerLevel serverLevel)) return Optional.empty();
         @SuppressWarnings({"unchecked", "rawtypes"})
-        Optional<RecipeHolder<T>> found = ((RecipeManager.CachedCheck) check).getRecipeFor(inputFor(container), (ServerLevel) level);
+        Optional<RecipeHolder<T>> found = ((RecipeManager.CachedCheck) check).getRecipeFor(inputFor(container), serverLevel);
         return found.map(RecipeShim::remember);
     }
 
