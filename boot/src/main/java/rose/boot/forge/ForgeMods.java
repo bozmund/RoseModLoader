@@ -99,9 +99,17 @@ public final class ForgeMods {
         for (Path jar : jars) {
             String modId = modIdOf(jar);
             DataPackFix packFix = new DataPackFix(java.util.Set.of(modId, "forge", "minecraft"));
-            Path translated = translator.translate(jar, cacheDir, (path, content) -> {
-                DataPackFix.Fixed fixed = packFix.fix(path, content);
-                return fixed == null ? null : new ModTranslator.Resource(fixed.path(), fixed.content());
+            Path translated = translator.translate(jar, cacheDir, new ModTranslator.ResourceTransform() {
+                @Override
+                public ModTranslator.Resource apply(String path, byte[] content) {
+                    DataPackFix.Fixed fixed = packFix.fix(path, content);
+                    return fixed == null ? null : new ModTranslator.Resource(fixed.path(), fixed.content());
+                }
+
+                @Override
+                public List<ModTranslator.Resource> extras() {
+                    return packFix.extras().stream().map(f -> new ModTranslator.Resource(f.path(), f.content())).toList();
+                }
             });
             if (!packFix.report().isEmpty()) {
                 Files.write(translated.resolveSibling(translated.getFileName() + ".packfix.txt"), packFix.report());

@@ -47,6 +47,7 @@ public final class DataPackFix {
     private static final Set<String> ENTITY_CONTEXT_KEYS = Set.of("player", "entity", "child", "parent", "partner", "zombie",
             "villager", "projectile", "shooter", "lightning", "bystander", "source");
     private static final Pattern DAMAGE_NBT = Pattern.compile("\\{\\s*Damage\\s*:\\s*(\\d+)\\s*}");
+    private static final Pattern ITEM_MODEL = Pattern.compile("assets/([^/]+)/models/item/(.+)\\.json");
     private static final Pattern DATA_PATH = Pattern.compile("data/([^/]+)/(.+)");
     private static final Set<String> COOKING = Set.of("minecraft:smelting", "minecraft:blasting", "minecraft:smoking",
             "minecraft:campfire_cooking");
@@ -67,8 +68,32 @@ public final class DataPackFix {
         return List.copyOf(report);
     }
 
+    /** Item models seen ({@code ns:path}); 1.21.4 needs an item definition for each. */
+    private final Set<String> itemModels = new java.util.TreeSet<>();
+
+    /**
+     * Files the mod lacks for 26.3: an item definition ({@code assets/<ns>/items/<id>.json}) for every item model.
+     * 1.21.4 made item models selected by these definitions; without one an item renders as missing.
+     */
+    public List<Fixed> extras() {
+        List<Fixed> out = new ArrayList<>();
+        for (String item : itemModels) {
+            int colon = item.indexOf(':');
+            JsonObject model = new JsonObject();
+            model.addProperty("type", "minecraft:model");
+            model.addProperty("model", item.substring(0, colon) + ":item/" + item.substring(colon + 1));
+            JsonObject definition = new JsonObject();
+            definition.add("model", model);
+            out.add(new Fixed("assets/" + item.substring(0, colon) + "/items/" + item.substring(colon + 1) + ".json",
+                    GSON.toJson(definition).getBytes(StandardCharsets.UTF_8)));
+        }
+        return out;
+    }
+
     /** The fixed resource, or {@code null} to leave it out of the translated jar. */
     public Fixed fix(String path, byte[] content) {
+        Matcher item = ITEM_MODEL.matcher(path);
+        if (item.matches()) itemModels.add(item.group(1) + ":" + item.group(2));
         Matcher m = DATA_PATH.matcher(path);
         if (!m.matches()) return new Fixed(path, null);
         String namespace = m.group(1);

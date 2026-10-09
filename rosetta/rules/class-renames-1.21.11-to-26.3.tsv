@@ -5,3 +5,4 @@
 # Only add renames that intermediary + Mojang names can't find (e.g. ResourceLocation -> Identifier needs no rule:
 # Mojang already renamed it by 1.21.11). Rose also proposes unique same-simple-name moves itself ("HEURISTIC" in the
 # name layer); promote a heuristic here once it is checked against corpus/minecraft/26.3/src.
+net/minecraft/client/gui/GuiGraphics	net/minecraft/client/gui/GuiGraphicsExtractor	26.x: GuiGraphics became GuiGraphicsExtractor (drawing extracts render state); same role and drawing methods (blit, fill, text, item), Screen.render became extractRenderState

@@ -108,4 +108,17 @@ class DataPackFixTest {
         assertEquals("{\"id\":\"fd:colony\",\"properties\":{\"age\":\"0\"}}", provider.get("source").toString());
         assertEquals(3, provider.getAsJsonObject("values").get("max_inclusive").getAsInt());
     }
+
+    @Test
+    void itemModelsGetItemDefinitions() {
+        // evidence: 26.3 assets/minecraft/items/carrot.json {"model":{"type":"minecraft:model","model":"minecraft:item/carrot"}}
+        fix.fix("assets/fd/models/item/cabbage.json", "{}".getBytes(StandardCharsets.UTF_8));
+        fix.fix("assets/fd/models/item/tools/knife.json", "{}".getBytes(StandardCharsets.UTF_8));
+        fix.fix("assets/fd/models/block/stove.json", "{}".getBytes(StandardCharsets.UTF_8));
+        var extras = fix.extras();
+        assertEquals(java.util.List.of("assets/fd/items/cabbage.json", "assets/fd/items/tools/knife.json"),
+                extras.stream().map(DataPackFix.Fixed::path).toList());
+        assertEquals("{\"model\":{\"type\":\"minecraft:model\",\"model\":\"fd:item/cabbage\"}}",
+                JsonParser.parseString(new String(extras.get(0).content(), StandardCharsets.UTF_8)).toString());
+    }
 }

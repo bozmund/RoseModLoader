@@ -28,7 +28,7 @@ import rose.rosetta.RedirectRules;
  */
 public final class ModTranslator {
     /** Bump when translation output changes, so cached jars are rebuilt. */
-    public static final int VERSION = 13;
+    public static final int VERSION = 16;
 
     private final NameLayer layer;
     private final RedirectRules redirects;
@@ -42,6 +42,11 @@ public final class ModTranslator {
     @FunctionalInterface
     public interface ResourceTransform {
         Resource apply(String path, byte[] content);
+
+        /** Resources to add after every original one was seen (e.g. files the new version needs and the old lacked). */
+        default List<Resource> extras() {
+            return List.of();
+        }
     }
 
     public record Resource(String path, byte[] content) {}
@@ -126,6 +131,12 @@ public final class ModTranslator {
                 if (!written.add(name)) continue; // two old files mapped to one new path: the first wins
                 out.putNextEntry(new ZipEntry(name));
                 out.write(bytes);
+                out.closeEntry();
+            }
+            for (Resource extra : resources.extras()) {
+                if (!written.add(extra.path())) continue; // the mod has its own
+                out.putNextEntry(new ZipEntry(extra.path()));
+                out.write(extra.content());
                 out.closeEntry();
             }
         }
