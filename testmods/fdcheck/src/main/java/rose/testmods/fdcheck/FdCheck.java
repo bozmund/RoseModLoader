@@ -47,6 +47,7 @@ public final class FdCheck implements ModInitializer {
         RoseGameTests.register(id("cooking_pot_item_keeps_its_meal"), FdCheck::cookingPotItemKeepsItsMeal);
         RoseGameTests.register(id("meals_feed_and_give_effects"), FdCheck::mealsFeedAndGiveEffects);
         RoseGameTests.register(id("block_items_named_after_blocks"), FdCheck::blockItemsNamedAfterBlocks);
+        RoseGameTests.register(id("cabinets_burn_in_furnaces"), FdCheck::cabinetsBurnInFurnaces);
     }
 
     private static Identifier id(String path) {
@@ -256,6 +257,20 @@ public final class FdCheck implements ModInitializer {
         }
         helper.assertTrue(item("rice").getDescriptionId().equals("item.farmersdelight.rice"), "rice is named " + item("rice").getDescriptionId());
         helper.succeed();
+    }
+
+    /** FD's wooden furniture burns in a furnace: FD sets its burn time the Forge way (getBurnTime, 300 ticks). */
+    private static void cabinetsBurnInFurnaces(GameTestHelper helper) {
+        if (skip(helper)) return;
+        ItemStack cabinet = new ItemStack(item("oak_cabinet"));
+        var fuel = cabinet.get(DataComponents.COOKING_FUEL);
+        helper.assertTrue(fuel != null && fuel.burnTime() instanceof net.minecraft.world.level.storage.loot.providers.number.ints.ResolvableInt.Constant c
+                && c.value() == 300, "oak cabinet should burn 300 ticks, fuel: " + fuel);
+        helper.setBlock(POS, net.minecraft.world.level.block.Blocks.FURNACE);
+        var furnace = helper.getBlockEntity(POS, net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity.class);
+        furnace.setItem(0, new ItemStack(net.minecraft.world.item.Items.BEEF));
+        furnace.setItem(1, cabinet);
+        helper.succeedWhen(() -> helper.assertBlockProperty(POS, net.minecraft.world.level.block.AbstractFurnaceBlock.LIT, true));
     }
 
     private static boolean hasEffect(Player player, String path) {

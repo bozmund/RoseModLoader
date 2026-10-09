@@ -196,3 +196,7 @@ tags minecraft:worldgen/biome #farmersdelight:wild_rice_whitelist	the port adds 
 tags minecraft:worldgen/biome #farmersdelight:wild_tomatoes_blacklist	the port adds this tag; FarmersDelight-1.20.1-1.3.4.jar has no data/farmersdelight/tags/worldgen/biome/wild_tomatoes_blacklist.json
 tags minecraft:worldgen/biome #farmersdelight:wild_tomatoes_whitelist	the port adds this tag; FarmersDelight-1.20.1-1.3.4.jar has no data/farmersdelight/tags/worldgen/biome/wild_tomatoes_whitelist.json
 tags minecraft:block #farmersdelight:mineable/knife minecraft:*_wool_s*	wool slabs and stairs are 26.x vanilla blocks (not in 1.20.1); the port's tag picks them up
+items farmersdelight:rope /components/minecraft:cooking_fuel	FD 1.20.1 makes it fuel (its FuelBlockItem.getBurnTime override, value as dumped); the port doesn't
+items farmersdelight:rope_fence /components/minecraft:cooking_fuel	FD 1.20.1 makes it fuel (its FuelBlockItem.getBurnTime override, value as dumped); the port doesn't
+items farmersdelight:rope_fence_gate /components/minecraft:cooking_fuel	FD 1.20.1 makes it fuel (its FuelBlockItem.getBurnTime override, value as dumped); the port doesn't
+items farmersdelight:straw_bale /components/minecraft:cooking_fuel	FD 1.20.1 makes it fuel (its FuelBlockItem.getBurnTime override, value as dumped); the port doesn't
