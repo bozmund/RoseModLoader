@@ -37,3 +37,6 @@ accessible field net/minecraft/world/food/FoodData exhaustionLevel F
 
 # 1.20.1 BaseContainerBlockEntity.setCustomName (LegacyRandomizableContainerBlockEntity).
 accessible field net/minecraft/world/level/block/entity/BaseContainerBlockEntity name Lnet/minecraft/network/chat/Component;
+
+# LegacyItemComponents reads the component a mod item already set (e.g. a food's consumable) to adjust it.
+accessible field net/minecraft/core/component/DataComponentMap$Builder map Lit/unimi/dsi/fastutil/objects/Reference2ObjectMap;

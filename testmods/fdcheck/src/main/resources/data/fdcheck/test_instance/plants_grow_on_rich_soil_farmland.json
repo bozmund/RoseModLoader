@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "fdcheck:plants_grow_on_rich_soil_farmland",
+  "structure": "minecraft:empty",
+  "max_ticks": 20,
+  "padding": 2
+}

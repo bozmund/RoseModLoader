@@ -25,6 +25,21 @@ public final class ItemShim {
         return self.components().has(DataComponents.FOOD);
     }
 
+    /**
+     * 1.20.1 {@code Item.isValidRepairItem(stack, repair)} reached from old code (usually an override's
+     * {@code super} call): 1.20.1's Item said no; 26.3 items say what their {@code repairable} component says. Doesn't
+     * dispatch to the override, which would loop for super calls.
+     */
+    public static boolean isValidRepairItem(Item self, net.minecraft.world.item.ItemStack stack, net.minecraft.world.item.ItemStack repair) {
+        var repairable = stack.get(DataComponents.REPAIRABLE);
+        return repairable != null && repairable.isValidRepairItem(repair);
+    }
+
+    /** {@link #isValidRepairItem(Item, net.minecraft.world.item.ItemStack, net.minecraft.world.item.ItemStack)}, called on a BlockItem. */
+    public static boolean isValidRepairItem(net.minecraft.world.item.BlockItem self, net.minecraft.world.item.ItemStack stack, net.minecraft.world.item.ItemStack repair) {
+        return isValidRepairItem((Item) self, stack, repair);
+    }
+
     private ItemShim() {}
 
     /** 1.20.1 {@code item.getDescription()}: the item's name; 26.3 has {@code getName(stack)} (it may depend on components). */

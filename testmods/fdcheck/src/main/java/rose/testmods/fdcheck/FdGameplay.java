@@ -10,13 +10,17 @@ import static rose.testmods.fdcheck.FdCheck.skip;
 import java.util.function.Consumer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.Container;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.ai.sensing.SecondaryPoiSensor;
@@ -28,8 +32,13 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodData;
 import net.minecraft.world.item.BoneMealItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ItemUseAnimation;
+import net.minecraft.world.item.component.Consumable;
+import net.minecraft.world.item.component.ItemAttributeModifiers;
+import net.minecraft.world.item.enchantment.Enchantable;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -61,6 +70,11 @@ final class FdGameplay {
         test("block_entities_keep_their_items", FdGameplay::blockEntitiesKeepTheirItems);
         test("pick_block_on_fd_blocks", FdGameplay::pickBlockOnFdBlocks);
         test("farmers_work_rich_soil_farmland", FdGameplay::farmersWorkRichSoilFarmland);
+        test("skillet_is_a_weapon", FdGameplay::skilletIsAWeapon);
+        test("drinks_are_drunk", FdGameplay::drinksAreDrunk);
+        test("tools_repair_with_their_material", FdGameplay::toolsRepairWithTheirMaterial);
+        test("farmers_buy_fd_crops", FdGameplay::farmersBuyFdCrops);
+        test("plants_grow_on_rich_soil_farmland", FdGameplay::plantsGrowOnRichSoilFarmland);
     }
 
     private static void test(String name, Consumer<GameTestHelper> test) {
@@ -363,7 +377,82 @@ final class FdGameplay {
         for (int i = 0; i <= 40; i++) sensor.tick(helper.getLevel(), farmer); // the sensor scans every 40 ticks
         GlobalPos soil = GlobalPos.of(helper.getLevel().dimension(), helper.absolutePos(POS));
         var sites = farmer.getBrain().getMemory(MemoryModuleType.SECONDARY_JOB_SITE);
+        farmer.discard(); // a farmer left behind wanders into other tests and picks up their items
         helper.assertTrue(sites.isPresent() && sites.get().contains(soil), "the farmer should target rich soil farmland: " + sites);
+        helper.succeed();
+    }
+
+    /**
+     * The skillet's 1.20.1 overrides become its components: getDefaultAttributeModifiers (7 attack damage in the main
+     * hand), getEnchantmentValue (14).
+     */
+    private static void skilletIsAWeapon(GameTestHelper helper) {
+        if (skip(helper)) return;
+        ItemStack skillet = new ItemStack(item("skillet"));
+        var modifiers = skillet.getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY);
+        double[] damage = {0};
+        modifiers.forEach(EquipmentSlot.MAINHAND, (attribute, modifier) -> {
+            if (attribute.is(Attributes.ATTACK_DAMAGE)) damage[0] += modifier.amount();
+        });
+        helper.assertTrue(damage[0] == 7.0, "the skillet should add 7 attack damage in the main hand: " + modifiers);
+        Enchantable enchantable = skillet.get(DataComponents.ENCHANTABLE);
+        helper.assertTrue(enchantable != null && enchantable.value() == 14, "the skillet should be enchantable (14): " + enchantable);
+        helper.succeed();
+    }
+
+    /** FD's drinks (DrinkableItem: the DRINK use animation) are consumed as drinks, food or not, keeping food effects. */
+    private static void drinksAreDrunk(GameTestHelper helper) {
+        if (skip(helper)) return;
+        for (String name : java.util.List.of("hot_cocoa", "milk_bottle", "apple_cider", "bone_broth")) {
+            Consumable consumable = new ItemStack(item(name)).get(DataComponents.CONSUMABLE);
+            helper.assertTrue(consumable != null && consumable.animation() == ItemUseAnimation.DRINK
+                    && consumable.sound().is(SoundEvents.GENERIC_DRINK.key()) && !consumable.hasConsumeParticles(), name + " should be a drink: " + consumable);
+        }
+        Consumable cider = new ItemStack(item("apple_cider")).get(DataComponents.CONSUMABLE);
+        helper.assertTrue(!cider.onConsumeEffects().isEmpty(), "apple cider keeps its food effect: " + cider);
+        helper.succeed();
+    }
+
+    /** Knives repair with their tier's 26.3 material tag; the skillet with iron (its 1.20.1 isValidRepairItem). */
+    private static void toolsRepairWithTheirMaterial(GameTestHelper helper) {
+        if (skip(helper)) return;
+        helper.assertTrue(new ItemStack(item("iron_knife")).isValidRepairItem(new ItemStack(Items.IRON_INGOT)), "iron knives repair with iron");
+        helper.assertTrue(new ItemStack(item("golden_knife")).isValidRepairItem(new ItemStack(Items.GOLD_INGOT)), "golden knives repair with gold");
+        helper.assertTrue(new ItemStack(item("skillet")).isValidRepairItem(new ItemStack(Items.IRON_INGOT)), "skillets repair with iron");
+        helper.assertTrue(!new ItemStack(item("skillet")).isValidRepairItem(new ItemStack(Items.DIAMOND)), "skillets don't repair with diamonds");
+        helper.succeed();
+    }
+
+    /**
+     * Novice farmers can buy onions and tomatoes (FD VillagerEvents.onVillagerTrades adds them to level 1 through
+     * Forge's VillagerTradesEvent). Each farmer gets 2 of the level's 7 trades, so some of 20 farmers must have one.
+     */
+    private static void farmersBuyFdCrops(GameTestHelper helper) {
+        if (skip(helper)) return;
+        boolean found = false;
+        for (int i = 0; i < 20 && !found; i++) {
+            Villager farmer = helper.spawn(EntityTypes.VILLAGER, POS.above());
+            farmer.setVillagerData(farmer.getVillagerData().withProfession(helper.getLevel().registryAccess(), VillagerProfession.FARMER));
+            for (var offer : farmer.getOffers()) {
+                ItemStack cost = offer.getBaseCostA();
+                if (cost.is(item("onion")) || cost.is(item("tomato"))) found = true;
+            }
+            farmer.discard();
+        }
+        helper.assertTrue(found, "no farmer offered to buy onions or tomatoes");
+        helper.succeed();
+    }
+
+    /** Vanilla crops and flowers can stand on rich soil farmland (FD RichSoilFarmlandBlock.canSustainPlant: CROP, PLAINS). */
+    private static void plantsGrowOnRichSoilFarmland(GameTestHelper helper) {
+        if (skip(helper)) return;
+        helper.setBlock(POS, block("rich_soil_farmland"));
+        for (Block plant : java.util.List.of(Blocks.WHEAT, Blocks.POPPY)) {
+            boolean survives = plant.defaultBlockState().canSurvive(helper.getLevel(), helper.absolutePos(POS.above()));
+            helper.assertTrue(survives, plant + " should survive on rich soil farmland");
+        }
+        helper.assertTrue(!Blocks.CACTUS.defaultBlockState().canSurvive(helper.getLevel(), helper.absolutePos(POS.above())),
+                "cactus shouldn't survive on rich soil farmland");
         helper.succeed();
     }
 

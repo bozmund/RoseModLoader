@@ -43,6 +43,22 @@ public final class DataPackFix {
             Map.entry("tags/fluids", "tags/fluid"),
             Map.entry("tags/game_events", "tags/game_event"),
             Map.entry("tags/functions", "tags/function"));
+    /**
+     * Vanilla tags 26.x renamed, per tag folder: 1.20.1 name to 26.3 name. Each pair is the tag the same vanilla
+     * check reads in both versions (e.g. BambooStalkBlock.canSurvive: BAMBOO_PLANTABLE_ON, then SUPPORTS_BAMBOO), so a
+     * mod adding its blocks to the old tag means the new one.
+     */
+    static final Map<String, Map<String, String>> VANILLA_TAG_RENAMES = Map.of(
+            "tags/block", Map.of(
+                    "bamboo_plantable_on", "supports_bamboo",
+                    "big_dripleaf_placeable", "supports_big_dripleaf",
+                    "small_dripleaf_placeable", "supports_small_dripleaf",
+                    "dead_bush_may_place_on", "supports_dry_vegetation",
+                    "mushroom_grow_block", "overrides_mushroom_light_requirement",
+                    "snow_layer_can_survive_on", "support_override_snow_layer",
+                    "snow_layer_cannot_survive_on", "cannot_support_snow_layer",
+                    "convertable_to_mud", "convertible_to_mud"),
+            "tags/item", Map.of("axolotl_tempt_items", "axolotl_food"));
     /** Criterion fields that were 1.20.1 ContextAwarePredicates (a condition list, or a bare entity predicate). */
     private static final Set<String> ENTITY_CONTEXT_KEYS = Set.of("player", "entity", "child", "parent", "partner", "zombie",
             "villager", "projectile", "shooter", "lightning", "bystander", "source");
@@ -133,9 +149,18 @@ public final class DataPackFix {
         }
         String newPath = "data/" + namespace + "/" + folder;
         if (folder.startsWith("tags/") && path.endsWith(".json")) {
+            Map<String, String> renames = tagRenames(folder);
+            if (namespace.equals("minecraft")) {
+                String kind = folder.substring(0, folder.indexOf('/', "tags/".length()));
+                String name = folder.substring(kind.length() + 1, folder.length() - ".json".length());
+                if (renames.containsKey(name)) {
+                    newPath = "data/minecraft/" + kind + "/" + renames.get(name) + ".json";
+                    report.add("moved " + path + " to " + newPath + " (26.x renamed #minecraft:" + name + ")");
+                }
+            }
             JsonObject tag = parse(content);
             if (tag == null) return new Fixed(newPath, null);
-            return new Fixed(newPath, GSON.toJson(optionalEntries(tag)).getBytes(StandardCharsets.UTF_8));
+            return new Fixed(newPath, GSON.toJson(renameTagReferences(optionalEntries(tag), renames)).getBytes(StandardCharsets.UTF_8));
         }
         if (folder.startsWith("recipe/") && path.endsWith(".json")) {
             JsonObject recipe = parse(content);
@@ -174,6 +199,28 @@ public final class DataPackFix {
      * Every entry of an old mod's tag becomes optional ({@code {"id": x, "required": false}}): an entry for content
      * that didn't load (or another mod's) would otherwise fail the whole tag, including vanilla's tag it adds to.
      */
+    /** The vanilla tag renames for a tag file's folder ({@code tags/block/...}), or none. */
+    private static Map<String, String> tagRenames(String folder) {
+        for (var e : VANILLA_TAG_RENAMES.entrySet()) {
+            if (folder.startsWith(e.getKey() + "/")) return e.getValue();
+        }
+        return Map.of();
+    }
+
+    /** Entries naming a renamed vanilla tag ({@code #minecraft:old}) name the 26.3 tag. */
+    static JsonObject renameTagReferences(JsonObject tag, Map<String, String> renames) {
+        JsonArray values = tag.getAsJsonArray("values");
+        if (values == null || renames.isEmpty()) return tag;
+        for (JsonElement v : values) {
+            JsonObject entry = v.getAsJsonObject();
+            String id = entry.get("id").getAsString();
+            if (id.startsWith("#minecraft:") && renames.containsKey(id.substring("#minecraft:".length()))) {
+                entry.addProperty("id", "#minecraft:" + renames.get(id.substring("#minecraft:".length())));
+            }
+        }
+        return tag;
+    }
+
     static JsonObject optionalEntries(JsonObject tag) {
         JsonArray values = tag.getAsJsonArray("values");
         if (values == null) return tag;

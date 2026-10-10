@@ -35,10 +35,21 @@ public final class ItemBridges {
         return result;
     }
 
-    /** 1.20.1 {@code hurtEnemy(stack, target, attacker)} returned a boolean (and wore the item itself); 26.3's is void. */
+    /**
+     * 1.20.1 {@code hurtEnemy(stack, target, attacker)} returned whether the item was used (and wore the item itself);
+     * 26.3's is void. 1.20.1's ItemStack.hurtEnemy counted a use for players when it returned true; 26.3 counts
+     * only items with a {@code weapon} component, which old items don't have, so the use is counted here.
+     */
     public static void hurtEnemy(Item self, ItemStack stack, LivingEntity target, LivingEntity attacker) {
         var old = Legacy.require(self, "hurtEnemy", MethodType.methodType(boolean.class, ItemStack.class, LivingEntity.class, LivingEntity.class));
-        Legacy.invoke(old, self, stack, target, attacker);
+        if ((Boolean) Legacy.invoke(old, self, stack, target, attacker)) countUse(self, stack, attacker);
+    }
+
+    /** 1.20.1 ItemStack.hurtEnemy's use count, for items that wear themselves (no {@code weapon} component). */
+    public static void countUse(Item item, ItemStack stack, LivingEntity attacker) {
+        if (attacker instanceof Player player && !stack.has(net.minecraft.core.component.DataComponents.WEAPON)) {
+            player.awardStat(net.minecraft.stats.Stats.ITEM_USED.get(item));
+        }
     }
 
     /**

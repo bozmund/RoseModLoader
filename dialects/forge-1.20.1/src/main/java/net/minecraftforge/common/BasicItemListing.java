@@ -1,11 +1,16 @@
 package net.minecraftforge.common;
 
+import java.util.Optional;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.trading.ItemCost;
+import net.minecraft.world.item.trading.MerchantOffer;
 
 /**
  * A simple villager trade. 26.3 villager trades are data-driven (the {@code villager_trade} registry), so Rose
- * collects these from VillagerTradesEvent listeners and turns them into trades.
+ * collects these from VillagerTradesEvent listeners and offers them with the trade sets' own (ForgeTrades).
  */
 public class BasicItemListing {
     protected final ItemStack price;
@@ -34,5 +39,15 @@ public class BasicItemListing {
 
     public BasicItemListing(int emeralds, ItemStack forSale, int maxTrades, int xp) {
         this(emeralds, forSale, maxTrades, xp, 1);
+    }
+
+    /** Forge 1.20.1 {@code getOffer}: always the same offer (26.3 costs match the item and count). */
+    public MerchantOffer getOffer(Entity trader, RandomSource random) {
+        Optional<ItemCost> second = price2.isEmpty() ? Optional.empty() : Optional.of(cost(price2));
+        return new MerchantOffer(cost(price), second, forSale.copy(), maxTrades, xp, priceMult);
+    }
+
+    private static ItemCost cost(ItemStack stack) {
+        return new ItemCost(stack.getItem(), stack.getCount());
     }
 }

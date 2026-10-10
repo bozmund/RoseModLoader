@@ -18,6 +18,26 @@ class DataPackFixTest {
     }
 
     @Test
+    void renamedVanillaTagsMoveToTheir26Names() {
+        DataPackFix.Fixed fixed = fix.fix("data/minecraft/tags/blocks/bamboo_plantable_on.json",
+                "{\"values\":[\"fd:rich_soil\"]}".getBytes(StandardCharsets.UTF_8));
+        assertEquals("data/minecraft/tags/block/supports_bamboo.json", fixed.path());
+        assertEquals("data/minecraft/tags/item/axolotl_food.json",
+                fix.fix("data/minecraft/tags/items/axolotl_tempt_items.json", "{\"values\":[]}".getBytes(StandardCharsets.UTF_8)).path());
+        // only vanilla's own tags were renamed
+        assertEquals("data/fd/tags/block/bamboo_plantable_on.json",
+                fix.fix("data/fd/tags/blocks/bamboo_plantable_on.json", "{\"values\":[]}".getBytes(StandardCharsets.UTF_8)).path());
+    }
+
+    @Test
+    void tagEntriesNamingRenamedVanillaTagsFollowTheRename() {
+        JsonObject tag = upgrade("data/fd/tags/blocks/soils.json", "{\"values\":[\"#minecraft:mushroom_grow_block\",\"fd:rich_soil\"]}");
+        assertEquals("#minecraft:overrides_mushroom_light_requirement",
+                tag.getAsJsonArray("values").get(0).getAsJsonObject().get("id").getAsString());
+        assertEquals("fd:rich_soil", tag.getAsJsonArray("values").get(1).getAsJsonObject().get("id").getAsString());
+    }
+
+    @Test
     void recipeAdvancementGetsRecipesListAndSingularFolder() {
         String json = """
                 {"parent":"minecraft:recipes/root",

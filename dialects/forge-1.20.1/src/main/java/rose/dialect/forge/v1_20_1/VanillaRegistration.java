@@ -9,7 +9,8 @@ import net.minecraft.world.item.Item;
 /**
  * Registers a Forge mod's entry into a 26.3 registry with the side effects vanilla's own registration has: a block
  * item is linked to its block ({@code Item.BY_BLOCK}, used by {@code Block.asItem()}), as {@code Items.registerItem}
- * does and Forge did for mod items. An item that sets its burn time the Forge way becomes furnace fuel (ForgeFuel).
+ * does and Forge did for mod items. An item that sets its burn time the Forge way becomes furnace fuel (ForgeFuel); 1.20.1 item overrides
+ * become components (LegacyItemComponents).
  */
 public final class VanillaRegistration {
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -28,7 +29,10 @@ public final class VanillaRegistration {
 
     private static void linked(Object value) {
         if (value instanceof BlockItem blockItem) blockItem.registerBlocks(Item.BY_BLOCK, blockItem);
-        if (value instanceof Item item) ForgeFuel.register(item);
+        if (value instanceof Item item) {
+            ForgeFuel.register(item);
+            rose.era.v1_20_1.item.LegacyItemComponents.register(item);
+        }
     }
 
     private VanillaRegistration() {}

@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "fdcheck:skillet_is_a_weapon",
+  "structure": "minecraft:empty",
+  "max_ticks": 20,
+  "padding": 2
+}

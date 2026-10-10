@@ -6,8 +6,10 @@
   "mixins": [
     "BlockPropertiesMixin",
     "BuiltInRegistriesMixin",
+    "CropBlockMixin",
     "DataComponentInitializersAccessor",
     "EntitySectionEventsMixin",
+    "ForgeTradesMixin",
     "InteractionEventsMixin",
     "ItemPropertiesMixin",
     "LivingEntityEventsMixin",

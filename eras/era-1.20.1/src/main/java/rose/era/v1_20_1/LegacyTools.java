@@ -11,6 +11,7 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Tier;
+import net.minecraft.world.item.Tiers;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.item.component.Tool;
 import net.minecraft.world.item.enchantment.Repairable;
@@ -21,6 +22,7 @@ public final class LegacyTools {
     /** 1.20.1 TieredItem: durability from the tier, enchantability, repair ingredient. */
     public static Item.Properties tiered(Tier tier, Item.Properties properties) {
         properties.durability(tier.getUses()).enchantable(tier.getEnchantmentValue());
+        if (tier instanceof Tiers vanilla) return properties.repairable(vanilla.material().repairItems());
         try {
             var items = HolderSet.direct(tier.getRepairIngredient().items().toList());
             properties.component(DataComponents.REPAIRABLE, new Repairable(items));
@@ -30,7 +32,11 @@ public final class LegacyTools {
         return properties;
     }
 
-    /** 1.20.1 DiggerItem: mines {@code blocks} at the tier's speed, attack damage = modifier + tier bonus. */
+    /**
+     * 1.20.1 DiggerItem: mines {@code blocks} at the tier's speed, attack damage = modifier + tier bonus. No
+     * {@code weapon} component: hitting wears it through its own {@code hurtEnemy}, as in 1.20.1, so a subclass that
+     * overrides it decides the wear.
+     */
     public static Item.Properties digger(Tier tier, TagKey<Block> blocks, float attackDamageModifier, float attackSpeedModifier,
                                         Item.Properties properties) {
         var lookup = BuiltInRegistries.acquireBootstrapRegistrationLookup(BuiltInRegistries.BLOCK);
@@ -49,6 +55,7 @@ public final class LegacyTools {
     /** The blocks a tier can't harvest: Forge's per-tier tag, else vanilla's tag for the tier's mining level. */
     static TagKey<Block> incorrectFor(Tier tier) {
         if (tier.getTag() != null) return tier.getTag();
+        if (tier instanceof Tiers vanilla) return vanilla.material().incorrectBlocksForDrops();
         return switch (tier.getLevel()) {
             case 0 -> BlockTags.INCORRECT_FOR_WOODEN_TOOL;
             case 1 -> BlockTags.INCORRECT_FOR_STONE_TOOL;

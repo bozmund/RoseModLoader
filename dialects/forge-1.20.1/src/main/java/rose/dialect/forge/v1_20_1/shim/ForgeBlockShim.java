@@ -57,10 +57,26 @@ public final class ForgeBlockShim {
         return self.is(Blocks.FARMLAND) && self.getValue(FarmlandBlock.MOISTURE) > 0;
     }
 
+    private static final ClassValue<Method> CAN_SUSTAIN_PLANT = new ClassValue<>() {
+        @Override
+        protected Method computeValue(Class<?> type) {
+            try {
+                return type.getMethod("canSustainPlant", BlockState.class, BlockGetter.class, BlockPos.class, Direction.class, IPlantable.class);
+            } catch (NoSuchMethodException e) {
+                return null;
+            }
+        }
+    };
+
+    /** Whether a (mod) block decides itself which plants grow on it: it overrides Forge's canSustainPlant. */
+    public static boolean decidesPlants(Block block) {
+        return CAN_SUSTAIN_PLANT.get(block.getClass()) != null;
+    }
+
     /** Forge {@code BlockState.canSustainPlant(level, pos, facing, plant)}: whether the plant can grow on this block. */
     public static boolean canSustainPlant(BlockState self, BlockGetter level, BlockPos pos, Direction facing, IPlantable plantable) {
         Block block = self.getBlock();
-        Method override = override(block, "canSustainPlant", BlockState.class, BlockGetter.class, BlockPos.class, Direction.class, IPlantable.class);
+        Method override = CAN_SUSTAIN_PLANT.get(block.getClass());
         if (override != null) return (Boolean) call(override, block, self, level, pos, facing, plantable);
 
         BlockPos plantPos = pos.relative(facing);

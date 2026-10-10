@@ -200,3 +200,41 @@ items farmersdelight:rope /components/minecraft:cooking_fuel	FD 1.20.1 makes it 
 items farmersdelight:rope_fence /components/minecraft:cooking_fuel	FD 1.20.1 makes it fuel (its FuelBlockItem.getBurnTime override, value as dumped); the port doesn't
 items farmersdelight:rope_fence_gate /components/minecraft:cooking_fuel	FD 1.20.1 makes it fuel (its FuelBlockItem.getBurnTime override, value as dumped); the port doesn't
 items farmersdelight:straw_bale /components/minecraft:cooking_fuel	FD 1.20.1 makes it fuel (its FuelBlockItem.getBurnTime override, value as dumped); the port doesn't
+# Blocks and items: values FD 1.20.1 sets that the port changed (Rose runs 1.20.1's code, so it keeps them)
+blocks farmersdelight:*wall_hanging_canvas_sign /map_color	FD 1.20.1 copies Blocks.SPRUCE_WALL_HANGING_SIGN (ModBlocks lambdas: Properties.copy), whose map color is WOOD in 1.20.1 and 26.3 (Blocks.java); the port's are PODZOL
+blocks farmersdelight:tomatoes* /map_color	FD 1.20.1 TomatoBlock uses Properties.of() without a map color (ModBlocks: of().noCollission().randomTicks().instabreak().sound(CROP)); the port gives it PLANT
+blocks farmersdelight:tomatoes /piston_push_reaction	FD 1.20.1 TomatoBlock sets no push reaction (see map_color); the port's pops
+blocks farmersdelight:tomatoes_on_rope /item	FD 1.20.1 tomato seeds (ModItems$1.registerBlocks) link both tomatoes and tomatoes_on_rope to the seeds; the port links only tomatoes
+items farmersdelight:*_canvas_sign /components/minecraft:sign_text_*	Rose's era SignItem uses 26.3 Item.Properties.signText() like vanilla's sign items (Items.java); the port's canvas sign items don't set it
+items farmersdelight:*_slice /components/minecraft:consumable/consume_seconds	FD 1.20.1 FoodValues makes pie and cake slices fast() food (16 ticks = 0.8 s); the port's slices use the default 1.6 s
+items farmersdelight:chicken_soup /components/minecraft:*	FD 1.20.1 FoodValues.CHICKEN_SOUP: nutrition 12, saturation 0.8, comfort MEDIUM_DURATION (3600); the port's FoodValues: 14, 21.0 saturation, LONG_DURATION (6000)
+items farmersdelight:fried_rice /components/minecraft:*	FD 1.20.1 FoodValues.FRIED_RICE: nutrition 12, saturation 0.8, MEDIUM_DURATION nourishment; the port's: 14, 21.0, LONG_DURATION (6000)
+items farmersdelight:onion_soup /components/minecraft:*	FD 1.20.1 FoodValues.ONION_SOUP: nutrition 12, saturation 0.8, MEDIUM_DURATION; the port's: 14, 21.0, LONG_DURATION (6000)
+items farmersdelight:grilled_salmon /components/minecraft:consumable/on_consume_effects/0/effects/0/duration	FD 1.20.1 FoodValues.GRILLED_SALMON: MEDIUM_DURATION (3600) nourishment; the port's LONG_DURATION (6000)
+items farmersdelight:kelp_roll /components/minecraft:*	FD 1.20.1 FoodValues.KELP_ROLL: nutrition 12, saturation 0.6 (14.4), default eat time; the port's new FoodProperties(12, 12.0F) and a 2.4 s consumable
+items farmersdelight:glow_berry_custard /components/minecraft:consumable/*	FD 1.20.1 makes it a ConsumableItem (eat animation, ModItems); the port makes it a drink
+items farmersdelight:*_knife /components/minecraft:tool/rules	the port adds a #farmersdelight:knife_instantly_mines rule (tag not in FarmersDelight-1.20.1-1.3.4.jar); flint: FD 1.20.1 ModMaterials.FLINT is mining level 1 (stone), the port uses wooden
+items farmersdelight:*_knife /components/minecraft:tool/can_destroy_blocks_in_creative	FD 1.20.1 KnifeItem.canAttackBlock returns !creative; Rose runs it through the canDestroyBlock bridge, the port says it with the tool component
+items farmersdelight:*_knife /components/minecraft:weapon*	FD 1.20.1 KnifeItem.hurtEnemy wears the knife by 1 (Rose runs it; no weapon component so 26.3 adds no wear); the port uses a weapon component with 2
+items farmersdelight:flint_knife /components/minecraft:repairable/items	FD 1.20.1 ModMaterials.FLINT repairs with Ingredient.of(Items.FLINT); the port adds #farmersdelight:flint_tool_materials
+items farmersdelight:skillet /components/minecraft:attribute_modifiers/2/id	FD 1.20.1 SkilletItem keys its knockback modifier by UUID (FD_ATTACK_KNOCKBACK_UUID), which Rose names rose:legacy/<uuid>; the port uses farmersdelight:base_attack_knockback
+items farmersdelight:skillet /components/minecraft:repairable	FD 1.20.1 SkilletItem.isValidRepairItem (iron) is asked directly by Rose (ItemStackRepairMixin); the port sets a repairable component
+items farmersdelight:skillet /components/minecraft:tool	FD 1.20.1 SkilletItem.canAttackBlock (!creative) runs through Rose's canDestroyBlock bridge; the port says it with an empty tool component
+items farmersdelight:skillet /components/minecraft:weapon	FD 1.20.1 SkilletItem.hurtEnemy wears the skillet itself (Rose runs it); the port uses a weapon component
+items farmersdelight:hot_cocoa /components/minecraft:consumable/on_consume_effects	FD 1.20.1 HotCocoaItem.affectConsumer removes a harmful effect in code (Rose runs it); the port moved it to a farmersdelight:remove_random_effects consume effect
+items farmersdelight:milk_bottle /components/minecraft:consumable/on_consume_effects	FD 1.20.1 MilkBottleItem.affectConsumer removes an effect in code (Rose runs it); the port moved it to a consume effect
+items farmersdelight:melon_juice /components/minecraft:consumable/on_consume_effects	FD 1.20.1 MelonJuiceItem.affectConsumer heals in code (Rose runs it); the port moved it to a farmersdelight:heal consume effect
+items farmersdelight:melon_popsicle /components/minecraft:consumable/on_consume_effects	FD 1.20.1 PopsicleItem.affectConsumer extinguishes in code (Rose runs it); the port moved it to a farmersdelight:extinguish consume effect
+# Registries: FD 1.20.1 code registers what Rose shows; the port moved to 26.x APIs
+registries minecraft:block_entity_type farmersdelight:*canvas_sign	FD 1.20.1 registers its own sign block entity types (ModBlockEntityTypes.CANVAS_SIGN, HANGING_CANVAS_SIGN); the port reuses vanilla's sign block entities
+registries minecraft:loot_function_type farmersdelight:copy_meal	FD 1.20.1 registers the copy_meal loot function (ModLootFunctions) for cooking pot drops; the port's loot tables copy components instead
+registries minecraft:consume_effect_type	consume effect types are 1.21.2+ API; FD 1.20.1 does these effects in item code (DrinkableItem/ConsumableItem.affectConsumer), which Rose runs
+registries minecraft:data_component_type	data components are 1.20.5+ API; FD 1.20.1 keeps this data in item NBT (CompoundTag), which Rose keeps in custom_data
+registries minecraft:enchantment_effect_component_type	enchantment effect components are 1.21+ API; FD 1.20.1's backstabbing is code (BackstabbingEnchantment, run by Rose through LegacyEnchantment)
+registries minecraft:loot_condition_type	the port's can_item_perform_ability replaces Forge's forge:can_tool_perform_action, which FD 1.20.1's loot tables use (Rose's Forge dialect provides that one)
+registries minecraft:recipe_book_category	recipe book categories became a registry in 1.21.2; FD 1.20.1 makes its categories with Forge's client-side RecipeBookRegistry
+registries minecraft:recipe_display	recipe displays are 1.21.2+ API; FD 1.20.1 has none
+registries minecraft:villager_trade	villager trades became data-driven in 26.x; FD 1.20.1 adds them in code through Forge's VillagerTradesEvent, which Rose fires and offers (ForgeTrades; GameTest fdcheck:farmers_buy_fd_crops)
+registries minecraft:worldgen/feature farmersdelight:*	FD 1.20.1's configured features are named patch_* (data/farmersdelight/worldgen/configured_feature/patch_wild_cabbages.json etc. in FarmersDelight-1.20.1-1.3.4.jar); the port renamed them and added sandy_shrub
+registries minecraft:worldgen/feature_type farmersdelight:*	FD 1.20.1 registers the wild_crop feature (ModBiomeFeatures.WILD_CROP); the port replaced it with in_order
+registries minecraft:worldgen/placed_feature farmersdelight:patch_sandy_shrub	FarmersDelight-1.20.1-1.3.4.jar has no data/farmersdelight/worldgen/placed_feature/patch_sandy_shrub.json; the port adds it
