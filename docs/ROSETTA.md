@@ -83,7 +83,7 @@ Examples of real changes it found:
 `rosetta/rules/*.tsv` holds Rose's own rules. Every rule needs an evidence column (a corpus file, changelog, porting primer or port-pair diff) and must be checked against `corpus/minecraft/26.3/src`.
 
 - `class-renames-1.20.1-to-26.3.tsv`: classes intermediary didn't carry across (built into the name layer: `./gradlew :rosetta:buildNameLayers`).
-- `forge-1.20.1/redirects.tsv`: a call or field access that changed becomes a call to an era shim.
+- `forge-1.20.1/redirects.tsv`: a call, field access or `instanceof` test (`Owner.<instanceof>(Ljava/lang/Object;)Z`) that changed becomes a call to an era shim.
 - `forge-1.20.1/bridges.tsv`: an old override of a vanilla method whose signature changed gets a bridge.
 - `forge-1.20.1/superclasses.tsv`: mod classes extending a changed vanilla class extend an era `Legacy*` class instead.
 - `forge-1.20.1/conversions.tsv`: values converted where an API's types changed (e.g. `Holder` wrapping).
