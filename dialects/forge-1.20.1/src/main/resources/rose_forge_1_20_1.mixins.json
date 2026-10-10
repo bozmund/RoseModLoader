@@ -9,7 +9,9 @@
     "DataComponentInitializersAccessor",
     "ItemPropertiesMixin",
     "MappedRegistryAccessor",
-    "ServerLifecycleMixin"
+    "ServerLifecycleMixin",
+    "StemBlockMixin",
+    "VegetationBlockMixin"
   ],
   "injectors": {
     "defaultRequire": 1

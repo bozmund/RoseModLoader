@@ -52,6 +52,7 @@ public final class FdCheck implements ModInitializer {
         RoseGameTests.register(id("ingredient_lists_keep_all_alternatives"), FdCheck::ingredientListsKeepAllAlternatives);
         RoseGameTests.register(id("foods_keep_their_own_effects"), FdCheck::foodsKeepTheirOwnEffects);
         RoseGameTests.register(id("drinks_can_be_drunk"), FdCheck::drinksCanBeDrunk);
+        RoseGameTests.register(id("crops_and_soil_random_tick"), FdCheck::cropsAndSoilRandomTick);
     }
 
     private static Identifier id(String path) {
@@ -360,6 +361,35 @@ public final class FdCheck implements ModInitializer {
         thirsty.setItemInHand(InteractionHand.MAIN_HAND, cider);
         cider.use(helper.getLevel(), thirsty, InteractionHand.MAIN_HAND);
         helper.assertTrue(thirsty.isUsingItem(), "using apple cider didn't start drinking");
+        helper.succeed();
+    }
+
+    /**
+     * FD's crops and rich soil survive random ticks (growth, hydration): their 1.20.1 code calls Forge's level and
+     * block state extensions (isAreaLoaded, canSustainPlant, isFertile, canBeHydrated).
+     */
+    private static void cropsAndSoilRandomTick(GameTestHelper helper) {
+        if (skip(helper)) return;
+        BlockPos soil = POS;
+        BlockPos crop = POS.above();
+        helper.setBlock(soil, block("rich_soil_farmland"));
+        helper.setBlock(crop, block("budding_tomatoes"));
+        var level = helper.getLevel();
+        for (int i = 0; i < 20; i++) {
+            level.getBlockState(helper.absolutePos(soil)).randomTick(level, helper.absolutePos(soil), level.getRandom());
+            level.getBlockState(helper.absolutePos(crop)).randomTick(level, helper.absolutePos(crop), level.getRandom());
+        }
+        BlockState tomatoes = level.getBlockState(helper.absolutePos(crop));
+        helper.assertTrue(tomatoes.canSurvive(level, helper.absolutePos(crop)), "budding tomatoes should stay on rich soil farmland");
+        helper.setBlock(soil, net.minecraft.world.level.block.Blocks.STONE);
+        helper.assertTrue(!block("budding_tomatoes").defaultBlockState().canSurvive(level, helper.absolutePos(crop)),
+                "budding tomatoes shouldn't stay on stone");
+
+        helper.setBlock(soil, net.minecraft.world.level.block.Blocks.FARMLAND);
+        helper.setBlock(crop, block("rice"));
+        for (int i = 0; i < 20; i++) {
+            level.getBlockState(helper.absolutePos(crop)).randomTick(level, helper.absolutePos(crop), level.getRandom());
+        }
         helper.succeed();
     }
 
