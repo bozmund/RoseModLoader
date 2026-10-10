@@ -1,16 +1,60 @@
 package rose.dialect.forge.v1_20_1.shim;
 
+import java.lang.reflect.Method;
+import java.util.List;
 import java.util.function.Supplier;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 
 /** Redirect targets for methods Forge 1.20.1 added to vanilla classes (IForge* extensions, patches). */
 public final class ForgeVanillaShim {
+    /**
+     * Forge {@code MobEffectInstance.isCurativeItem(stack)}: whether the stack cures the effect. Forge's default cure
+     * is a milk bucket ({@code IForgeMobEffect.getCurativeItems()}); a mod effect lists its own by overriding
+     * {@code getCurativeItems()}.
+     */
+    public static boolean isCurativeItem(MobEffectInstance self, ItemStack stack) {
+        return curativeItems(self.getEffect().value()).stream().anyMatch(cure -> ItemStack.isSameItem(cure, stack));
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<ItemStack> curativeItems(MobEffect effect) {
+        try {
+            return (List<ItemStack>) effect.getClass().getMethod("getCurativeItems").invoke(effect);
+        } catch (NoSuchMethodException e) {
+            return List.of(new ItemStack(Items.MILK_BUCKET));
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException("getCurativeItems of " + effect.getClass().getName() + " failed", e);
+        }
+    }
+
+    /**
+     * Forge {@code ItemStack.getFoodProperties(entity)}: the item's {@code IForgeItem.getFoodProperties(stack, entity)}
+     * if it overrides it, else the stack's food (1.20.1 {@code Item.getFoodProperties()}; 26.3: the food component).
+     */
+    public static FoodProperties getFoodProperties(ItemStack self, LivingEntity entity) {
+        try {
+            Method override = self.getItem().getClass().getMethod("getFoodProperties", ItemStack.class, LivingEntity.class);
+            return (FoodProperties) override.invoke(self.getItem(), self, entity);
+        } catch (NoSuchMethodException e) {
+            return self.get(DataComponents.FOOD);
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException("getFoodProperties of " + self.getItem().getClass().getName() + " failed", e);
+        }
+    }
+
     /** Forge {@code BlockTags.create(id)}. */
     public static TagKey<Block> blockTag(Identifier id) {
         return TagKey.create(Registries.BLOCK, id);

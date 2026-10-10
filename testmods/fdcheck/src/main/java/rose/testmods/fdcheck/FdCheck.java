@@ -51,6 +51,7 @@ public final class FdCheck implements ModInitializer {
         RoseGameTests.register(id("cooking_recipes_have_ingredients"), FdCheck::cookingRecipesHaveIngredients);
         RoseGameTests.register(id("ingredient_lists_keep_all_alternatives"), FdCheck::ingredientListsKeepAllAlternatives);
         RoseGameTests.register(id("foods_keep_their_own_effects"), FdCheck::foodsKeepTheirOwnEffects);
+        RoseGameTests.register(id("drinks_can_be_drunk"), FdCheck::drinksCanBeDrunk);
     }
 
     private static Identifier id(String path) {
@@ -331,6 +332,34 @@ public final class FdCheck implements ModInitializer {
         float doughSeconds = new ItemStack(item("wheat_dough")).get(DataComponents.CONSUMABLE).consumeSeconds();
         float cutsSeconds = new ItemStack(item("chicken_cuts")).get(DataComponents.CONSUMABLE).consumeSeconds();
         helper.assertTrue(doughSeconds == 1.6F && cutsSeconds == 0.8F, "eating time: wheat dough " + doughSeconds + " (1.6), chicken cuts " + cutsSeconds + " (0.8)");
+        helper.succeed();
+    }
+
+    /**
+     * FD's drinks (DrinkableItem) can be drunk: use starts drinking with the drink animation, and finishing
+     * hot cocoa takes away a harmful effect (FD HotCocoaItem) and leaves a bottle.
+     */
+    private static void drinksCanBeDrunk(GameTestHelper helper) {
+        if (skip(helper)) return;
+        Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        ItemStack cocoa = new ItemStack(item("hot_cocoa"));
+        player.setItemInHand(InteractionHand.MAIN_HAND, cocoa);
+        player.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.SLOWNESS, 600));
+        cocoa.use(helper.getLevel(), player, InteractionHand.MAIN_HAND);
+        helper.assertTrue(player.isUsingItem(), "using hot cocoa didn't start drinking");
+        helper.assertTrue(cocoa.getUseAnimation() == net.minecraft.world.item.ItemUseAnimation.DRINK, "hot cocoa animation: " + cocoa.getUseAnimation());
+        ItemStack left = cocoa.finishUsingItem(helper.getLevel(), player);
+        helper.assertTrue(!player.hasEffect(net.minecraft.world.effect.MobEffects.SLOWNESS), "hot cocoa should take away Slowness");
+        helper.assertTrue(left.is(net.minecraft.world.item.Items.GLASS_BOTTLE) || player.getInventory().contains(new ItemStack(net.minecraft.world.item.Items.GLASS_BOTTLE)),
+                "no bottle back, left " + left);
+
+        // Apple cider is a drink and a food: drinking it goes through the food checks (Forge getFoodProperties).
+        Player thirsty = helper.makeMockPlayer(GameType.SURVIVAL);
+        thirsty.getFoodData().setFoodLevel(2);
+        ItemStack cider = new ItemStack(item("apple_cider"));
+        thirsty.setItemInHand(InteractionHand.MAIN_HAND, cider);
+        cider.use(helper.getLevel(), thirsty, InteractionHand.MAIN_HAND);
+        helper.assertTrue(thirsty.isUsingItem(), "using apple cider didn't start drinking");
         helper.succeed();
     }
 
