@@ -3,6 +3,14 @@
     {
       "id": "minecraft:egg",
       "required": false
+    },
+    {
+      "id": "minecraft:blue_egg",
+      "required": false
+    },
+    {
+      "id": "minecraft:brown_egg",
+      "required": false
     }
   ]
 }

@@ -2,12 +2,10 @@ package rose.era.v1_20_1.shim;
 
 import java.lang.invoke.MethodType;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.WeakHashMap;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
@@ -39,8 +37,11 @@ import rose.era.v1_20_1.mixin.RecipeManagerAccess;
  * Containers.
  */
 public final class RecipeShim {
-    /** Ids of recipes handed to old code (1.20.1 recipes knew their own id). */
-    private static final Map<Recipe<?>, Identifier> IDS = Collections.synchronizedMap(new WeakHashMap<>());
+    /**
+     * Ids of recipes handed to old code (1.20.1 recipes knew their own id). By identity: many 26.3 recipes are
+     * records, so two recipes with the same contents are equal but have different ids.
+     */
+    private static final Map<Recipe<?>, Identifier> IDS = new com.google.common.collect.MapMaker().weakKeys().makeMap();
 
     /** 1.20.1 {@code level.getRecipeManager()}: the server's recipes (on a client, the integrated server's). */
     public static RecipeManager getRecipeManager(Level level) {

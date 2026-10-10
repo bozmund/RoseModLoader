@@ -36,9 +36,10 @@ items = {
     "rods/wooden": ["minecraft:stick"], "rods/blaze": ["minecraft:blaze_rod"],
     "rods": ["#forge:rods/wooden", "#forge:rods/blaze"],
     "string": ["minecraft:string"], "leather": ["minecraft:leather"], "feathers": ["minecraft:feather"],
-    "bones": ["minecraft:bone"], "eggs": ["minecraft:egg"], "slimeballs": ["minecraft:slime_ball"],
+    "bones": ["minecraft:bone"], "eggs": ["minecraft:egg", "minecraft:blue_egg", "minecraft:brown_egg"], "slimeballs": ["minecraft:slime_ball"],
     "gunpowder": ["minecraft:gunpowder"], "ender_pearls": ["minecraft:ender_pearl"],
-    "mushrooms": ["minecraft:brown_mushroom", "minecraft:red_mushroom"],
+    # 26.x added blue/brown eggs and the shelf mushroom; Forge tags on 26.x (c:eggs, c:mushrooms) include them
+    "mushrooms": ["minecraft:brown_mushroom", "minecraft:red_mushroom", "minecraft:shelf_mushroom"],
     "heads": ["minecraft:skeleton_skull", "minecraft:wither_skeleton_skull", "minecraft:zombie_head",
               "minecraft:creeper_head", "minecraft:player_head", "minecraft:dragon_head", "minecraft:piglin_head"],
     "stone": ["minecraft:stone", "minecraft:andesite", "minecraft:diorite", "minecraft:granite", "minecraft:deepslate", "minecraft:tuff"],
