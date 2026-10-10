@@ -27,7 +27,10 @@ import rose.rosetta.RedirectRules;
  * (libraries Forge mods bundle, like MixinExtras, are provided by Rose).
  */
 public final class ModTranslator {
-    /** Bump when translation output changes, so cached jars are rebuilt. */
+    /**
+     * Part of the cache key. Code changes already rebuild cached jars ({@link #codeHash}); bump this only when output
+     * depends on something neither the code nor the rule files capture.
+     */
     public static final int VERSION = 25;
 
     private final NameLayer layer;
@@ -192,6 +195,63 @@ public final class ModTranslator {
 
     private static boolean isSignature(String name) {
         return name.startsWith("META-INF/") && (name.endsWith(".SF") || name.endsWith(".RSA") || name.endsWith(".DSA") || name.endsWith(".EC"));
+    }
+
+    /**
+     * SHA-256 over the code that produces translated jars: every class file and resource in the jar or class
+     * directory each producer was loaded from. Part of the cache key, so a translator or packfix change rebuilds
+     * cached jars without a {@link #VERSION} bump. Entry timestamps are left out, so a rebuilt but identical jar
+     * keeps its hash.
+     */
+    public static String codeHash(Class<?>... producers) throws IOException {
+        java.util.SortedSet<Path> sources = new java.util.TreeSet<>();
+        for (Class<?> producer : producers) {
+            var source = producer.getProtectionDomain().getCodeSource();
+            if (source == null) throw new IOException("no code source for " + producer.getName());
+            try {
+                sources.add(Path.of(source.getLocation().toURI()));
+            } catch (java.net.URISyntaxException e) {
+                throw new IOException(e);
+            }
+        }
+        return hashSources(sources);
+    }
+
+    /** SHA-256 over the entries (name and content, sorted by name) of jars and class directories. */
+    static String hashSources(java.util.SortedSet<Path> sources) throws IOException {
+        MessageDigest digest;
+        try {
+            digest = MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
+        for (Path source : sources) {
+            java.util.SortedMap<String, byte[]> entries = new java.util.TreeMap<>();
+            if (Files.isDirectory(source)) {
+                try (var files = Files.walk(source)) {
+                    for (Path file : files.filter(Files::isRegularFile).toList()) {
+                        entries.put(source.relativize(file).toString().replace('\\', '/'), Files.readAllBytes(file));
+                    }
+                }
+            } else {
+                try (ZipFile zip = new ZipFile(source.toFile())) {
+                    var all = zip.entries();
+                    while (all.hasMoreElements()) {
+                        ZipEntry e = all.nextElement();
+                        if (e.isDirectory()) continue;
+                        try (InputStream in = zip.getInputStream(e)) {
+                            entries.put(e.getName(), in.readAllBytes());
+                        }
+                    }
+                }
+            }
+            for (var e : entries.entrySet()) {
+                digest.update(e.getKey().getBytes(StandardCharsets.UTF_8));
+                digest.update((byte) 0);
+                digest.update(e.getValue());
+            }
+        }
+        return HexFormat.of().formatHex(digest.digest());
     }
 
     public static String sha256(byte[] bytes) {

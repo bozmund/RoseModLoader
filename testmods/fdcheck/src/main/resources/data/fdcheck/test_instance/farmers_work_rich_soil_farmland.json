@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "fdcheck:farmers_work_rich_soil_farmland",
+  "structure": "minecraft:empty",
+  "max_ticks": 40,
+  "padding": 2
+}

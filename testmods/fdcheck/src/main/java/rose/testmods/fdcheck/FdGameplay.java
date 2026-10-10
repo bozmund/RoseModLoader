@@ -9,6 +9,7 @@ import static rose.testmods.fdcheck.FdCheck.skip;
 
 import java.util.function.Consumer;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.GlobalPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.resources.Identifier;
@@ -17,8 +18,12 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.ai.memory.MemoryModuleType;
+import net.minecraft.world.entity.ai.sensing.SecondaryPoiSensor;
 import net.minecraft.world.entity.animal.pig.Pig;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.npc.villager.Villager;
+import net.minecraft.world.entity.npc.villager.VillagerProfession;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodData;
 import net.minecraft.world.item.BoneMealItem;
@@ -55,6 +60,7 @@ final class FdGameplay {
         test("skillet_cooks_held_food", FdGameplay::skilletCooksHeldFood);
         test("block_entities_keep_their_items", FdGameplay::blockEntitiesKeepTheirItems);
         test("pick_block_on_fd_blocks", FdGameplay::pickBlockOnFdBlocks);
+        test("farmers_work_rich_soil_farmland", FdGameplay::farmersWorkRichSoilFarmland);
     }
 
     private static void test(String name, Consumer<GameTestHelper> test) {
@@ -344,6 +350,20 @@ final class FdGameplay {
             ItemStack picked = helper.getBlockState(POS).getCloneItemStack(helper.getLevel(), helper.absolutePos(POS), true);
             helper.assertTrue(picked.is(item(name)), "pick-block on " + name + " gave " + picked);
         }
+        helper.succeed();
+    }
+
+    /** Farmer villagers count rich soil farmland as work land (FD VillagersTargetRichSoilMixin on SecondaryPoiSensor). */
+    private static void farmersWorkRichSoilFarmland(GameTestHelper helper) {
+        if (skip(helper)) return;
+        helper.setBlock(POS, block("rich_soil_farmland"));
+        Villager farmer = helper.spawn(EntityTypes.VILLAGER, POS.above());
+        farmer.setVillagerData(farmer.getVillagerData().withProfession(helper.getLevel().registryAccess(), VillagerProfession.FARMER));
+        SecondaryPoiSensor sensor = new SecondaryPoiSensor();
+        for (int i = 0; i <= 40; i++) sensor.tick(helper.getLevel(), farmer); // the sensor scans every 40 ticks
+        GlobalPos soil = GlobalPos.of(helper.getLevel().dimension(), helper.absolutePos(POS));
+        var sites = farmer.getBrain().getMemory(MemoryModuleType.SECONDARY_JOB_SITE);
+        helper.assertTrue(sites.isPresent() && sites.get().contains(soil), "the farmer should target rich soil farmland: " + sites);
         helper.succeed();
     }
 

@@ -90,6 +90,9 @@ public final class ForgeMods {
         }
         long start = System.nanoTime();
         String inputsHash = ModTranslator.sha256(concat(concat(concat(Files.readAllBytes(nameLayer), readOrEmpty(redirects)), readOrEmpty(bridges)), concat(concat(readOrEmpty(superclasses), readOrEmpty(conversions)), readOrEmpty(accessors))));
+        // translator, rule readers, packfix and this class: their code shapes the output as much as the rules do
+        String codeHash = ModTranslator.codeHash(ModTranslator.class, NameLayer.class, DataPackFix.class, ForgeMods.class);
+        inputsHash = ModTranslator.sha256(concat(inputsHash.getBytes(StandardCharsets.UTF_8), codeHash.getBytes(StandardCharsets.UTF_8)));
         NameLayer layer = NameLayer.read(nameLayer);
         ClassIndex game = ClassIndex.of(gameJars, true);
         ModTranslator translator = new ModTranslator(layer, RedirectRules.read(redirects), BridgeRules.read(bridges),
