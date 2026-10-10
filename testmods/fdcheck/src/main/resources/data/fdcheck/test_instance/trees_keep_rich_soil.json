@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "fdcheck:trees_keep_rich_soil",
+  "structure": "minecraft:empty",
+  "max_ticks": 20,
+  "padding": 8
+}

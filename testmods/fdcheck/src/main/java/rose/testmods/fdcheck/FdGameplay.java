@@ -80,6 +80,9 @@ final class FdGameplay {
         test("farmers_buy_fd_crops", FdGameplay::farmersBuyFdCrops);
         test("plants_grow_on_rich_soil_farmland", FdGameplay::plantsGrowOnRichSoilFarmland);
         test("global_loot_modifiers_apply", FdGameplay::globalLootModifiersApply);
+        test("trampled_rich_soil_stays_rich", FdGameplay::trampledRichSoilStaysRich);
+        test("dispensers_cut_on_cutting_boards", FdGameplay::dispensersCutOnCuttingBoards);
+        test("trees_keep_rich_soil", FdGameplay::treesKeepRichSoil);
     }
 
     private static void test(String name, Consumer<GameTestHelper> test) {
@@ -479,6 +482,61 @@ final class FdGameplay {
                 .withParameter(LootContextParams.ORIGIN, helper.absoluteVec(net.minecraft.world.phys.Vec3.atCenterOf(POS))).create(LootContextParamSets.CHEST));
         helper.assertTrue(chestLoot.stream().anyMatch(s -> BuiltInRegistries.ITEM.getKey(s.getItem()).getNamespace().equals("farmersdelight")),
                 "a dungeon chest should hold FD loot: " + chestLoot);
+        helper.succeed();
+    }
+
+    /** Rich soil farmland can't be trampled: FD's fallOn only hurts the falling entity (RichSoilFarmlandBlock.fallOn). */
+    private static void trampledRichSoilStaysRich(GameTestHelper helper) {
+        if (skip(helper)) return;
+        helper.setBlock(POS, block("rich_soil_farmland"));
+        Pig pig = helper.spawn(EntityTypes.PIG, POS.above());
+        float health = pig.getHealth();
+        BlockState soil = helper.getBlockState(POS);
+        soil.getBlock().fallOn(helper.getLevel(), soil, helper.absolutePos(POS), pig, 6.0);
+        boolean hurt = pig.getHealth() < health;
+        pig.discard();
+        helper.assertTrue(helper.getBlockState(POS).is(block("rich_soil_farmland")), "rich soil farmland was trampled into " + helper.getBlockState(POS));
+        helper.assertTrue(hurt, "the fall should hurt the pig");
+        helper.succeed();
+    }
+
+    /** A dispenser facing a cutting board uses its tool on the board's item (FD CuttingBoardDispenserMixin, rebased). */
+    private static void dispensersCutOnCuttingBoards(GameTestHelper helper) {
+        if (skip(helper)) return;
+        helper.setBlock(POS, with(Blocks.DISPENSER.defaultBlockState(), "facing", "east"));
+        helper.setBlock(POS.east(), block("cutting_board"));
+        BlockEntity board = helper.getBlockEntity(POS.east(), BlockEntity.class);
+        try {
+            board.getClass().getMethod("addItem", ItemStack.class).invoke(board, new ItemStack(item("cabbage")));
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException(e);
+        }
+        Container dispenser = (Container) helper.getBlockEntity(POS, BlockEntity.class);
+        dispenser.setItem(0, new ItemStack(item("iron_knife")));
+        helper.getBlockState(POS).tick(helper.getLevel(), helper.absolutePos(POS), helper.getLevel().getRandom());
+        ItemStack stored = (ItemStack) call(board, "getStoredItem");
+        helper.assertTrue(stored.isEmpty(), "the dispenser's knife should have cut the cabbage, the board still holds " + stored);
+        helper.assertTrue(dispenser.getItem(0).is(item("iron_knife")), "the knife should stay in the dispenser: " + dispenser.getItem(0));
+        helper.succeed();
+    }
+
+    /**
+     * A tree grown on rich soil leaves the rich soil under its trunk: FD's KeepRichSoilTreeMixin (rebased onto
+     * placeBelowTrunkBlock) and 26.3 itself (#cannot_replace_below_tree_trunk holds #dirt, which FD puts rich soil in).
+     */
+    private static void treesKeepRichSoil(GameTestHelper helper) {
+        if (skip(helper)) return;
+        helper.setBlock(POS, block("rich_soil"));
+        helper.setBlock(POS.above(), Blocks.OAK_SAPLING);
+        var pos = helper.absolutePos(POS.above());
+        for (int i = 0; i < 2; i++) {
+            BlockState sapling = helper.getLevel().getBlockState(pos);
+            if (sapling.getBlock() instanceof net.minecraft.world.level.block.SaplingBlock grower) {
+                grower.advanceTree(helper.getLevel(), pos, sapling, helper.getLevel().getRandom());
+            }
+        }
+        helper.assertTrue(helper.getLevel().getBlockState(pos).is(Blocks.OAK_LOG), "the oak should have grown: " + helper.getLevel().getBlockState(pos));
+        helper.assertTrue(helper.getBlockState(POS).is(block("rich_soil")), "the trunk turned the rich soil into " + helper.getBlockState(POS));
         helper.succeed();
     }
 

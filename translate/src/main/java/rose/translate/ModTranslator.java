@@ -40,6 +40,7 @@ public final class ModTranslator {
     private final ClassIndex game;
     private final String inputsHash;
     private final List<ExtraTransform> extras;
+    private rose.rosetta.MixinRetargetRules mixinRetargets = rose.rosetta.MixinRetargetRules.empty();
 
     /** Rewrites a non-class resource (data/asset upgrades): the new path and content, or {@code null} to leave it out. */
     @FunctionalInterface
@@ -73,6 +74,12 @@ public final class ModTranslator {
         this.game = game;
         this.inputsHash = inputsHash;
         this.extras = List.copyOf(extras);
+    }
+
+    /** Mixin targets that moved in 26.3 ({@code mixin-retargets.tsv}); the rebaser moves the mods' Mixins with them. */
+    public ModTranslator withMixinRetargets(rose.rosetta.MixinRetargetRules rules) {
+        this.mixinRetargets = rules;
+        return this;
     }
 
     /** The translated jar for {@code input} inside {@code cacheDir}, building it if needed. */
@@ -111,8 +118,19 @@ public final class ModTranslator {
         List<String> mixinConfigs = mixinConfigsOf(input);
         List<String> refmaps = refmapsOf(input);
         RefmapRemapper refmapRemapper = new RefmapRemapper(remapper);
+        MixinRebaser rebaser = new MixinRebaser(mixinRetargets, game);
         java.util.Set<String> written = new java.util.HashSet<>();
         try (ZipFile in = new ZipFile(input.toFile()); ZipOutputStream out = new ZipOutputStream(Files.newOutputStream(output))) {
+            // refmaps first: the rebaser needs to know which selectors it moved before it sees the Mixin classes
+            java.util.Map<String, byte[]> rebasedRefmaps = new java.util.HashMap<>();
+            for (String refmap : refmaps) {
+                ZipEntry entry = in.getEntry(refmap);
+                if (entry == null) continue;
+                try (InputStream stream = in.getInputStream(entry)) {
+                    String remapped = refmapRemapper.remap(new String(stream.readAllBytes(), StandardCharsets.UTF_8));
+                    rebasedRefmaps.put(refmap, rebaser.retargetRefmap(remapped).getBytes(StandardCharsets.UTF_8));
+                }
+            }
             var entries = in.entries();
             while (entries.hasMoreElements()) {
                 ZipEntry entry = entries.nextElement();
@@ -122,9 +140,9 @@ public final class ModTranslator {
                 try (InputStream stream = in.getInputStream(entry)) {
                     bytes = stream.readAllBytes();
                 }
-                if (name.endsWith(".class")) bytes = translator.translateClass(bytes);
+                if (name.endsWith(".class")) bytes = rebaser.rebase(translator.translateClass(bytes));
                 else if (mixinConfigs.contains(name)) bytes = tolerantMixinConfig(new String(bytes, StandardCharsets.UTF_8)).getBytes(StandardCharsets.UTF_8);
-                else if (refmaps.contains(name)) bytes = refmapRemapper.remap(new String(bytes, StandardCharsets.UTF_8)).getBytes(StandardCharsets.UTF_8);
+                else if (rebasedRefmaps.containsKey(name)) bytes = rebasedRefmaps.get(name);
                 else {
                     Resource fixed = resources.apply(name, bytes);
                     if (fixed == null) continue;
@@ -142,6 +160,9 @@ public final class ModTranslator {
                 out.write(extra.content());
                 out.closeEntry();
             }
+        }
+        if (!rebaser.report().isEmpty()) {
+            Files.write(output.resolveSibling(output.getFileName().toString().replaceAll("\\.part$", "") + ".mixins.txt"), rebaser.report());
         }
     }
 

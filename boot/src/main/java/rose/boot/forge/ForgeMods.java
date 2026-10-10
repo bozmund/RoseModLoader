@@ -51,6 +51,7 @@ public final class ForgeMods {
     private final Path superclasses;
     private final Path conversions;
     private final Path accessors;
+    private final Path mixinRetargets;
     private final List<Path> gameJars;
     private final Path cacheDir;
 
@@ -64,6 +65,7 @@ public final class ForgeMods {
         this.superclasses = rulesDir.resolve("superclasses.tsv");
         this.conversions = rulesDir.resolve("conversions.tsv");
         this.accessors = rulesDir.resolve("accessors.tsv");
+        this.mixinRetargets = rulesDir.resolve("mixin-retargets.tsv");
         this.gameJars = List.copyOf(gameJars);
         this.cacheDir = cacheDir;
     }
@@ -89,7 +91,7 @@ public final class ForgeMods {
                     + " (run ./gradlew :rosetta:buildNameLayers)");
         }
         long start = System.nanoTime();
-        String inputsHash = ModTranslator.sha256(concat(concat(concat(Files.readAllBytes(nameLayer), readOrEmpty(redirects)), readOrEmpty(bridges)), concat(concat(readOrEmpty(superclasses), readOrEmpty(conversions)), readOrEmpty(accessors))));
+        String inputsHash = ModTranslator.sha256(concat(concat(concat(Files.readAllBytes(nameLayer), readOrEmpty(redirects)), readOrEmpty(bridges)), concat(concat(readOrEmpty(superclasses), readOrEmpty(conversions)), concat(readOrEmpty(accessors), readOrEmpty(mixinRetargets)))));
         // translator, rule readers, packfix and this class: their code shapes the output as much as the rules do
         String codeHash = ModTranslator.codeHash(ModTranslator.class, NameLayer.class, DataPackFix.class, ForgeMods.class);
         inputsHash = ModTranslator.sha256(concat(inputsHash.getBytes(StandardCharsets.UTF_8), codeHash.getBytes(StandardCharsets.UTF_8)));
@@ -98,7 +100,8 @@ public final class ForgeMods {
         ModTranslator translator = new ModTranslator(layer, RedirectRules.read(redirects), BridgeRules.read(bridges),
                 ConversionRules.read(conversions), game,
                 inputsHash, List.of(new TypedListenerTransform(), new SuperclassRebaser(SuperclassRebaser.read(superclasses)),
-                        new AccessorReplacer(AccessorReplacer.read(accessors))));
+                        new AccessorReplacer(AccessorReplacer.read(accessors))))
+                .withMixinRetargets(rose.rosetta.MixinRetargetRules.read(mixinRetargets));
 
         AccessTransformerConverter atConverter = new AccessTransformerConverter(new RosettaRemapper(layer), game);
 
