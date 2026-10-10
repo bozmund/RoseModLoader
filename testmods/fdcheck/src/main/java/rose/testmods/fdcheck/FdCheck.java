@@ -50,6 +50,7 @@ public final class FdCheck implements ModInitializer {
         RoseGameTests.register(id("cabinets_burn_in_furnaces"), FdCheck::cabinetsBurnInFurnaces);
         RoseGameTests.register(id("cooking_recipes_have_ingredients"), FdCheck::cookingRecipesHaveIngredients);
         RoseGameTests.register(id("ingredient_lists_keep_all_alternatives"), FdCheck::ingredientListsKeepAllAlternatives);
+        RoseGameTests.register(id("foods_keep_their_own_effects"), FdCheck::foodsKeepTheirOwnEffects);
     }
 
     private static Identifier id(String path) {
@@ -311,6 +312,26 @@ public final class FdCheck implements ModInitializer {
             helper.assertTrue(ingredients.stream().anyMatch(i -> i.test(new ItemStack(item))),
                     recipePath + " should accept " + item + "; ingredients: " + ingredients);
         }
+    }
+
+    /**
+     * Each food keeps its own 1.20.1 extras (FD FoodValues): wheat dough, raw pasta and chicken cuts have a 30% chance
+     * of Hunger; wheat dough isn't fast to eat, chicken cuts are. Wheat dough and raw pasta have the same nutrition
+     * and saturation, which once made their extras collide.
+     */
+    private static void foodsKeepTheirOwnEffects(GameTestHelper helper) {
+        if (skip(helper)) return;
+        for (String food : List.of("wheat_dough", "raw_pasta", "chicken_cuts")) {
+            var consumable = new ItemStack(item(food)).get(DataComponents.CONSUMABLE);
+            helper.assertTrue(consumable != null && consumable.onConsumeEffects().stream().anyMatch(e ->
+                    e instanceof net.minecraft.world.item.consume_effects.ApplyStatusEffectsConsumeEffect apply && apply.probability() == 0.3F
+                            && apply.effects().stream().anyMatch(i -> i.getEffect().is(net.minecraft.world.effect.MobEffects.HUNGER))),
+                    food + " should have a 30% chance of Hunger, has " + consumable);
+        }
+        float doughSeconds = new ItemStack(item("wheat_dough")).get(DataComponents.CONSUMABLE).consumeSeconds();
+        float cutsSeconds = new ItemStack(item("chicken_cuts")).get(DataComponents.CONSUMABLE).consumeSeconds();
+        helper.assertTrue(doughSeconds == 1.6F && cutsSeconds == 0.8F, "eating time: wheat dough " + doughSeconds + " (1.6), chicken cuts " + cutsSeconds + " (0.8)");
+        helper.succeed();
     }
 
     private static boolean hasEffect(Player player, String path) {

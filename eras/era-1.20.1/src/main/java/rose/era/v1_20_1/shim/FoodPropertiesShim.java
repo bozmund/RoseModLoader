@@ -1,10 +1,8 @@
 package rose.era.v1_20_1.shim;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.WeakHashMap;
 import java.util.function.Supplier;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -28,7 +26,8 @@ public final class FoodPropertiesShim {
         boolean meat;
     }
 
-    private static final Map<Object, Extras> EXTRAS = Collections.synchronizedMap(new WeakHashMap<>());
+    /** By identity: 26.3 FoodProperties is a record, so two foods with the same nutrition and saturation are equal. */
+    private static final Map<Object, Extras> EXTRAS = new com.google.common.collect.MapMaker().weakKeys().makeMap();
 
     private static Extras extras(Object key) {
         return EXTRAS.computeIfAbsent(key, k -> new Extras());

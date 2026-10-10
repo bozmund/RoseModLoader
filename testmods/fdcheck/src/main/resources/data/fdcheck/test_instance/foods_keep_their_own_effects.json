@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "fdcheck:foods_keep_their_own_effects",
+  "structure": "minecraft:empty",
+  "max_ticks": 20,
+  "padding": 2
+}
