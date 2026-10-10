@@ -26,6 +26,7 @@ dependencies {
     compileOnly(files(widenMinecraft.map { it.outputs.files }))
     compileOnly(files(Callable { minecraft.files.filter { it.name != "client.jar" } }).builtBy(":boot:installMinecraft"))
     compileOnly(libs.mixin)
+    compileOnly(libs.mixinextras) // provided by the mixin service
     compileOnly(libs.bundles.asm) // provided by the launcher's class loader
     compileOnly(project(":loader")) // shared from the parent class loader at runtime
     compileOnly(project(":api"))    // ships inside the "rose" core mod

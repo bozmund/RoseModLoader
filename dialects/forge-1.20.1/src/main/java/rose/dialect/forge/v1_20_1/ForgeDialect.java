@@ -50,6 +50,11 @@ public final class ForgeDialect implements ModInitializer {
         return MODS;
     }
 
+    /** Whether any Forge 1.20.1 mod is loaded, so game hooks can skip posting Forge events otherwise. */
+    public static boolean active() {
+        return !MODS.isEmpty();
+    }
+
     @Override
     public void onInitialize() {
         for (ModMetadata mod : RoseLoader.get().mods()) {

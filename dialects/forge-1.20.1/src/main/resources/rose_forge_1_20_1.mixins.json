@@ -7,11 +7,20 @@
     "BlockPropertiesMixin",
     "BuiltInRegistriesMixin",
     "DataComponentInitializersAccessor",
+    "EntitySectionEventsMixin",
+    "InteractionEventsMixin",
     "ItemPropertiesMixin",
+    "LivingEntityEventsMixin",
     "MappedRegistryAccessor",
+    "PlayerEventsMixin",
     "ServerLifecycleMixin",
     "StemBlockMixin",
     "VegetationBlockMixin"
+  ],
+  "client": [
+    "client.ClientEventsMixin",
+    "client.ClientInteractionEventsMixin",
+    "client.TooltipEventsMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -3,11 +3,12 @@ package rose.era.v1_20_1.shim;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import rose.era.v1_20_1.RegistrationContext;
 
-/** Redirect targets for 1.20.1 {@code EntityType.Builder}. */
+/** Redirect targets for 1.20.1 {@code EntityType} and {@code EntityType.Builder}. */
 public final class EntityTypeShim {
     /**
      * 1.20.1 {@code build(String)} took a name used only for data fixers; 26.3 {@code build(ResourceKey)} needs the
@@ -17,6 +18,11 @@ public final class EntityTypeShim {
         ResourceKey<EntityType<?>> key = RegistrationContext.current(Registries.ENTITY_TYPE);
         if (key == null) key = ResourceKey.create(Registries.ENTITY_TYPE, Identifier.parse(name));
         return self.build(key);
+    }
+
+    /** 1.20.1 {@code EntityType.is(TagKey)}; 26.x tests tags on the type's holder (or on the entity). */
+    public static boolean is(EntityType<?> self, TagKey<EntityType<?>> tag) {
+        return self.builtInRegistryHolder().is(tag);
     }
 
     private EntityTypeShim() {}

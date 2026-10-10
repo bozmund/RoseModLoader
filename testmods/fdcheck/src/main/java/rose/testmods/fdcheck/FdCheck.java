@@ -54,6 +54,9 @@ public final class FdCheck implements ModInitializer {
         RoseGameTests.register(id("drinks_can_be_drunk"), FdCheck::drinksCanBeDrunk);
         RoseGameTests.register(id("crops_and_soil_random_tick"), FdCheck::cropsAndSoilRandomTick);
         RoseGameTests.register(id("meal_tooltips_build"), FdCheck::mealTooltipsBuild);
+        RoseGameTests.register(id("knife_slices_cake"), FdCheck::knifeSlicesCake);
+        RoseGameTests.register(id("rabbit_stew_gives_jump_boost"), FdCheck::rabbitStewGivesJumpBoost);
+        RoseGameTests.register(id("dog_food_heals_tamed_wolves"), FdCheck::dogFoodHealsTamedWolves);
     }
 
     private static Identifier id(String path) {
@@ -401,6 +404,53 @@ public final class FdCheck implements ModInitializer {
         var lines = new ItemStack(item("beef_stew")).getTooltipLines(Item.TooltipContext.of(helper.getLevel()), player,
                 net.minecraft.world.item.TooltipFlag.Default.NORMAL);
         helper.assertTrue(lines.size() > 1, "beef stew tooltip should list Nourishment, has " + lines);
+        helper.succeed();
+    }
+
+    /** Forge RightClickBlock: FD's KnifeEvents.onCakeInteraction slices a cake with a knife, dropping a cake slice. */
+    private static void knifeSlicesCake(GameTestHelper helper) {
+        if (skip(helper)) return;
+        helper.setBlock(POS, net.minecraft.world.level.block.Blocks.CAKE);
+        var player = (net.minecraft.server.level.ServerPlayer) helper.makeMockServerPlayer(GameType.SURVIVAL);
+        ItemStack knife = new ItemStack(item("iron_knife"));
+        player.setItemInHand(InteractionHand.MAIN_HAND, knife);
+        BlockPos pos = helper.absolutePos(POS);
+        var hit = new net.minecraft.world.phys.BlockHitResult(net.minecraft.world.phys.Vec3.atCenterOf(pos), net.minecraft.core.Direction.UP, pos, false);
+        player.gameMode.useItemOn(player, helper.getLevel(), knife, InteractionHand.MAIN_HAND, hit);
+        helper.assertBlockProperty(POS, net.minecraft.world.level.block.CakeBlock.BITES, 1);
+        helper.assertItemEntityPresent(item("cake_slice"), POS, 2.0);
+        helper.succeed();
+    }
+
+    /** Forge LivingEntityUseItemEvent.Finish: FD's CommonEvents.handleVanillaSoupEffects gives Jump Boost for rabbit stew. */
+    private static void rabbitStewGivesJumpBoost(GameTestHelper helper) {
+        if (skip(helper)) return;
+        Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(net.minecraft.world.item.Items.RABBIT_STEW));
+        player.startUsingItem(InteractionHand.MAIN_HAND);
+        try {
+            Method complete = net.minecraft.world.entity.LivingEntity.class.getDeclaredMethod("completeUsingItem");
+            complete.setAccessible(true);
+            complete.invoke(player);
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException(e);
+        }
+        helper.assertTrue(player.hasEffect(net.minecraft.world.effect.MobEffects.JUMP_BOOST),
+                "rabbit stew should give Jump Boost, effects: " + player.getActiveEffects());
+        helper.succeed();
+    }
+
+    /** Forge EntityInteract: FD's DogFoodEvent heals a tamed wolf fed dog food. */
+    private static void dogFoodHealsTamedWolves(GameTestHelper helper) {
+        if (skip(helper)) return;
+        Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        var wolf = helper.spawn(net.minecraft.world.entity.EntityTypes.WOLF, POS);
+        wolf.tame(player);
+        wolf.setHealth(1.0F);
+        ItemStack food = new ItemStack(item("dog_food"));
+        player.setItemInHand(InteractionHand.MAIN_HAND, food);
+        player.interactOn(wolf, InteractionHand.MAIN_HAND, wolf.position());
+        helper.assertTrue(wolf.getHealth() == wolf.getMaxHealth(), "dog food should heal the wolf, health " + wolf.getHealth());
         helper.succeed();
     }
 
