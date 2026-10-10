@@ -75,7 +75,6 @@ tags minecraft:block #farmersdelight:grows_mushroom_colonies	the port adds this 
 tags minecraft:block #farmersdelight:grows_wild_crops	the port adds this tag; FarmersDelight-1.20.1-1.3.4.jar has no data/farmersdelight/tags/blocks/grows_wild_crops.json
 tags minecraft:block #farmersdelight:knife_instantly_mines	the port adds this tag; FarmersDelight-1.20.1-1.3.4.jar has no data/farmersdelight/tags/blocks/knife_instantly_mines.json
 tags minecraft:block #minecraft:grows_crops	the port adds this tag; FarmersDelight-1.20.1-1.3.4.jar has no data/minecraft/tags/blocks/grows_crops.json
-tags minecraft:block #minecraft:overrides_mushroom_light_requirement	the port adds this tag; FarmersDelight-1.20.1-1.3.4.jar has no data/minecraft/tags/blocks/overrides_mushroom_light_requirement.json
 tags minecraft:block #minecraft:support_override_cactus_flower	the port adds this tag; FarmersDelight-1.20.1-1.3.4.jar has no data/minecraft/tags/blocks/support_override_cactus_flower.json
 tags minecraft:block #minecraft:supports_big_dripleaf	the port adds this tag; FarmersDelight-1.20.1-1.3.4.jar has no data/minecraft/tags/blocks/supports_big_dripleaf.json
 tags minecraft:block #minecraft:supports_crops	the port adds this tag; FarmersDelight-1.20.1-1.3.4.jar has no data/minecraft/tags/blocks/supports_crops.json
@@ -91,12 +90,6 @@ tags minecraft:damage_type #minecraft:is_fire	the port adds this tag; FarmersDel
 tags minecraft:damage_type #minecraft:no_knockback	the port adds this tag; FarmersDelight-1.20.1-1.3.4.jar has no data/minecraft/tags/damage_type/no_knockback.json
 tags minecraft:damage_type #minecraft:panic_causes	the port adds this tag; FarmersDelight-1.20.1-1.3.4.jar has no data/minecraft/tags/damage_type/panic_causes.json
 tags minecraft:damage_type #minecraft:panic_environmental_causes	the port adds this tag; FarmersDelight-1.20.1-1.3.4.jar has no data/minecraft/tags/damage_type/panic_environmental_causes.json
-tags minecraft:enchantment #minecraft:in_enchanting_table	the port adds this tag; FarmersDelight-1.20.1-1.3.4.jar has no data/minecraft/tags/enchantment/in_enchanting_table.json
-tags minecraft:enchantment #minecraft:non_treasure	the port adds this tag; FarmersDelight-1.20.1-1.3.4.jar has no data/minecraft/tags/enchantment/non_treasure.json
-tags minecraft:enchantment #minecraft:on_mob_spawn_equipment	the port adds this tag; FarmersDelight-1.20.1-1.3.4.jar has no data/minecraft/tags/enchantment/on_mob_spawn_equipment.json
-tags minecraft:enchantment #minecraft:on_random_loot	the port adds this tag; FarmersDelight-1.20.1-1.3.4.jar has no data/minecraft/tags/enchantment/on_random_loot.json
-tags minecraft:enchantment #minecraft:on_traded_equipment	the port adds this tag; FarmersDelight-1.20.1-1.3.4.jar has no data/minecraft/tags/enchantment/on_traded_equipment.json
-tags minecraft:enchantment #minecraft:tradeable	the port adds this tag; FarmersDelight-1.20.1-1.3.4.jar has no data/minecraft/tags/enchantment/tradeable.json
 tags minecraft:entity_type #farmersdelight:drops_leather	the port adds this tag; FarmersDelight-1.20.1-1.3.4.jar has no data/farmersdelight/tags/entity_types/drops_leather.json
 tags minecraft:item #c:animal_foods	the port adds this tag; FarmersDelight-1.20.1-1.3.4.jar has no data/c/tags/items/animal_foods.json
 tags minecraft:item #c:crops	the port adds this tag; FarmersDelight-1.20.1-1.3.4.jar has no data/c/tags/items/crops.json
@@ -246,3 +239,36 @@ tags minecraft:item #minecraft:tall_flowers	26.x removed #minecraft:tall_flowers
 tags minecraft:item #minecraft:tools	26.x removed #minecraft:tools; Rose's era keeps it with 1.20.1's contents for old mods, and FD 1.20.1 adds its knives (data/minecraft/tags/items/tools.json)
 tags minecraft:item #minecraft:villager_picks_up farmersdelight:*	FD 1.20.1 adds its crops to Villager.WANTED_ITEMS in code, which Rose turns into this tag (AnimalFoodShim.setVillagerWantedItems); the port doesn't
 tags minecraft:block #minecraft:supports_* farmersdelight:rich_soil_farmland	FD 1.20.1 RichSoilFarmlandBlock.canSustainPlant decides which plants grow on it (CROP and PLAINS), as Forge asked it; Rose asks it too (VegetationBlockMixin; GameTest fdcheck:plants_grow_on_rich_soil_farmland), the port lists it in the supports_* tags
+# Loot tables: Rose runs FD 1.20.1's tables (packfix-upgraded) and its global loot modifiers
+loot_tables farmersdelight:blocks/* /pools/*/modifier/*	FD 1.20.1 copies a container's name with minecraft:copy_name (data/farmersdelight/loot_tables/blocks/oak_cabinet.json etc.; still a 26.3 loot function); the port uses copy_components
+loot_tables farmersdelight:blocks/* /pools/*condition*/ability	the port's farmersdelight:can_item_perform_ability replaces Forge's forge:can_tool_perform_action, which FD 1.20.1's tables use (Rose's Forge dialect provides it)
+loot_tables farmersdelight:blocks/* /pools/*condition*/action	FD 1.20.1's forge:can_tool_perform_action condition (see the ability entry)
+loot_tables farmersdelight:blocks/* /pools/*condition*/type	FD 1.20.1's forge:can_tool_perform_action condition (see the ability entry)
+loot_tables farmersdelight:blocks/*_pie /pools	FD 1.20.1 pies have no loot pools (data/farmersdelight/loot_tables/blocks/apple_pie.json); slices drop through its global loot modifiers (slicing_*), which Rose applies (GameTest fdcheck:global_loot_modifiers_apply); the port moved them into the table
+loot_tables farmersdelight:blocks/sweet_berry_cheesecake /pools	as the pies: FD 1.20.1 slices it through the slicing_sweet_berry_cheesecake global loot modifier
+loot_tables farmersdelight:blocks/rice_panicles /pools	FD 1.20.1 drops straw from mature rice through the straw_from_mature_rice global loot modifier (Rose applies it; GameTest fdcheck:global_loot_modifiers_apply); the port added a straw pool to the table
+loot_tables farmersdelight:blocks/sandy_shrub /pools	FD 1.20.1 drops straw from sandy shrubs through the straw_from_sandy_shrub global loot modifier, which Rose applies; the port added a straw pool to the table
+loot_tables farmersdelight:blocks/cooking_pot /pools/*/modifier	FD 1.20.1 keeps the meal with its copy_meal loot function (ModLootFunctions; Rose runs it and encodes the 1.20.1 JSON); the port copies components
+# Recipes: FD's own recipe types run through FD 1.20.1's serializers (LegacyRecipes), which encode the JSON they read
+recipes farmersdelight:cutting/* /codec/*	the port rewrote FD's cutting recipe JSON (data/farmersdelight/recipe/cutting/acacia_log.json: string ingredients, result {"item": {"id"}}, a fabric:type tool); Rose reads FD 1.20.1's (recipes/cutting/acacia_log.json: {"item"} ingredients, tool list) with FD's own serializer
+recipes farmersdelight:salvaging/* /codec/*	as cutting/*: salvaging recipes are FD cutting recipes in FD 1.20.1's format
+recipes farmersdelight:cooking/* /codec/*	the port rewrote FD's cooking recipe JSON (result {"id"}, recipe_book_tab, cooking time defaults); Rose reads FD 1.20.1's (recipes/cooking/*.json: {"item"} forms, forge: tags) with FD's own serializer
+recipes farmersdelight:cutting/* /book_category	recipe book categories are a 1.21.2 registry; the port registers farmersdelight:cutting, FD 1.20.1 has none for cutting (Rose reports crafting_misc)
+recipes farmersdelight:salvaging/* /book_category	as cutting/*
+recipes farmersdelight:cooking/* /book_category	recipe book categories are a 1.21.2 registry; the port registers farmersdelight:cooking_*, FD 1.20.1 picks a tab with Forge's client-side RecipeBookRegistry (Rose reports crafting_misc)
+recipes farmersdelight:cooking/* /display	recipe displays are 1.21.2+ API; the port registers a farmersdelight:cooking display, FD 1.20.1 has none
+recipes farmersdelight:cutting/* /ingredients	FD 1.20.1 CuttingBoardRecipe.getIngredients lists the input, which Rose's placement info reports; the port's cutting recipes aren't placeable
+recipes farmersdelight:salvaging/* /ingredients	as cutting/*
+recipes farmersdelight:cooking/cabbage_rolls /ingredients/*	FD 1.20.1's #farmersdelight:cabbage_roll_ingredients is built from Forge tags (forge:vegetables has no golden carrot, forge:mushrooms is brown and red, + Rose's shelf mushroom); the port's from c: tags
+recipes farmersdelight:cooking/*_stew /ingredients/*	FD 1.20.1's stews list brown and red mushrooms as items (recipes/cooking/mushroom_stew.json, rabbit_stew.json) and fish via #forge:raw_fishes; the port uses c: tags (adds shelf mushroom, drops tropical fish)
+recipes farmersdelight:cooking/mushroom_rice /ingredients/*	FD 1.20.1's mushroom rice lists brown and red mushrooms as items; the port uses #c:mushrooms
+recipes farmersdelight:cooking/squid_ink_pasta /ingredients/*	FD 1.20.1 uses #forge:raw_fishes (with tropical fish); the port's c: tag doesn't have it
+recipes farmersdelight:cooking/chicken_soup /ingredients/*	FD 1.20.1 uses #forge:vegetables (carrot, potato, beetroot + FD's onion and tomato; recipes/cooking/chicken_soup.json); the port's #c:foods/vegetable also has golden carrot
+recipes farmersdelight:cooking/ratatouille /ingredients/*	FD 1.20.1 uses #forge:vegetables (carrot, potato, beetroot + FD's onion and tomato; recipes/cooking/ratatouille.json); the port's #c:foods/vegetable also has golden carrot
+recipes farmersdelight:cooking/stuffed_pumpkin_block /ingredients/*	FD 1.20.1 uses #forge:vegetables (carrot, potato, beetroot + FD's onion and tomato; recipes/cooking/stuffed_pumpkin_block.json); the port's #c:foods/vegetable also has golden carrot
+recipes farmersdelight:cooking/vegetable_noodles /ingredients/*	FD 1.20.1 uses #forge:vegetables (carrot, potato, beetroot + FD's onion and tomato; recipes/cooking/vegetable_noodles.json); the port's #c:foods/vegetable also has golden carrot
+recipes farmersdelight:kelp_roll *	FD 1.20.1 uses #forge:vegetables (recipes/kelp_roll.json); the port's #c:foods/vegetable adds golden carrot
+recipes farmersdelight:barbecue_stick *	FD 1.20.1 accepts #forge:cooked_fishes (recipes/barbecue_stick.json); the port's recipe dropped fish
+recipes farmersdelight:fried_egg* *	FD 1.20.1 smelts minecraft:egg (recipes/fried_egg.json); the port takes #c:eggs (with 26.x blue and brown eggs)
+recipes farmersdelight:food_serving /codec/category	FD 1.20.1's special recipe JSON has "category": "misc", which 26.3's CustomRecipe keeps; the port's doesn't
+recipes farmersdelight:wheat_dough_from_water /codec/category	as food_serving (recipes/wheat_dough_from_water.json has "category": "misc")
