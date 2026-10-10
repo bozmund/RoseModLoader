@@ -24,7 +24,7 @@ public abstract class EntityRenderersEvent extends Event implements IModBusEvent
         /** Old renderers (1.20.1 render-into-buffers) run through Rose's adapter on 26.3's two-phase rendering. */
         @SuppressWarnings({"unchecked", "rawtypes"})
         public <T extends BlockEntity> void registerBlockEntityRenderer(BlockEntityType<? extends T> type, LegacyBlockEntityRendererProvider<T> provider) {
-            BlockEntityRenderers.register((BlockEntityType) type, (BlockEntityRendererProvider) LegacyBlockEntityRendererAdapter.provider(provider));
+            BlockEntityRenderers.register((BlockEntityType) type, (BlockEntityRendererProvider) LegacyBlockEntityRendererAdapter.provider(type, provider));
         }
     }
 }

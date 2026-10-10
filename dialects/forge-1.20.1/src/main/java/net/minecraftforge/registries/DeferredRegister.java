@@ -59,6 +59,10 @@ public class DeferredRegister<T> {
         return object;
     }
 
+    /** Forge-only registries Rose's dialect reads (ForgeLootModifiers, BiomeModifiers): entries there do take effect. */
+    private static final java.util.Set<ResourceKey<?>> ROSE_READS = java.util.Set.of(
+            ForgeRegistries.Keys.GLOBAL_LOOT_MODIFIER_SERIALIZERS, ForgeRegistries.Keys.BIOME_MODIFIER_SERIALIZERS);
+
     public void register(IEventBus bus) {
         bus.rose$addListener(this::addEntries, RegisterEvent.class);
     }
@@ -99,7 +103,7 @@ public class DeferredRegister<T> {
             object.bind(value);
             unhandled++;
         }
-        if (registry.isDetached() && unhandled > 0) {
+        if (registry.isDetached() && unhandled > 0 && !ROSE_READS.contains(registry.getRegistryKey())) {
             Unsupported.registry(registry.getRegistryName().toString(), modid + " registers " + unhandled
                     + " entries into " + registry.getRegistryName() + ", which isn't a built-in registry on 26.3; they are kept but have no effect yet");
         }

@@ -10,6 +10,7 @@ import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
@@ -28,14 +29,28 @@ public final class LegacyBlockEntityRendererAdapter<T extends BlockEntity>
 
     /** A dialect's provider wrapper: 26.3 creates renderers from a Context, as 1.20.1 did. */
     public static <T extends BlockEntity> BlockEntityRendererProvider<T, State> provider(LegacyBlockEntityRendererProvider<T> legacy) {
+        return provider(null, legacy);
+    }
+
+    /**
+     * As {@link #provider(LegacyBlockEntityRendererProvider)}, for {@code type}: when the old renderer can't be built,
+     * the block entity gets the vanilla renderer of the vanilla block entity it extends (a mod sign is still a sign),
+     * else nothing is drawn.
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public static <T extends BlockEntity> BlockEntityRendererProvider<T, State> provider(@Nullable BlockEntityType<?> type,
+                                                                                         LegacyBlockEntityRendererProvider<T> legacy) {
         return context -> {
             try {
                 return new LegacyBlockEntityRendererAdapter<>(legacy.create(context));
             } catch (RuntimeException | LinkageError e) {
                 // 26.3 fails the whole resource reload if one renderer can't be built; an old renderer that uses an
-                // API Rose doesn't bridge yet draws nothing instead.
+                // API Rose doesn't bridge yet falls back (or draws nothing) instead.
                 if (Boolean.getBoolean("rose.forge.strict")) throw e;
-                LogUtils.getLogger().warn("[rose] block entity renderer from {} not created: {}", legacy.getClass().getName(), e.toString());
+                BlockEntityRendererProvider<?, ?> vanilla = type == null ? null : VanillaFallback.providerFor(type);
+                LogUtils.getLogger().warn("[rose] block entity renderer from {} not created ({}): {}", legacy.getClass().getName(),
+                        vanilla != null ? "using the vanilla renderer of its block entity's superclass" : "it draws nothing", e.toString());
+                if (vanilla != null) return (BlockEntityRenderer) vanilla.create(context);
                 return new LegacyBlockEntityRendererAdapter<>((be, partialTick, pose, buffers, light, overlay) -> { });
             }
         };

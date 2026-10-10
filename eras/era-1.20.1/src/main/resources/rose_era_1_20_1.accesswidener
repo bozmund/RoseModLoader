@@ -40,3 +40,6 @@ accessible field net/minecraft/world/level/block/entity/BaseContainerBlockEntity
 
 # LegacyItemComponents reads the component a mod item already set (e.g. a food's consumable) to adjust it.
 accessible field net/minecraft/core/component/DataComponentMap$Builder map Lit/unimi/dsi/fastutil/objects/Reference2ObjectMap;
+
+# VanillaFallback: the vanilla block entity renderer for a mod block entity whose own renderer cannot be built.
+accessible field net/minecraft/client/renderer/blockentity/BlockEntityRenderers PROVIDERS Ljava/util/Map;

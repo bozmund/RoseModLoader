@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "fdcheck:canvas_signs_can_be_placed",
+  "structure": "minecraft:empty",
+  "max_ticks": 20,
+  "padding": 2
+}

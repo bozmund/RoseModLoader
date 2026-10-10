@@ -52,6 +52,22 @@ class DataPackFixTest {
     }
 
     @Test
+    void modelOverridesBecomeARangeDispatchOnTheLegacyProperty() {
+        fix.fix("assets/fd/models/item/skillet.json", """
+                {"parent":"fd:block/skillet","overrides":[{"predicate":{"cooking":1},"model":"fd:item/skillet_cooking"}]}"""
+                .getBytes(StandardCharsets.UTF_8));
+        JsonObject definition = JsonParser.parseString(new String(fix.extras().stream()
+                .filter(f -> f.path().equals("assets/fd/items/skillet.json")).findFirst().orElseThrow().content(), StandardCharsets.UTF_8)).getAsJsonObject();
+        JsonObject model = definition.getAsJsonObject("model");
+        assertEquals("minecraft:range_dispatch", model.get("type").getAsString());
+        assertEquals("rose:legacy_property", model.get("property").getAsString());
+        assertEquals("minecraft:cooking", model.get("name").getAsString());
+        assertEquals("fd:item/skillet_cooking", model.getAsJsonArray("entries").get(0).getAsJsonObject().getAsJsonObject("model").get("model").getAsString());
+        assertEquals(1.0f, model.getAsJsonArray("entries").get(0).getAsJsonObject().get("threshold").getAsFloat());
+        assertEquals("fd:item/skillet", model.getAsJsonObject("fallback").get("model").getAsString());
+    }
+
+    @Test
     void recipeAdvancementGetsRecipesListAndSingularFolder() {
         String json = """
                 {"parent":"minecraft:recipes/root",

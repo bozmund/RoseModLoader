@@ -85,6 +85,7 @@ final class FdGameplay {
         test("trees_keep_rich_soil", FdGameplay::treesKeepRichSoil);
         test("placed_skillets_keep_their_item", FdGameplay::placedSkilletsKeepTheirItem);
         test("safety_nets_bounce", FdGameplay::safetyNetsBounce);
+        test("canvas_signs_can_be_placed", FdGameplay::canvasSignsCanBePlaced);
     }
 
     private static void test(String name, Consumer<GameTestHelper> test) {
@@ -577,6 +578,18 @@ final class FdGameplay {
         double bounce = pig.getDeltaMovement().y;
         pig.discard();
         helper.assertTrue(bounce > 0.5, "the pig should bounce off the safety net, its vertical motion is " + bounce);
+        helper.succeed();
+    }
+
+    /** FD's canvas signs build on vanilla's sign block entity but declare their own type (BlockEntityTypeMixin). */
+    private static void canvasSignsCanBePlaced(GameTestHelper helper) {
+        if (skip(helper)) return;
+        for (String sign : java.util.List.of("canvas_sign", "hanging_canvas_sign", "red_canvas_sign", "black_hanging_canvas_sign")) {
+            helper.setBlock(POS, block(sign));
+            BlockEntity entity = helper.getBlockEntity(POS, BlockEntity.class);
+            var type = BuiltInRegistries.BLOCK_ENTITY_TYPE.getKey(entity.getType());
+            helper.assertTrue(type != null && type.getNamespace().equals("farmersdelight"), sign + " has block entity type " + type);
+        }
         helper.succeed();
     }
 

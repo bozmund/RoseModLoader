@@ -4,6 +4,7 @@
   "package": "rose.era.v1_20_1.mixin",
   "compatibilityLevel": "JAVA_25",
   "mixins": [
+    "BlockEntityTypeMixin",
     "BlockItemMixin",
     "EntityFallOnMixin",
     "ItemStackRepairMixin",
@@ -19,5 +20,8 @@
   ],
   "injectors": {
     "defaultRequire": 1
-  }
+  },
+  "client": [
+    "client.RangeSelectItemModelPropertiesMixin"
+  ]
 }

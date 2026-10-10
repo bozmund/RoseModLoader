@@ -91,6 +91,8 @@ public final class DataPackFix {
 
     /** Item models seen ({@code ns:path}); 1.21.4 needs an item definition for each. */
     private final Set<String> itemModels = new java.util.TreeSet<>();
+    /** Item models' 1.20.1 {@code overrides} (pick a model by item property), by model. */
+    private final Map<String, JsonArray> modelOverrides = new java.util.HashMap<>();
 
     /**
      * Files the mod lacks for 26.3: an item definition ({@code assets/<ns>/items/<id>.json}) for every item model.
@@ -101,11 +103,9 @@ public final class DataPackFix {
         List<Fixed> out = new ArrayList<>();
         for (String item : itemModels) {
             int colon = item.indexOf(':');
-            JsonObject model = new JsonObject();
-            model.addProperty("type", "minecraft:model");
-            model.addProperty("model", item.substring(0, colon) + ":item/" + item.substring(colon + 1));
+            JsonObject model = plainModel(item.substring(0, colon) + ":item/" + item.substring(colon + 1));
             JsonObject definition = new JsonObject();
-            definition.add("model", model);
+            definition.add("model", modelOverrides.containsKey(item) ? withOverrides(item, model, modelOverrides.get(item)) : model);
             out.add(new Fixed("assets/" + item.substring(0, colon) + "/items/" + item.substring(colon + 1) + ".json",
                     GSON.toJson(definition).getBytes(StandardCharsets.UTF_8)));
         }
@@ -119,10 +119,60 @@ public final class DataPackFix {
         return out;
     }
 
+    private static JsonObject plainModel(String model) {
+        JsonObject out = new JsonObject();
+        out.addProperty("type", "minecraft:model");
+        out.addProperty("model", model);
+        return out;
+    }
+
+    /**
+     * 1.20.1 {@code overrides} over one item property become a {@code range_dispatch} on {@code rose:legacy_property},
+     * which asks the property the mod registered (era ItemProperties): the highest threshold reached picks the model,
+     * as the last matching override did for overrides in rising order. Overrides over several properties keep the
+     * plain model (reported).
+     */
+    private JsonObject withOverrides(String item, JsonObject fallback, JsonArray overrides) {
+        String property = null;
+        JsonArray entries = new JsonArray();
+        for (JsonElement o : overrides) {
+            JsonObject override = o.getAsJsonObject();
+            JsonObject predicate = override.getAsJsonObject("predicate");
+            if (predicate == null || predicate.size() != 1 || !override.has("model")) property = "";
+            else {
+                String key = predicate.keySet().iterator().next();
+                String id = key.contains(":") ? key : "minecraft:" + key;
+                if (property == null) property = id;
+                else if (!property.equals(id)) property = "";
+                JsonObject entry = new JsonObject();
+                entry.addProperty("threshold", predicate.get(key).getAsFloat());
+                entry.add("model", plainModel(override.get("model").getAsString()));
+                entries.add(entry);
+            }
+            if ("".equals(property)) {
+                report.add("kept the plain model for " + item + ": its overrides use several properties");
+                return fallback;
+            }
+        }
+        JsonObject dispatch = new JsonObject();
+        dispatch.addProperty("type", "minecraft:range_dispatch");
+        dispatch.addProperty("property", "rose:legacy_property");
+        dispatch.addProperty("name", property);
+        dispatch.add("entries", entries);
+        dispatch.add("fallback", fallback);
+        return dispatch;
+    }
+
     /** The fixed resource, or {@code null} to leave it out of the translated jar. */
     public Fixed fix(String path, byte[] content) {
         Matcher item = ITEM_MODEL.matcher(path);
-        if (item.matches()) itemModels.add(item.group(1) + ":" + item.group(2));
+        if (item.matches()) {
+            itemModels.add(item.group(1) + ":" + item.group(2));
+            JsonObject model = parse(content);
+            if (model != null && model.get("overrides") instanceof JsonArray overrides && !overrides.isEmpty()) {
+                modelOverrides.put(item.group(1) + ":" + item.group(2), overrides);
+            }
+        }
         Matcher m = DATA_PATH.matcher(path);
         if (!m.matches()) return new Fixed(path, null);
         String namespace = m.group(1);
