@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "fdcheck:tatami_mat_breaks_whole",
+  "structure": "minecraft:empty",
+  "max_ticks": 40,
+  "padding": 2
+}

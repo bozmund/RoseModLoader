@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "fdcheck:rice_can_be_used",
+  "structure": "minecraft:empty",
+  "max_ticks": 20,
+  "padding": 2
+}

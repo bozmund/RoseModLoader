@@ -17,6 +17,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.ScheduledTickAccess;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.BonemealSource;
 import net.minecraft.world.level.block.BonemealableBlock;
 import net.minecraft.world.level.block.LiquidBlockContainer;
@@ -68,10 +69,25 @@ public final class BlockBridges {
     private static final MethodType CLONE_ITEM = MethodType.methodType(ItemStack.class, LevelReader.class, BlockPos.class, BlockState.class, boolean.class);
 
     /** 1.20.1 {@code super.getCloneItemStack(level, pos, state)} from a mod block (no block entity data). */
+    // Redirected calls pass their receiver typed as the class the old code called the method on (Block).
+    public static ItemStack superGetCloneItemStack(Block self, BlockGetter level, BlockPos pos, BlockState state) {
+        return superGetCloneItemStack((BlockBehaviour) self, level, pos, state);
+    }
+
     public static ItemStack superGetCloneItemStack(BlockBehaviour self, BlockGetter level, BlockPos pos, BlockState state) {
         if (!(level instanceof LevelReader reader)) return new ItemStack(self.asItem());
         return (ItemStack) Legacy.invoke(Legacy.superMethod(self, "getCloneItemStack", CLONE_ITEM), self, reader, pos, state, false);
     }
+
+    /**
+     * A mod block's 1.20.1 {@code super.fallOn(level, state, pos, entity, float distance)}: vanilla's own fallOn, which
+     * since 1.21.5 takes the distance as a double. Called non-virtually, so the mod's bridged fallOn isn't re-entered.
+     */
+    public static void superFallOn(Block self, Level level, BlockState state, BlockPos pos, Entity entity, float fallDistance) {
+        Legacy.invoke(Legacy.superMethod(self, "fallOn", FALL_ON), self, level, state, pos, entity, (double) fallDistance);
+    }
+
+    private static final MethodType FALL_ON = MethodType.methodType(void.class, Level.class, BlockState.class, BlockPos.class, Entity.class, double.class);
 
     /** 1.20.1 {@code onRemove(state, level, pos, newState, isMoving)}: after the block was replaced. */
     public static void affectNeighborsAfterRemoval(BlockBehaviour self, BlockState state, ServerLevel level, BlockPos pos, boolean movedByPiston) {

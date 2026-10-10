@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "fdcheck:cooking_pot_drops_with_its_meal",
+  "structure": "minecraft:empty",
+  "max_ticks": 40,
+  "padding": 2
+}

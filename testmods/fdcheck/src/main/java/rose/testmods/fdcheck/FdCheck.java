@@ -33,10 +33,11 @@ import rose.loader.RoseLoader;
  * passes as skipped when FD isn't installed.
  */
 public final class FdCheck implements ModInitializer {
-    private static final BlockPos POS = new BlockPos(1, 1, 1);
+    static final BlockPos POS = new BlockPos(1, 1, 1);
 
     @Override
     public void onInitialize() {
+        FdGameplay.register();
         RoseGameTests.register(id("content_registered"), FdCheck::contentRegistered);
         RoseGameTests.register(id("cutting_board_cuts_cabbage"), FdCheck::cuttingBoardCutsCabbage);
         RoseGameTests.register(id("cooking_pot_cooks_beef_stew"), FdCheck::cookingPotCooksBeefStew);
@@ -65,17 +66,17 @@ public final class FdCheck implements ModInitializer {
         return Identifier.fromNamespaceAndPath("fdcheck", path);
     }
 
-    private static boolean skip(GameTestHelper helper) {
+    static boolean skip(GameTestHelper helper) {
         if (RoseLoader.get().mod("farmersdelight").isPresent()) return false;
         helper.succeed(); // Farmer's Delight not installed
         return true;
     }
 
-    private static Block block(String path) {
+    static Block block(String path) {
         return BuiltInRegistries.BLOCK.getValue(Identifier.fromNamespaceAndPath("farmersdelight", path));
     }
 
-    private static Item item(String path) {
+    static Item item(String path) {
         return BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("farmersdelight", path));
     }
 
@@ -518,7 +519,7 @@ public final class FdCheck implements ModInitializer {
         return effect.isPresent() && player.hasEffect(effect.get());
     }
 
-    private static void setSlot(Object handler, int slot, ItemStack stack) {
+    static void setSlot(Object handler, int slot, ItemStack stack) {
         try {
             Method set = handler.getClass().getMethod("setStackInSlot", int.class, ItemStack.class);
             set.invoke(handler, slot, stack);
@@ -527,7 +528,7 @@ public final class FdCheck implements ModInitializer {
         }
     }
 
-    private static Object call(Object target, String method) {
+    static Object call(Object target, String method) {
         try {
             Method m = target.getClass().getMethod(method);
             return m.invoke(target);

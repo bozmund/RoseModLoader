@@ -4,6 +4,7 @@ import java.lang.invoke.MethodType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -15,6 +16,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 
 /** Bridge helpers for items (rules/forge-1.20.1/bridges.tsv). */
 public final class ItemBridges {
@@ -31,6 +33,22 @@ public final class ItemBridges {
             return success.heldItemTransformedTo(stack);
         }
         return result;
+    }
+
+    /** 1.20.1 {@code hurtEnemy(stack, target, attacker)} returned a boolean (and wore the item itself); 26.3's is void. */
+    public static void hurtEnemy(Item self, ItemStack stack, LivingEntity target, LivingEntity attacker) {
+        var old = Legacy.require(self, "hurtEnemy", MethodType.methodType(boolean.class, ItemStack.class, LivingEntity.class, LivingEntity.class));
+        Legacy.invoke(old, self, stack, target, attacker);
+    }
+
+    /**
+     * 1.20.1 {@code canAttackBlock(state, level, pos, player)} (26.3 name: canDestroyBlock, which also takes the stack
+     * and any living user). Only players asked in 1.20.1, so other users may.
+     */
+    public static boolean canDestroyBlock(Item self, ItemStack stack, BlockState state, Level level, BlockPos pos, LivingEntity user) {
+        if (!(user instanceof Player player)) return true;
+        var old = Legacy.require(self, "canDestroyBlock", MethodType.methodType(boolean.class, BlockState.class, Level.class, BlockPos.class, Player.class));
+        return (Boolean) Legacy.invoke(old, self, state, level, pos, player);
     }
 
     /** 1.20.1 {@code appendHoverText(stack, level, lines, flag)}; 26.3 streams lines to a consumer (no level). */

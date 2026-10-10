@@ -70,4 +70,16 @@ public final class EntityShim {
     }
 
     private EntityShim() {}
+
+    /** 1.20.1 {@code causeFallDamage(float distance, float multiplier, source)}; 1.21.5 made the distance a double. */
+    public static boolean causeFallDamage(Entity self, float fallDistance, float multiplier, DamageSource source) {
+        return self.causeFallDamage(fallDistance, multiplier, source);
+    }
+
+    /** 1.20.1 {@code PiglinAi.angerNearbyPiglins(player, onlyIfSeen)}; 26.3 needs the server level (no effect on clients). */
+    public static void angerNearbyPiglins(Player player, boolean onlyIfTheySeeThePlayer) {
+        if (player.level() instanceof ServerLevel level) {
+            net.minecraft.world.entity.monster.piglin.PiglinAi.angerNearbyPiglins(level, player, onlyIfTheySeeThePlayer);
+        }
+    }
 }

@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "fdcheck:baskets_pick_up_items",
+  "structure": "minecraft:empty",
+  "max_ticks": 200,
+  "padding": 2
+}

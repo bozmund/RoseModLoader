@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "fdcheck:nourishment_stops_exhaustion",
+  "structure": "minecraft:empty",
+  "max_ticks": 20,
+  "padding": 2
+}

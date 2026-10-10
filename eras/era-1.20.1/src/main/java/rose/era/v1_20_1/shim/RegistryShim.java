@@ -1,5 +1,6 @@
 package rose.era.v1_20_1.shim;
 
+import java.util.Optional;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.Identifier;
@@ -15,6 +16,11 @@ public final class RegistryShim {
     /** 1.20.1 {@code getHolderOrThrow(ResourceKey)}: 26.3 {@code getOrThrow(ResourceKey)}. */
     public static <T> Holder.Reference<T> getHolderOrThrow(Registry<T> self, ResourceKey<T> key) {
         return self.getOrThrow(key);
+    }
+
+    /** 1.20.1 {@code getHolder(ResourceKey)}: 26.3 {@code get(ResourceKey)}. */
+    public static <T> Optional<Holder.Reference<T>> getHolder(Registry<T> self, ResourceKey<T> key) {
+        return self.get(key);
     }
 
     private RegistryShim() {}

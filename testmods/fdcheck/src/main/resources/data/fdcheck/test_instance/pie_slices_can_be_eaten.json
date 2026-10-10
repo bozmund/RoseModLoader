@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "fdcheck:pie_slices_can_be_eaten",
+  "structure": "minecraft:empty",
+  "max_ticks": 20,
+  "padding": 2
+}

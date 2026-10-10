@@ -3,6 +3,7 @@ package rose.era.v1_20_1.shim;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
@@ -37,4 +38,12 @@ public final class EnchantmentShim {
     }
 
     private EnchantmentShim() {}
+
+    /** 1.20.1 {@code EnchantmentHelper.hasFrostWalker(entity)}: the entity wears Frost Walker (enchantments are data since 1.21). */
+    public static boolean hasFrostWalker(LivingEntity entity) {
+        return entity.level().registryAccess().lookupOrThrow(Registries.ENCHANTMENT)
+                .get(Enchantments.FROST_WALKER)
+                .map(frostWalker -> EnchantmentHelper.getEnchantmentLevel(frostWalker, entity) > 0)
+                .orElse(false);
+    }
 }

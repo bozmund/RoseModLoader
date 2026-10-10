@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "fdcheck:rotten_tomatoes_can_be_thrown",
+  "structure": "minecraft:empty",
+  "max_ticks": 40,
+  "padding": 2
+}

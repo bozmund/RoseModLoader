@@ -31,3 +31,6 @@ accessible method net/minecraft/world/item/component/CustomData <init> (Lnet/min
 # LateRegistration binds a holder registered after its registry was frozen.
 accessible method net/minecraft/core/Holder$Reference bindValue (Ljava/lang/Object;)V
 accessible method net/minecraft/core/Holder$Reference bindTags (Ljava/util/Collection;)V
+
+# 1.20.1 FoodData.getExhaustionLevel / setExhaustion (FoodDataShim); 26.3 keeps the field private with no accessors.
+accessible field net/minecraft/world/food/FoodData exhaustionLevel F

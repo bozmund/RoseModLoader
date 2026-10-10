@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "fdcheck:skillet_cooks_on_a_stove",
+  "structure": "minecraft:empty",
+  "max_ticks": 600,
+  "padding": 2
+}
