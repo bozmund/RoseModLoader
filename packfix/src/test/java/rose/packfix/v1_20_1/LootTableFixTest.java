@@ -27,6 +27,19 @@ class LootTableFixTest {
     }
 
     @Test
+    void killerEntityTargetsBecomeAttackers() {
+        JsonObject c = LootTableFix.condition(json("""
+                {"condition":"minecraft:entity_properties","entity":"killer","predicate":{}}"""));
+        assertEquals("attacker", c.get("entity").getAsString());
+        assertEquals("attacking_player", LootTableFix.condition(json("""
+                {"condition":"minecraft:entity_properties","entity":"killer_player","predicate":{}}""")).get("entity").getAsString());
+        assertEquals("direct_attacker", LootTableFix.function(json("""
+                {"function":"minecraft:copy_name","source":"direct_killer"}""")).get("source").getAsString());
+        assertEquals("this", LootTableFix.condition(json("""
+                {"condition":"minecraft:entity_properties","entity":"this","predicate":{}}""")).get("entity").getAsString());
+    }
+
+    @Test
     void wheatUpgradesExactlyToVanilla26() {
         // evidence: data/minecraft/loot_tables/blocks/wheat.json (1.20.1) vs loot_table/blocks/wheat.json (26.3)
         JsonObject old = json("""

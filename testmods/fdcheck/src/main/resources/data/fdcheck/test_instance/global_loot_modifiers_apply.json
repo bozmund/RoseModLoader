@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "fdcheck:global_loot_modifiers_apply",
+  "structure": "minecraft:empty",
+  "max_ticks": 20,
+  "padding": 2
+}

@@ -13,8 +13,10 @@
     "InteractionEventsMixin",
     "ItemPropertiesMixin",
     "LivingEntityEventsMixin",
+    "LootTableMixin",
     "MappedRegistryAccessor",
     "PlayerEventsMixin",
+    "ReloadableServerResourcesMixin",
     "ServerLifecycleMixin",
     "StemBlockMixin",
     "VegetationBlockMixin"

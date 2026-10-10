@@ -84,6 +84,7 @@ final class LootTableFix {
     static JsonObject condition(JsonObject c) {
         if (!c.has("condition")) return c; // already 26.3-shaped
         String type = namespaced(c.remove("condition").getAsString());
+        entityTarget(c, "entity");
         switch (type) {
             case "minecraft:block_state_property" -> {
                 type = "minecraft:match_block";
@@ -127,6 +128,8 @@ final class LootTableFix {
     static JsonObject function(JsonObject f) {
         if (!f.has("function")) return f;
         String type = namespaced(f.remove("function").getAsString());
+        entityTarget(f, "entity");
+        entityTarget(f, "source"); // copy_name, copy_nbt
         switch (type) {
             case "minecraft:set_count", "minecraft:set_damage" -> {
                 if (f.get("add") instanceof JsonPrimitive add && !add.getAsBoolean()) f.remove("add");
@@ -229,6 +232,18 @@ final class LootTableFix {
                 n.addProperty("type", "minecraft:uniform");
             }
         }
+    }
+
+    /** 1.21 renamed the loot entity targets: killer to attacker, direct_killer, killer_player (LootContext.EntityTarget). */
+    private static void entityTarget(JsonObject o, String key) {
+        if (!(o.get(key) instanceof JsonPrimitive p) || !p.isString()) return;
+        String renamed = switch (p.getAsString()) {
+            case "killer" -> "attacker";
+            case "direct_killer" -> "direct_attacker";
+            case "killer_player" -> "attacking_player";
+            default -> null;
+        };
+        if (renamed != null) o.addProperty(key, renamed);
     }
 
     private static void rename(JsonObject o, String from, String to) {

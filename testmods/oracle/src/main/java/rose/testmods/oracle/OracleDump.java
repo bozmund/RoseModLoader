@@ -192,7 +192,7 @@ public final class OracleDump {
     /**
      * Replaces each item tag reference ({@code "#c:crops/wheat"}) with the items in it, so recipes compare by what
      * they accept, not by tag names: Forge 1.20.1's {@code forge:} tags became {@code c:} tags. A tag with no items
-     * stays a name, marked {@code (empty)}.
+     * stays a name, marked {@code (empty)}; a tag with one item compares like that item (as in {@link #itemsOf}).
      */
     private JsonElement resolveItemTags(JsonElement json) {
         if (json instanceof JsonObject object) {
@@ -212,6 +212,7 @@ public final class OracleDump {
             BuiltInRegistries.ITEM.getTagOrEmpty(TagKey.create(Registries.ITEM, tag)).forEach(h ->
                     h.unwrapKey().ifPresent(k -> items.add(k.identifier().toString())));
             if (items.isEmpty()) return new JsonPrimitive(p.getAsString() + " (empty)");
+            if (items.size() == 1) return new JsonPrimitive(items.first());
             JsonArray out = new JsonArray();
             items.forEach(out::add);
             return out;

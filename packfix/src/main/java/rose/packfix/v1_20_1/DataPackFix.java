@@ -22,6 +22,7 @@ import java.util.regex.Pattern;
  *       {@code tags/item}, ...);</li>
  *   <li>vanilla recipe types: 1.21.2 ingredients are ids/tags as strings, results are {@code {"id", "count"}};
  *       Forge recipe conditions are resolved (other mods' integration recipes are left out);</li>
+ *   <li>Forge global loot modifiers: their loot conditions, like loot tables';</li>
  *   <li>worldgen: dropped until the worldgen era bridge exists (26.x restructured features; one unreadable worldgen
  *       file stops a world from loading).</li>
  * </ul>
@@ -169,6 +170,15 @@ public final class DataPackFix {
             JsonObject upgraded = upgradeRecipe(recipe, path);
             if (upgraded == null) return null;
             return new Fixed(newPath, GSON.toJson(upgraded).getBytes(StandardCharsets.UTF_8));
+        }
+        if (folder.startsWith("loot_modifiers/") && path.endsWith(".json") && !folder.equals("loot_modifiers/global_loot_modifiers.json")) {
+            JsonObject modifier = parse(content);
+            if (modifier == null || !(modifier.get("conditions") instanceof JsonArray conditions)) return new Fixed(newPath, null);
+            // Forge global loot modifiers: their conditions are 1.20.1 loot conditions (LootTableFix), kept as a list
+            JsonArray upgraded = new JsonArray();
+            conditions.forEach(c -> upgraded.add(c.isJsonObject() ? LootTableFix.condition(c.getAsJsonObject()) : c));
+            modifier.add("conditions", upgraded);
+            return new Fixed(newPath, GSON.toJson(modifier).getBytes(StandardCharsets.UTF_8));
         }
         if (folder.startsWith("loot_table/") && path.endsWith(".json")) {
             JsonObject table = parse(content);

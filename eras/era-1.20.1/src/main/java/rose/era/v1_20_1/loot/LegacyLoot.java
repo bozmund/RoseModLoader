@@ -20,9 +20,14 @@ import net.minecraft.world.level.storage.loot.functions.LootItemFunction;
 import net.minecraft.world.level.storage.loot.functions.LootItemFunctionType;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
 
-/** Adapts 1.20.1 JSON loot serializers to 26.3 MapCodecs. */
+/**
+ * Adapts 1.20.1 JSON loot serializers to 26.3 MapCodecs. A function encodes as the JSON it was read from (26.3
+ * encodes loot tables, e.g. for commands and data generation; the old serializers wrote 1.20.1 JSON anyway).
+ */
 public final class LegacyLoot {
     private static final Map<LootItemFunctionType, MapCodec<?>> CODECS = Collections.synchronizedMap(new IdentityHashMap<>());
+    /** The JSON each function was read from, by identity. */
+    private static final Map<LootItemFunction, JsonObject> SOURCES = new com.google.common.collect.MapMaker().weakKeys().makeMap();
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     public static MapCodec<? extends LootItemFunction> adapt(LootItemFunctionType type) {
@@ -50,7 +55,9 @@ public final class LegacyLoot {
                         .ifSuccess(key -> json.add(key, ops.convertTo(JsonOps.INSTANCE, e.getSecond()))));
                 DynamicOps<JsonElement> jsonOps = ops instanceof RegistryOps<?> registryOps ? registryOps.withParent(JsonOps.INSTANCE) : JsonOps.INSTANCE;
                 try {
-                    return DataResult.success(type.getSerializer().deserialize(json, context(jsonOps)));
+                    LootItemFunction function = type.getSerializer().deserialize(json, context(jsonOps));
+                    SOURCES.put(function, json);
+                    return DataResult.success(function);
                 } catch (RuntimeException | LinkageError e) {
                     return DataResult.error(() -> "Legacy loot function " + type.getSerializer().getClass().getName() + " failed: " + e);
                 }
@@ -58,9 +65,19 @@ public final class LegacyLoot {
 
             @Override
             public <O> RecordBuilder<O> encode(LootItemFunction value, DynamicOps<O> ops, RecordBuilder<O> prefix) {
-                return prefix.withErrorsFrom(DataResult.error(() -> "Loot functions from 1.20.1 mods can't be encoded"));
+                JsonObject json = SOURCES.get(value);
+                if (json == null) return prefix.withErrorsFrom(DataResult.error(() -> "This 1.20.1 loot function wasn't read from JSON"));
+                return encodeJson(json, "function", ops, prefix);
             }
         };
+    }
+
+    /** The entries of a 1.20.1 JSON object, except the dispatch key (the 26.3 codec writes it). */
+    public static <O> RecordBuilder<O> encodeJson(JsonObject json, String dispatchKey, DynamicOps<O> ops, RecordBuilder<O> prefix) {
+        for (var entry : json.entrySet()) {
+            if (!entry.getKey().equals(dispatchKey)) prefix.add(entry.getKey(), JsonOps.INSTANCE.convertTo(ops, entry.getValue()));
+        }
+        return prefix;
     }
 
     /** Gson's deserialization context as 1.20.1 loot serializers used it: for nested conditions. */

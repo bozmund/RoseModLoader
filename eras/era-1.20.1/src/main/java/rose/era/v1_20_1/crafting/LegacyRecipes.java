@@ -17,8 +17,13 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 
-/** Adapts 1.20.1 recipe serializers to 26.3 ones (a MapCodec that hands the JSON to the old fromJson). */
+/**
+ * Adapts 1.20.1 recipe serializers to 26.3 ones (a MapCodec that hands the JSON to the old fromJson). A recipe
+ * encodes as the JSON it was read from: 1.20.1 serializers had no JSON writer.
+ */
 public final class LegacyRecipes {
+    /** The JSON each recipe was read from, by identity (records may be equal and still be different recipes). */
+    private static final Map<Recipe<?>, JsonObject> SOURCES = new com.google.common.collect.MapMaker().weakKeys().makeMap();
     private static final Identifier UNKNOWN = Identifier.fromNamespaceAndPath("rose", "unknown_recipe");
     private static final ThreadLocal<Identifier> CURRENT_ID = new ThreadLocal<>();
     private static final ThreadLocal<DynamicOps<com.google.gson.JsonElement>> CURRENT_OPS = new ThreadLocal<>();
@@ -69,6 +74,7 @@ public final class LegacyRecipes {
                 CURRENT_OPS.set(ops);
                 try {
                     Recipe<?> real = deferred.serializer.fromJson(deferred.id, deferred.json);
+                    SOURCES.put(real, deferred.json);
                     holder = new net.minecraft.world.item.crafting.RecipeHolder(entry.getKey(), real);
                     made++;
                 } catch (RuntimeException | LinkageError e) {
@@ -111,7 +117,9 @@ public final class LegacyRecipes {
 
             @Override
             public <O> RecordBuilder<O> encode(T value, DynamicOps<O> ops, RecordBuilder<O> prefix) {
-                return prefix.withErrorsFrom(DataResult.error(() -> "Recipes from 1.20.1 serializers can't be encoded"));
+                JsonObject json = value instanceof DeferredLegacyRecipe deferred ? deferred.json : SOURCES.get(value);
+                if (json == null) return prefix.withErrorsFrom(DataResult.error(() -> "This 1.20.1 recipe wasn't read from JSON"));
+                return rose.era.v1_20_1.loot.LegacyLoot.encodeJson(json, "type", ops, prefix);
             }
         };
     }

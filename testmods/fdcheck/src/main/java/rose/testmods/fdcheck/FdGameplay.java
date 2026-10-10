@@ -43,6 +43,10 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
+import net.minecraft.world.level.storage.loot.BuiltInLootTables;
+import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import rose.api.gametest.RoseGameTests;
 
 /**
@@ -75,6 +79,7 @@ final class FdGameplay {
         test("tools_repair_with_their_material", FdGameplay::toolsRepairWithTheirMaterial);
         test("farmers_buy_fd_crops", FdGameplay::farmersBuyFdCrops);
         test("plants_grow_on_rich_soil_farmland", FdGameplay::plantsGrowOnRichSoilFarmland);
+        test("global_loot_modifiers_apply", FdGameplay::globalLootModifiersApply);
     }
 
     private static void test(String name, Consumer<GameTestHelper> test) {
@@ -453,6 +458,27 @@ final class FdGameplay {
         }
         helper.assertTrue(!Blocks.CACTUS.defaultBlockState().canSurvive(helper.getLevel(), helper.absolutePos(POS.above())),
                 "cactus shouldn't survive on rich soil farmland");
+        helper.succeed();
+    }
+
+    /**
+     * FD's Forge global loot modifiers change drops: mature rice cut with a knife also drops straw
+     * (straw_from_mature_rice), and a pie broken with a knife drops its slices (slicing_apple_pie).
+     */
+    private static void globalLootModifiersApply(GameTestHelper helper) {
+        if (skip(helper)) return;
+        ItemStack knife = new ItemStack(item("iron_knife"));
+        BlockState rice = with(block("rice_panicles").defaultBlockState(), "age", "3");
+        var riceDrops = Block.getDrops(rice, helper.getLevel(), helper.absolutePos(POS), null, null, knife);
+        helper.assertTrue(riceDrops.stream().anyMatch(s -> s.is(item("straw"))), "mature rice cut with a knife should drop straw: " + riceDrops);
+        var pieDrops = Block.getDrops(block("apple_pie").defaultBlockState(), helper.getLevel(), helper.absolutePos(POS), null, null, knife);
+        helper.assertTrue(pieDrops.stream().anyMatch(s -> s.is(item("apple_pie_slice"))), "a pie broken with a knife should drop slices: " + pieDrops);
+        // add_loot_simple_dungeon: dungeon chests also roll FD's chests/fd_simple_dungeon (forge:loot_table_id)
+        var dungeon = helper.getLevel().getServer().reloadableRegistries().getLootTable(BuiltInLootTables.SIMPLE_DUNGEON);
+        var chestLoot = dungeon.getRandomItems(new LootParams.Builder(helper.getLevel())
+                .withParameter(LootContextParams.ORIGIN, helper.absoluteVec(net.minecraft.world.phys.Vec3.atCenterOf(POS))).create(LootContextParamSets.CHEST));
+        helper.assertTrue(chestLoot.stream().anyMatch(s -> BuiltInRegistries.ITEM.getKey(s.getItem()).getNamespace().equals("farmersdelight")),
+                "a dungeon chest should hold FD loot: " + chestLoot);
         helper.succeed();
     }
 

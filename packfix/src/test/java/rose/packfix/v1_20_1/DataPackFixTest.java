@@ -38,6 +38,20 @@ class DataPackFixTest {
     }
 
     @Test
+    void globalLootModifierConditionsAreUpgraded() {
+        JsonObject modifier = upgrade("data/fd/loot_modifiers/straw.json", """
+                {"type":"fd:add_item","item":"fd:straw","conditions":[
+                  {"condition":"minecraft:match_tool","predicate":{"tag":"fd:straw_harvesters"}},
+                  {"condition":"minecraft:block_state_property","block":"fd:rice","properties":{"age":"3"}}]}""");
+        var conditions = modifier.getAsJsonArray("conditions");
+        assertEquals(2, conditions.size());
+        assertEquals("minecraft:match_tool", conditions.get(0).getAsJsonObject().get("type").getAsString());
+        assertEquals("#fd:straw_harvesters", conditions.get(0).getAsJsonObject().getAsJsonObject("predicate").get("items").getAsString());
+        assertEquals("minecraft:match_block", conditions.get(1).getAsJsonObject().get("type").getAsString());
+        assertEquals("fd:straw", modifier.get("item").getAsString());
+    }
+
+    @Test
     void recipeAdvancementGetsRecipesListAndSingularFolder() {
         String json = """
                 {"parent":"minecraft:recipes/root",
