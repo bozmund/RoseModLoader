@@ -25,6 +25,9 @@ import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.SingleItemRecipe;
 import net.minecraft.world.item.crafting.SingleRecipeInput;
+import net.minecraft.world.item.crafting.SmithingRecipeInput;
+import net.minecraft.world.item.crafting.SmithingRecipe;
+import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.level.Level;
 import rose.era.v1_20_1.EraContext;
 import rose.era.v1_20_1.bridge.Legacy;
@@ -132,7 +135,7 @@ public final class RecipeShim {
         var own = Legacy.find(recipe, "matches", MethodType.methodType(boolean.class, Container.class, Level.class));
         if (own.isPresent()) return (Boolean) Legacy.invoke(own.get(), recipe, container, level);
         try {
-            return ((Recipe) recipe).matches(inputFor(container), level);
+            return ((Recipe) recipe).matches(inputFor(recipe, container), level);
         } catch (ClassCastException wrongInputType) {
             return false;
         }
@@ -143,7 +146,28 @@ public final class RecipeShim {
     public static ItemStack assemble(Recipe<?> recipe, Container container, RegistryAccess access) {
         var own = Legacy.find(recipe, "assemble", MethodType.methodType(ItemStack.class, Container.class, RegistryAccess.class));
         if (own.isPresent()) return (ItemStack) Legacy.invoke(own.get(), recipe, container, access);
-        return ((Recipe) recipe).assemble(inputFor(container));
+        return ((Recipe) recipe).assemble(inputFor(recipe, container));
+    }
+
+    /**
+     * The 26.3 input a recipe takes, from an old container. Vanilla recipes declare their input type: cooking and
+     * stonecutting read one item (an empty container is an empty item: 1.20.1 code assembles campfire recipes with
+     * {@code new SimpleContainer()}), crafting reads a grid, smithing three slots.
+     */
+    static RecipeInput inputFor(Recipe<?> recipe, Container container) {
+        if (container instanceof RecipeInput input) return input;
+        if (recipe instanceof SingleItemRecipe) {
+            return new SingleRecipeInput(container.getContainerSize() > 0 ? container.getItem(0) : ItemStack.EMPTY);
+        }
+        if (recipe instanceof CraftingRecipe && !(container instanceof CraftingContainer)) {
+            List<ItemStack> items = new ArrayList<>();
+            for (int i = 0; i < container.getContainerSize(); i++) items.add(container.getItem(i));
+            return CraftingInput.of(Math.max(1, items.size()), 1, items);
+        }
+        if (recipe instanceof SmithingRecipe && container.getContainerSize() >= 3) {
+            return new SmithingRecipeInput(container.getItem(0), container.getItem(1), container.getItem(2));
+        }
+        return inputFor(container);
     }
 
     /** The 26.3 input for an old container: crafting grids, single-slot inputs, or the container itself. */

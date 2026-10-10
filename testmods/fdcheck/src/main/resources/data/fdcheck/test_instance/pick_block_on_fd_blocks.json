@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "fdcheck:pick_block_on_fd_blocks",
+  "structure": "minecraft:empty",
+  "max_ticks": 20,
+  "padding": 2
+}

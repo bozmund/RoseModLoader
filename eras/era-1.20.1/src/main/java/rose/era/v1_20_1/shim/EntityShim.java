@@ -82,4 +82,9 @@ public final class EntityShim {
             net.minecraft.world.entity.monster.piglin.PiglinAi.angerNearbyPiglins(level, player, onlyIfTheySeeThePlayer);
         }
     }
+
+    /** 1.20.1 {@code Inventory.placeItemBackInInventory(stack)}: server code, so the client is sent the slots. */
+    public static void placeItemBackInInventory(net.minecraft.world.entity.player.Inventory inventory, ItemStack stack) {
+        inventory.placeItemBackInInventory(stack, Prediction.SERVER_ONLY);
+    }
 }

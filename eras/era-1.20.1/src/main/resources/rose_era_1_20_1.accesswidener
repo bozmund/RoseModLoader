@@ -34,3 +34,6 @@ accessible method net/minecraft/core/Holder$Reference bindTags (Ljava/util/Colle
 
 # 1.20.1 FoodData.getExhaustionLevel / setExhaustion (FoodDataShim); 26.3 keeps the field private with no accessors.
 accessible field net/minecraft/world/food/FoodData exhaustionLevel F
+
+# 1.20.1 BaseContainerBlockEntity.setCustomName (LegacyRandomizableContainerBlockEntity).
+accessible field net/minecraft/world/level/block/entity/BaseContainerBlockEntity name Lnet/minecraft/network/chat/Component;

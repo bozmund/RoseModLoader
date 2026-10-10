@@ -51,6 +51,16 @@ public final class ItemBridges {
         return (Boolean) Legacy.invoke(old, self, state, level, pos, player);
     }
 
+    /**
+     * 1.20.1 {@code releaseUsing(stack, level, entity, timeLeft)} returned nothing; 26.3 returns whether to apply the
+     * stack's after-use component effects, which 1.20.1 items didn't have.
+     */
+    public static boolean releaseUsing(Item self, ItemStack stack, Level level, LivingEntity entity, int timeLeft) {
+        var old = Legacy.require(self, "releaseUsing", MethodType.methodType(void.class, ItemStack.class, Level.class, LivingEntity.class, int.class));
+        Legacy.invoke(old, self, stack, level, entity, timeLeft);
+        return false;
+    }
+
     /** 1.20.1 {@code appendHoverText(stack, level, lines, flag)}; 26.3 streams lines to a consumer (no level). */
     public static void appendHoverText(Item self, ItemStack stack, Item.TooltipContext context, TooltipDisplay display,
                                        Consumer<Component> builder, TooltipFlag flag) {

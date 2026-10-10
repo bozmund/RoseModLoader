@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "fdcheck:skillet_cooks_held_food",
+  "structure": "minecraft:empty",
+  "max_ticks": 20,
+  "padding": 2
+}

@@ -51,6 +51,10 @@ final class FdGameplay {
         test("tatami_mat_breaks_whole", FdGameplay::tatamiMatBreaksWhole);
         test("baskets_pick_up_items", FdGameplay::basketsPickUpItems);
         test("skillet_cooks_on_a_stove", FdGameplay::skilletCooksOnAStove);
+        test("cooking_pot_meals_can_be_taken", FdGameplay::cookingPotMealsCanBeTaken);
+        test("skillet_cooks_held_food", FdGameplay::skilletCooksHeldFood);
+        test("block_entities_keep_their_items", FdGameplay::blockEntitiesKeepTheirItems);
+        test("pick_block_on_fd_blocks", FdGameplay::pickBlockOnFdBlocks);
     }
 
     private static void test(String name, Consumer<GameTestHelper> test) {
@@ -262,6 +266,85 @@ final class FdGameplay {
                 helper.assertItemEntityPresent(Items.COOKED_BEEF, POS.above(), 3.0);
             }
         });
+    }
+
+    /** Taking a finished meal out of the cooking pot's output slot (FD CookingPotResultSlot) puts it in the inventory. */
+    private static void cookingPotMealsCanBeTaken(GameTestHelper helper) {
+        if (skip(helper)) return;
+        helper.setBlock(POS, block("cooking_pot"));
+        BlockEntity pot = helper.getBlockEntity(POS, BlockEntity.class);
+        setSlot(call(pot, "getInventory"), 8, new ItemStack(item("beef_stew"), 2));
+        Player player = helper.makeMockServerPlayerInLevel();
+        helper.useBlock(POS, player);
+        helper.assertTrue(player.containerMenu != player.inventoryMenu, "the cooking pot's menu should be open");
+        player.containerMenu.quickMoveStack(player, 8);
+        helper.assertTrue(player.getInventory().contains(new ItemStack(item("beef_stew"))), "the meal should be in the inventory");
+        helper.succeed();
+    }
+
+    /** A skillet in hand cooks the food held in the other hand (FD SkilletItem) and hands back the cooked food. */
+    private static void skilletCooksHeldFood(GameTestHelper helper) {
+        if (skip(helper)) return;
+        helper.setBlock(POS, with(block("stove").defaultBlockState(), "lit", "true")); // the skillet needs heat nearby
+        Player player = helper.makeMockServerPlayerInLevel();
+        var at = helper.absolutePos(POS.above());
+        player.setPos(at.getX() + 0.5, at.getY(), at.getZ() + 0.5);
+        ItemStack skillet = new ItemStack(item("skillet"));
+        player.setItemInHand(InteractionHand.MAIN_HAND, skillet);
+        player.setItemInHand(InteractionHand.OFF_HAND, new ItemStack(Items.BEEF));
+        skillet.use(helper.getLevel(), player, InteractionHand.MAIN_HAND);
+        skillet.finishUsingItem(helper.getLevel(), player);
+        helper.assertTrue(player.getInventory().contains(new ItemStack(Items.COOKED_BEEF)), "the skillet should hand back cooked beef");
+        helper.succeed();
+    }
+
+    /** Cabinets, baskets and stoves keep their items when saved and loaded (FD's 1.20.1 load/saveAdditional). */
+    private static void blockEntitiesKeepTheirItems(GameTestHelper helper) {
+        if (skip(helper)) return;
+        var registries = helper.getLevel().registryAccess();
+        helper.setBlock(POS, block("oak_cabinet"));
+        Container cabinet = (Container) helper.getBlockEntity(POS, BlockEntity.class);
+        cabinet.setItem(3, new ItemStack(item("cabbage"), 5));
+        BlockEntity savedCabinet = (BlockEntity) cabinet;
+        Container cabinetAgain = (Container) BlockEntity.loadStatic(savedCabinet.getBlockPos(), savedCabinet.getBlockState(),
+                savedCabinet.saveWithFullMetadata(registries), registries);
+        helper.assertTrue(cabinetAgain != null && cabinetAgain.getItem(3).is(item("cabbage")) && cabinetAgain.getItem(3).getCount() == 5,
+                "the cabinet lost its cabbages: " + (cabinetAgain == null ? null : cabinetAgain.getItem(3)));
+
+        helper.setBlock(POS, with(block("stove").defaultBlockState(), "lit", "false"));
+        BlockEntity stove = helper.getBlockEntity(POS, BlockEntity.class);
+        setSlot(call(stove, "getItems"), 0, new ItemStack(Items.BEEF));
+        BlockEntity stoveAgain = BlockEntity.loadStatic(stove.getBlockPos(), stove.getBlockState(), stove.saveWithFullMetadata(registries), registries);
+        ItemStack onStove = stoveAgain == null ? ItemStack.EMPTY : stackIn(call(stoveAgain, "getItems"), 0);
+        helper.assertTrue(onStove.is(Items.BEEF), "the stove lost its beef: " + onStove);
+        helper.succeed();
+    }
+
+    private static ItemStack stackIn(Object handler, int slot) {
+        try {
+            return (ItemStack) handler.getClass().getMethod("getStackInSlot", int.class).invoke(handler, slot);
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    /** Pick-block on FD blocks that call 1.20.1 super.getCloneItemStack (cooking pot, skillet). */
+    private static void pickBlockOnFdBlocks(GameTestHelper helper) {
+        if (skip(helper)) return;
+        for (String name : java.util.List.of("cooking_pot", "skillet")) {
+            helper.setBlock(POS, block(name));
+            if (name.equals("skillet")) { // a placed skillet remembers its item; pick-block gives that item back
+                BlockEntity skillet = helper.getBlockEntity(POS, BlockEntity.class);
+                try {
+                    skillet.getClass().getMethod("setSkilletItem", ItemStack.class).invoke(skillet, new ItemStack(item("skillet")));
+                } catch (ReflectiveOperationException e) {
+                    throw new IllegalStateException(e);
+                }
+            }
+            ItemStack picked = helper.getBlockState(POS).getCloneItemStack(helper.getLevel(), helper.absolutePos(POS), true);
+            helper.assertTrue(picked.is(item(name)), "pick-block on " + name + " gave " + picked);
+        }
+        helper.succeed();
     }
 
     private FdGameplay() {}
