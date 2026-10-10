@@ -93,6 +93,8 @@ public final class DataPackFix {
     private final Set<String> itemModels = new java.util.TreeSet<>();
     /** Item models' 1.20.1 {@code overrides} (pick a model by item property), by model. */
     private final Map<String, JsonArray> modelOverrides = new java.util.HashMap<>();
+    /** Item models ({@code ns:item/path}) whose parent was {@code builtin/entity}: the mod's item renderer draws them. */
+    private final Set<String> rendererModels = new java.util.HashSet<>();
 
     /**
      * Files the mod lacks for 26.3: an item definition ({@code assets/<ns>/items/<id>.json}) for every item model.
@@ -103,7 +105,7 @@ public final class DataPackFix {
         List<Fixed> out = new ArrayList<>();
         for (String item : itemModels) {
             int colon = item.indexOf(':');
-            JsonObject model = plainModel(item.substring(0, colon) + ":item/" + item.substring(colon + 1));
+            JsonObject model = itemModel(item.substring(0, colon) + ":item/" + item.substring(colon + 1));
             JsonObject definition = new JsonObject();
             definition.add("model", modelOverrides.containsKey(item) ? withOverrides(item, model, modelOverrides.get(item)) : model);
             out.add(new Fixed("assets/" + item.substring(0, colon) + "/items/" + item.substring(colon + 1) + ".json",
@@ -119,10 +121,21 @@ public final class DataPackFix {
         return out;
     }
 
-    private static JsonObject plainModel(String model) {
+    /**
+     * The item model for a model id: {@code minecraft:model}, or {@code rose:legacy_renderer} when the model was a
+     * {@code builtin/entity} one (1.20.1 drew those with the item's BlockEntityWithoutLevelRenderer; 26.3 has no such
+     * parent, and the era's legacy_renderer calls that renderer with the model as base for the display transforms).
+     */
+    private JsonObject itemModel(String model) {
+        String id = model.contains(":") ? model : "minecraft:" + model;
         JsonObject out = new JsonObject();
-        out.addProperty("type", "minecraft:model");
-        out.addProperty("model", model);
+        if (rendererModels.contains(id)) {
+            out.addProperty("type", "rose:legacy_renderer");
+            out.addProperty("base", id);
+        } else {
+            out.addProperty("type", "minecraft:model");
+            out.addProperty("model", model);
+        }
         return out;
     }
 
@@ -146,7 +159,7 @@ public final class DataPackFix {
                 else if (!property.equals(id)) property = "";
                 JsonObject entry = new JsonObject();
                 entry.addProperty("threshold", predicate.get(key).getAsFloat());
-                entry.add("model", plainModel(override.get("model").getAsString()));
+                entry.add("model", itemModel(override.get("model").getAsString()));
                 entries.add(entry);
             }
             if ("".equals(property)) {
@@ -171,6 +184,13 @@ public final class DataPackFix {
             JsonObject model = parse(content);
             if (model != null && model.get("overrides") instanceof JsonArray overrides && !overrides.isEmpty()) {
                 modelOverrides.put(item.group(1) + ":" + item.group(2), overrides);
+            }
+            if (model != null && model.get("parent") instanceof JsonPrimitive parent
+                    && (parent.getAsString().equals("builtin/entity") || parent.getAsString().equals("minecraft:builtin/entity"))) {
+                // 26.3 has no builtin/entity model to inherit from; what is left (display transforms) is the base
+                rendererModels.add(item.group(1) + ":item/" + item.group(2));
+                model.remove("parent");
+                return new Fixed(path, GSON.toJson(model).getBytes(StandardCharsets.UTF_8));
             }
         }
         Matcher m = DATA_PATH.matcher(path);

@@ -20,6 +20,16 @@ public final class RenderShim {
         return ItemRenderer.INSTANCE;
     }
 
+    /** 1.20.1 {@code Minecraft.getBlockRenderer()}; 26.3 resolves block models through BlockModelResolver. */
+    public static net.minecraft.client.renderer.block.BlockRenderDispatcher blockRenderer(Minecraft minecraft) {
+        return net.minecraft.client.renderer.block.BlockRenderDispatcher.INSTANCE;
+    }
+
+    /** 1.20.1 {@code Minecraft.getFrameTime()}: the partial tick, which 26.3's DeltaTracker keeps. */
+    public static float getFrameTime(Minecraft minecraft) {
+        return minecraft.getDeltaTracker().getGameTimeDeltaPartialTick(false);
+    }
+
     /** 1.20.1 {@code LevelRenderer.getLightColor(level, pos)}: 26.3 {@code LightCoordsUtil.getLightCoords}. */
     public static int getLightColor(BlockAndTintGetter level, BlockPos pos) {
         return level instanceof BlockAndLightGetter light ? LightCoordsUtil.getLightCoords(light, pos) : LightCoordsUtil.FULL_BRIGHT;

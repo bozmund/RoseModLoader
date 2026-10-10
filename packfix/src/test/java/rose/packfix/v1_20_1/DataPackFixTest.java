@@ -1,7 +1,9 @@
 package rose.packfix.v1_20_1;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -65,6 +67,30 @@ class DataPackFixTest {
         assertEquals("fd:item/skillet_cooking", model.getAsJsonArray("entries").get(0).getAsJsonObject().getAsJsonObject("model").get("model").getAsString());
         assertEquals(1.0f, model.getAsJsonArray("entries").get(0).getAsJsonObject().get("threshold").getAsFloat());
         assertEquals("fd:item/skillet", model.getAsJsonObject("fallback").get("model").getAsString());
+    }
+
+    @Test
+    void builtinEntityModelsAreDrawnByTheLegacyRenderer() {
+        fix.fix("assets/fd/models/item/skillet.json", """
+                {"parent":"fd:block/skillet","overrides":[{"predicate":{"cooking":1},"model":"fd:item/skillet_cooking"}]}"""
+                .getBytes(StandardCharsets.UTF_8));
+        DataPackFix.Fixed cooking = fix.fix("assets/fd/models/item/skillet_cooking.json", """
+                {"parent":"builtin/entity","display":{"gui":{"rotation":[31,-38,0]}}}""".getBytes(StandardCharsets.UTF_8));
+        JsonObject base = JsonParser.parseString(new String(cooking.content(), StandardCharsets.UTF_8)).getAsJsonObject();
+        assertFalse(base.has("parent"), "26.3 has no builtin/entity model");
+        assertTrue(base.has("display"));
+
+        JsonObject skillet = definition("assets/fd/items/skillet.json").getAsJsonObject("model");
+        JsonObject entry = skillet.getAsJsonArray("entries").get(0).getAsJsonObject().getAsJsonObject("model");
+        assertEquals("rose:legacy_renderer", entry.get("type").getAsString());
+        assertEquals("fd:item/skillet_cooking", entry.get("base").getAsString());
+        assertEquals("minecraft:model", skillet.getAsJsonObject("fallback").get("type").getAsString());
+        assertEquals("rose:legacy_renderer", definition("assets/fd/items/skillet_cooking.json").getAsJsonObject("model").get("type").getAsString());
+    }
+
+    private JsonObject definition(String path) {
+        return JsonParser.parseString(new String(fix.extras().stream().filter(f -> f.path().equals(path)).findFirst().orElseThrow().content(),
+                StandardCharsets.UTF_8)).getAsJsonObject();
     }
 
     @Test
