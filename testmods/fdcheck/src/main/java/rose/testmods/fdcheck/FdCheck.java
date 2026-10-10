@@ -53,6 +53,7 @@ public final class FdCheck implements ModInitializer {
         RoseGameTests.register(id("foods_keep_their_own_effects"), FdCheck::foodsKeepTheirOwnEffects);
         RoseGameTests.register(id("drinks_can_be_drunk"), FdCheck::drinksCanBeDrunk);
         RoseGameTests.register(id("crops_and_soil_random_tick"), FdCheck::cropsAndSoilRandomTick);
+        RoseGameTests.register(id("meal_tooltips_build"), FdCheck::mealTooltipsBuild);
     }
 
     private static Identifier id(String path) {
@@ -390,6 +391,16 @@ public final class FdCheck implements ModInitializer {
         for (int i = 0; i < 20; i++) {
             level.getBlockState(helper.absolutePos(crop)).randomTick(level, helper.absolutePos(crop), level.getRandom());
         }
+        helper.succeed();
+    }
+
+    /** FD meal tooltips build (ConsumableItem lists the meal's effects through FD TextUtils and Forge getFoodProperties). */
+    private static void mealTooltipsBuild(GameTestHelper helper) {
+        if (skip(helper)) return;
+        Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        var lines = new ItemStack(item("beef_stew")).getTooltipLines(Item.TooltipContext.of(helper.getLevel()), player,
+                net.minecraft.world.item.TooltipFlag.Default.NORMAL);
+        helper.assertTrue(lines.size() > 1, "beef stew tooltip should list Nourishment, has " + lines);
         helper.succeed();
     }
 

@@ -33,6 +33,21 @@ public final class AttributeModifierShim {
         return self.id().toString();
     }
 
+    /** 1.20.1 {@code getAmount()}; 1.20.5 made AttributeModifier a record ({@code amount()}). */
+    public static double getAmount(AttributeModifier self) {
+        return self.amount();
+    }
+
+    /** 1.20.1 {@code getOperation()}; 26.3 {@code operation()}. */
+    public static AttributeModifier.Operation getOperation(AttributeModifier self) {
+        return self.operation();
+    }
+
+    /** 1.20.1 {@code Operation.toValue()}: 0 add, 1 multiply base, 2 multiply total; 26.3 {@code id()}, same numbers. */
+    public static int toValue(AttributeModifier.Operation self) {
+        return self.id();
+    }
+
     public static Identifier idFor(UUID id) {
         Identifier known = KNOWN.get(id);
         return known != null ? known : Identifier.fromNamespaceAndPath("rose", "legacy/" + id.toString().toLowerCase(java.util.Locale.ROOT));

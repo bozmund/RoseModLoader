@@ -40,20 +40,36 @@ public final class ForgeVanillaShim {
         }
     }
 
-    /**
-     * Forge {@code ItemStack.getFoodProperties(entity)}: the item's {@code IForgeItem.getFoodProperties(stack, entity)}
-     * if it overrides it, else the stack's food (1.20.1 {@code Item.getFoodProperties()}; 26.3: the food component).
-     */
+    /** Forge {@code ItemStack.getFoodProperties(entity)} = {@code getItem().getFoodProperties(stack, entity)}. */
     public static FoodProperties getFoodProperties(ItemStack self, LivingEntity entity) {
-        try {
-            Method override = self.getItem().getClass().getMethod("getFoodProperties", ItemStack.class, LivingEntity.class);
-            return (FoodProperties) override.invoke(self.getItem(), self, entity);
-        } catch (NoSuchMethodException e) {
-            return self.get(DataComponents.FOOD);
-        } catch (ReflectiveOperationException e) {
-            throw new IllegalStateException("getFoodProperties of " + self.getItem().getClass().getName() + " failed", e);
-        }
+        return getFoodProperties(self.getItem(), self, entity);
     }
+
+    /**
+     * Forge {@code Item.getFoodProperties(stack, entity)}: the item's override if it has one, else Forge's default, the
+     * item's food (1.20.1 {@code Item.getFoodProperties()}; 26.3: the item's food component). Rose redirects
+     * {@code super.getFoodProperties(...)} here too, so inside an item's own override the default applies.
+     */
+    public static FoodProperties getFoodProperties(Item self, ItemStack stack, LivingEntity entity) {
+        if (IN_FOOD_OVERRIDE.get() != self) {
+            try {
+                Method override = self.getClass().getMethod("getFoodProperties", ItemStack.class, LivingEntity.class);
+                IN_FOOD_OVERRIDE.set(self);
+                try {
+                    return (FoodProperties) override.invoke(self, stack, entity);
+                } finally {
+                    IN_FOOD_OVERRIDE.remove();
+                }
+            } catch (NoSuchMethodException e) {
+                // no override: Forge's default below
+            } catch (ReflectiveOperationException e) {
+                throw new IllegalStateException("getFoodProperties of " + self.getClass().getName() + " failed", e);
+            }
+        }
+        return self.components().get(DataComponents.FOOD);
+    }
+
+    private static final ThreadLocal<Item> IN_FOOD_OVERRIDE = new ThreadLocal<>();
 
     /** Forge {@code BlockTags.create(id)}. */
     public static TagKey<Block> blockTag(Identifier id) {
