@@ -15,14 +15,23 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
 import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ItemStackTemplate;
+import net.minecraft.world.item.crafting.AbstractCookingRecipe;
+import net.minecraft.world.item.crafting.BlastingRecipe;
+import net.minecraft.world.item.crafting.CampfireCookingRecipe;
+import net.minecraft.world.item.crafting.CookingBookCategory;
 import net.minecraft.world.item.crafting.CraftingInput;
+import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeInput;
 import net.minecraft.world.item.crafting.RecipeManager;
+import net.minecraft.world.item.crafting.RecipePropertySet;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.SingleItemRecipe;
 import net.minecraft.world.item.crafting.SingleRecipeInput;
+import net.minecraft.world.item.crafting.SmeltingRecipe;
+import net.minecraft.world.item.crafting.SmokingRecipe;
 import net.minecraft.world.item.crafting.SmithingRecipeInput;
 import net.minecraft.world.item.crafting.SmithingRecipe;
 import net.minecraft.world.item.crafting.CraftingRecipe;
@@ -61,10 +70,37 @@ public final class RecipeShim {
     });
 
     public static <T extends Recipe<?>> Optional<T> getRecipeFor(RecipeManager manager, RecipeType<T> type, Container container, Level level) {
+        if (manager == NO_RECIPES.get()) return predicted(type, container, level);
         for (RecipeHolder<T> holder : byTypeHolders(manager, type)) {
             if (matches(holder.value(), container, level)) return Optional.of(remember(holder));
         }
         return Optional.empty();
+    }
+
+    private record Cooking(AbstractCookingRecipe.Factory<?> factory, ResourceKey<RecipePropertySet> inputs, int time) {}
+
+    /** The cooking types whose accepted inputs 26.3 sends clients, with vanilla's usual cooking times. */
+    private static final Map<RecipeType<?>, Cooking> PREDICTABLE = Map.of(
+            RecipeType.SMELTING, new Cooking(SmeltingRecipe::new, RecipePropertySet.FURNACE_INPUT, 200),
+            RecipeType.BLASTING, new Cooking(BlastingRecipe::new, RecipePropertySet.BLAST_FURNACE_INPUT, 100),
+            RecipeType.SMOKING, new Cooking(SmokingRecipe::new, RecipePropertySet.SMOKER_INPUT, 100),
+            RecipeType.CAMPFIRE_COOKING, new Cooking(CampfireCookingRecipe::new, RecipePropertySet.CAMPFIRE_INPUT, 600));
+
+    /**
+     * A remote client's stand-in for a cooking recipe. 26.3 sends clients which items each cooking type accepts
+     * (RecipePropertySet), not the recipes, and 1.20.1 code predicts on the client with the recipe (FD's skillet only
+     * starts its use animation, and so its flip, when one is found). The stand-in's result is the input itself; the
+     * server, which has the real recipe, decides what comes out.
+     */
+    @SuppressWarnings("unchecked")
+    private static <T extends Recipe<?>> Optional<T> predicted(RecipeType<T> type, Container container, Level level) {
+        Cooking cooking = PREDICTABLE.get(type);
+        if (cooking == null || container.getContainerSize() == 0) return Optional.empty();
+        ItemStack input = container.getItem(0);
+        if (input.isEmpty() || !level.recipeAccess().propertySet(cooking.inputs()).test(input)) return Optional.empty();
+        return Optional.of((T) cooking.factory().create(new Recipe.CommonInfo(false),
+                new AbstractCookingRecipe.CookingBookInfo(CookingBookCategory.MISC, ""), Ingredient.of(input.getItem()),
+                new ItemStackTemplate(input.getItem()), 0, cooking.time()));
     }
 
     public static <T extends Recipe<?>> List<T> getRecipesFor(RecipeManager manager, RecipeType<T> type, Container container, Level level) {

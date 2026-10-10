@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 import com.mojang.blaze3d.platform.InputConstants;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -243,6 +244,25 @@ public final class ClientMethods {
                     var result = mc.gameMode.useItemOn(mc.player, InteractionHand.MAIN_HAND, hit);
                     JsonObject out = new JsonObject();
                     out.addProperty("result", result.toString());
+                    return out;
+                }));
+
+        bridge.register("client.key", "name:string (key mapping, e.g. key.use, key.attack), action?:string (click|press|release, default click)",
+                "Drives a key mapping as if its key were used: click queues one press (what consumeClick sees), "
+                        + "press holds it down until release (key.use held keeps using the item).", p -> onClient(() -> {
+                    String name = p.string("name");
+                    KeyMapping key = KeyMapping.get(name);
+                    if (key == null) throw new Params.InvalidParams("no key mapping '" + name + "'");
+                    String action = p.string("action", "click").toLowerCase(Locale.ROOT);
+                    switch (action) {
+                        case "click" -> KeyMapping.click(InputConstants.getKey(key.saveString()));
+                        case "press" -> key.setDown(true);
+                        case "release" -> key.setDown(false);
+                        default -> throw new Params.InvalidParams("action must be click, press or release");
+                    }
+                    JsonObject out = new JsonObject();
+                    out.addProperty("key", name);
+                    out.addProperty("down", key.isDown());
                     return out;
                 }));
 

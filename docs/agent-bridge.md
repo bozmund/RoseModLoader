@@ -89,6 +89,7 @@ Call `rose.methods` for the live list. Each method lists its parameters and a de
 | `client.player` | | position, rotation, health, food, held item, inventory |
 | `client.useBlock` | `x y z face?` | a real right-click: client → network → server, including reach checks |
 | `client.getBlock` | `x y z` | the block and its block entity data as the **client** has them; compare with `world.getBlock` to see whether data reached the client (sync bugs show up here) |
+| `client.key` | `name action?` | drives a key mapping (`key.use`, `key.attack`, ...): `click` (default) queues one press, `press`/`release` hold it; holding `key.use` keeps using the held item |
 | `client.chat` | `message` | chat, or a command when it starts with `/` |
 | `client.quit` | | closes the client |
 
@@ -110,5 +111,8 @@ Call `rose.methods` for the live list. Each method lists its parameters and a de
 
 - Crash reports with a "Rose translation context" section. This needs the translation engine (M3).
 - Hot reload of Rosetta rules and patches (M3+). `server.reload` covers data packs today.
-- Keyboard input and walking/looking (`client.key`, `client.move`).
-- A full multiplayer run with a real second client on a dedicated server. The dedicated server needs `eula=true`. Bots cover the server side today.
+- Walking and looking (`client.move`).
+
+## Multiplayer runs
+
+A real client can join a dedicated server: `./rose launch server` (accept Mojang's EULA in `run/server/eula.txt` first), then `./rose ctl --target server server.command command="whitelist off"` (26.3 servers start with the whitelist on), `./rose launch client` and `./rose ctl --target client client.connect address=127.0.0.1:25565`. Pass `--target` on every call while both run.
