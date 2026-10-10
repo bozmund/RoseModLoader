@@ -18,4 +18,10 @@ public final class ForgeDialectClient implements ClientModInitializer {
         ForgeDialect.dispatchLifecycle(FMLClientSetupEvent::new);
         ForgeDialect.dispatchLifecycle(FMLLoadCompleteEvent::new);
     }
+
+    /** Called as the client builds its particle providers, during Minecraft's construction. */
+    public static void registerParticleProviders(net.minecraft.client.particle.ParticleResources resources) {
+        if (!ForgeDialect.active() || ForgeDialect.mods().isEmpty()) return;
+        ForgeDialect.postToMods(new net.minecraftforge.client.event.RegisterParticleProvidersEvent(resources), "RegisterParticleProviders");
+    }
 }

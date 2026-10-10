@@ -389,6 +389,8 @@ public final class Analyzer {
             return;
         }
         if (entry == null || !entry.exists()) {
+            // gone from vanilla, but a Rose era class above declares it (e.g. TextureSheetParticle.getRenderType)
+            if (above.stream().anyMatch(i -> i.methods().contains(readableName + newDesc))) return;
             boolean sameNameExists = hasMethodNamed(above, readableName);
             add(sameNameExists ? Status.OVERRIDE_SIGNATURE_CHANGED : Status.OVERRIDE_GONE, "override", symbol, readable,
                     sameNameExists ? readableName + " (new signature)" : "-", node.name);
