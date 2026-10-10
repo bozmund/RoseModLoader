@@ -21,7 +21,8 @@ import java.util.Map;
  * A constructor ({@code owner.<init>(args)V}) becomes a factory {@code static Owner name(args)}. A field read
  * ({@code owner.name:desc}) becomes {@code static Desc name()} for static fields, {@code static Desc name(Owner self)}
  * for instance fields. A field write ({@code owner.name=desc}) becomes {@code static void name(Desc value)}, or
- * {@code static void name(Owner self, Desc value)}.
+ * {@code static void name(Owner self, Desc value)}. A type test ({@code owner.<instanceof>(Ljava/lang/Object;)Z},
+ * for a class 26.3 no longer has) becomes {@code static boolean name(Object value)}.
  */
 public final class RedirectRules {
     public record Redirect(String symbol, String shimOwner, String shimName, String evidence) {
@@ -106,6 +107,13 @@ public final class RedirectRules {
         Redirect exact = bySymbol.get(owner + "." + name + desc);
         return exact != null ? exact : bySrgMember.get(name + desc);
     }
+
+    /** The redirect for {@code value instanceof type}, or {@code null}. */
+    public Redirect findInstanceOf(String type) {
+        return bySymbol.get(type + "." + INSTANCEOF);
+    }
+
+    public static final String INSTANCEOF = "<instanceof>(Ljava/lang/Object;)Z";
 
     /** The redirect for reading ({@code owner.name:desc}) or writing ({@code owner.name=desc}) a field, or {@code null}. */
     public Redirect findField(String owner, String name, String desc, boolean write) {

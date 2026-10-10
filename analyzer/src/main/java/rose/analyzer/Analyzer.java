@@ -177,7 +177,9 @@ public final class Analyzer {
             case FieldInsnNode fi -> {
                 if (!fieldRedirect(fi, where)) fieldRef(fi.owner, fi.name, fi.desc, where, "field");
             }
-            case TypeInsnNode ti -> typeRef(ti.desc, where);
+            case TypeInsnNode ti -> {
+                if (!instanceOfRedirect(ti, where)) typeRef(ti.desc, where);
+            }
             case MultiANewArrayInsnNode ma -> descRefs(Type.getType(ma.desc), where);
             case LdcInsnNode ldc when ldc.cst instanceof Type t -> descRefs(t, where);
             case InvokeDynamicInsnNode indy -> {
@@ -188,6 +190,21 @@ public final class Analyzer {
             }
             default -> { }
         }
+    }
+
+    /** @return true if a redirect rule covers this type test (see {@link #redirect}) */
+    private boolean instanceOfRedirect(TypeInsnNode test, String where) {
+        RedirectRules.Redirect rule = test.getOpcode() == Opcodes.INSTANCEOF ? redirects.findInstanceOf(test.desc) : null;
+        if (rule == null) return false;
+        references++;
+        ClassIndex.Info shim = target.get(rule.shimOwner());
+        if (shim != null && shim.methods().contains(rule.shimName() + rule.shimDescriptor(true))) {
+            redirected++;
+        } else {
+            add(Status.RULE_BROKEN, "class", rule.symbol(), rule.symbol(),
+                    rule.shimOwner() + "." + rule.shimName() + rule.shimDescriptor(true) + " (expected, static)", where);
+        }
+        return true;
     }
 
     /**

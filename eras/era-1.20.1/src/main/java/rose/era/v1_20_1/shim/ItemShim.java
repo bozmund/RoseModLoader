@@ -40,6 +40,16 @@ public final class ItemShim {
         return isValidRepairItem((Item) self, stack, repair);
     }
 
+    /** 1.20.1 {@code value instanceof PickaxeItem}: 26.x pickaxes are plain items in {@code #minecraft:pickaxes}. */
+    public static boolean isPickaxe(Object value) {
+        return value instanceof Item item && item.builtInRegistryHolder().is(net.minecraft.tags.ItemTags.PICKAXES);
+    }
+
+    /** 1.20.1 {@code value instanceof HoeItem}: 26.x hoes are plain items in {@code #minecraft:hoes}. */
+    public static boolean isHoe(Object value) {
+        return value instanceof Item item && item.builtInRegistryHolder().is(net.minecraft.tags.ItemTags.HOES);
+    }
+
     private ItemShim() {}
 
     /** 1.20.1 {@code item.getDescription()}: the item's name; 26.3 has {@code getName(stack)} (it may depend on components). */

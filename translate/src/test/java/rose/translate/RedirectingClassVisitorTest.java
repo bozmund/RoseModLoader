@@ -77,6 +77,45 @@ class RedirectingClassVisitorTest {
     }
 
     @Test
+    void typeTestsOfGoneClassesGoToShims() {
+        String symbol = "game/Pickaxe." + RedirectRules.INSTANCEOF;
+        RedirectRules rules = new RedirectRules(Map.of(symbol, new Redirect(symbol, "shim/ItemShim", "isPickaxe", "test")));
+        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        cw.visit(Opcodes.V21, Opcodes.ACC_PUBLIC, "mod/Renderer", null, "java/lang/Object", null);
+        MethodVisitor mv = cw.visitMethod(Opcodes.ACC_STATIC, "tool", "(Ljava/lang/Object;)Z", null, null);
+        mv.visitCode();
+        mv.visitVarInsn(Opcodes.ALOAD, 0);
+        mv.visitTypeInsn(Opcodes.INSTANCEOF, "game/Pickaxe");
+        mv.visitVarInsn(Opcodes.ALOAD, 0);
+        mv.visitTypeInsn(Opcodes.INSTANCEOF, "game/Trident");
+        mv.visitInsn(Opcodes.IOR);
+        mv.visitInsn(Opcodes.IRETURN);
+        mv.visitMaxs(0, 0);
+        mv.visitEnd();
+        cw.visitEnd();
+        ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        new ClassReader(cw.toByteArray()).accept(new RedirectingClassVisitor(writer, rules), 0);
+        List<String> insns = new ArrayList<>();
+        new ClassReader(writer.toByteArray()).accept(new ClassVisitor(Opcodes.ASM9) {
+            @Override
+            public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
+                return new MethodVisitor(Opcodes.ASM9) {
+                    @Override
+                    public void visitTypeInsn(int opcode, String type) {
+                        insns.add("instanceof " + type);
+                    }
+
+                    @Override
+                    public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
+                        insns.add(owner + "." + name + desc);
+                    }
+                };
+            }
+        }, 0);
+        assertEquals(List.of("shim/ItemShim.isPickaxe(Ljava/lang/Object;)Z", "instanceof game/Trident"), insns);
+    }
+
+    @Test
     void fieldReadsAndWritesGoToTheirOwnShims() {
         RedirectRules rules = new RedirectRules(Map.of(
                 "game/Chicken.FOOD:Lgame/Ingredient;", new Redirect("game/Chicken.FOOD:Lgame/Ingredient;", "shim/Food", "chickenFood", "test"),

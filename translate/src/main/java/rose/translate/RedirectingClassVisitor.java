@@ -17,6 +17,8 @@ import rose.rosetta.RedirectRules;
  * Replaces calls that have a {@link RedirectRules redirect rule} with a static call to the rule's shim. Runs on the
  * mod's <em>old</em> names, before renaming, so rules can use the symbols exactly as the analyzer reports them.
  *
+ * <p>A type test rule turns {@code value instanceof Owner} into {@code Shim.name(value)}.
+ *
  * <p>A constructor rule ({@code owner.<init>(args)V}) turns {@code new Owner(args)} into a static factory call
  * {@code Shim.name(args)} that returns the object: the {@code NEW}/{@code DUP} pair is removed.
  */
@@ -56,6 +58,16 @@ public final class RedirectingClassVisitor extends ClassVisitor {
             }
 
             @Override
+            public void visitTypeInsn(int opcode, String type) {
+                RedirectRules.Redirect rule = opcode == Opcodes.INSTANCEOF ? rules.findInstanceOf(type) : null;
+                if (rule == null) {
+                    super.visitTypeInsn(opcode, type);
+                    return;
+                }
+                super.visitMethodInsn(Opcodes.INVOKESTATIC, rule.shimOwner(), rule.shimName(), rule.shimDescriptor(true), false);
+            }
+
+            @Override
             public void visitFieldInsn(int opcode, String owner, String field, String desc) {
                 RedirectRules.Redirect rule = rules.findField(owner, field, desc, !isRead(opcode));
                 if (rule == null) {
@@ -78,6 +90,14 @@ public final class RedirectingClassVisitor extends ClassVisitor {
 
     private void redirectCalls(MethodNode method) {
         for (AbstractInsnNode insn : method.instructions.toArray()) {
+            if (insn instanceof TypeInsnNode type && type.getOpcode() == Opcodes.INSTANCEOF) {
+                RedirectRules.Redirect rule = rules.findInstanceOf(type.desc);
+                if (rule != null) {
+                    method.instructions.set(type, new MethodInsnNode(Opcodes.INVOKESTATIC, rule.shimOwner(), rule.shimName(),
+                            rule.shimDescriptor(true), false));
+                }
+                continue;
+            }
             if (insn instanceof org.objectweb.asm.tree.FieldInsnNode field) {
                 RedirectRules.Redirect rule = rules.findField(field.owner, field.name, field.desc, !isRead(field.getOpcode()));
                 if (rule != null) {
