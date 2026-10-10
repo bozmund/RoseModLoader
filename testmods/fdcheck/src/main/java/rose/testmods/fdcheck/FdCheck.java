@@ -58,6 +58,7 @@ public final class FdCheck implements ModInitializer {
         RoseGameTests.register(id("rabbit_stew_gives_jump_boost"), FdCheck::rabbitStewGivesJumpBoost);
         RoseGameTests.register(id("dog_food_heals_tamed_wolves"), FdCheck::dogFoodHealsTamedWolves);
         RoseGameTests.register(id("villages_include_compost_piles"), FdCheck::villagesIncludeCompostPiles);
+        RoseGameTests.register(id("backstabbing_enchants_knives"), FdCheck::backstabbingEnchantsKnives);
     }
 
     private static Identifier id(String path) {
@@ -472,6 +473,44 @@ public final class FdCheck implements ModInitializer {
                 "compost pile not among the pieces villages generate from");
         helper.assertTrue(server.getStructureTemplateManager().get(Identifier.parse(piece)).isPresent(), "structure " + piece + " doesn't load");
         helper.succeed();
+    }
+
+    /**
+     * FD's Backstabbing (a 1.20.1 Enchantment subclass) is in the server's data-driven enchantment registry, offered by
+     * the enchanting table for knives only, and FD's LivingHurtEvent listener multiplies a knife hit from behind by
+     * 1.2 + 0.2 * level (BackstabbingEnchantment.getBackstabbingDamagePerLevel).
+     */
+    private static void backstabbingEnchantsKnives(GameTestHelper helper) {
+        if (skip(helper)) return;
+        var registry = helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
+        var key = net.minecraft.resources.ResourceKey.create(Registries.ENCHANTMENT, Identifier.fromNamespaceAndPath("farmersdelight", "backstabbing"));
+        var backstabbing = registry.get(key).orElse(null);
+        helper.assertTrue(backstabbing != null, "farmersdelight:backstabbing isn't in the enchantment registry");
+        helper.assertTrue(backstabbing.is(net.minecraft.tags.EnchantmentTags.IN_ENCHANTING_TABLE), "not offered by the enchanting table");
+        helper.assertTrue(backstabbing.value().canEnchant(new ItemStack(item("iron_knife"))), "can't enchant a knife; supported: " + backstabbing.value().definition().supportedItems());
+        helper.assertFalse(backstabbing.value().canEnchant(new ItemStack(net.minecraft.world.item.Items.DIAMOND_SWORD)), "enchants a sword");
+
+        Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        ItemStack knife = new ItemStack(item("iron_knife"));
+        knife.enchant(backstabbing, 1);
+        player.setItemInHand(InteractionHand.MAIN_HAND, knife);
+        float front = damageFrom(helper, player, 2.0);
+        float back = damageFrom(helper, player, -2.0);
+        helper.assertTrue(Math.abs(front - 2.0F) < 0.01F, "a hit from the front should deal 2, dealt " + front);
+        helper.assertTrue(Math.abs(back - 2.8F) < 0.01F, "a backstab should deal 2 * 1.4, dealt " + back);
+        helper.succeed();
+    }
+
+    /** Damage a fresh pig facing south (+z) takes from a 2-point hit by {@code player} standing {@code dz} away. */
+    private static float damageFrom(GameTestHelper helper, Player player, double dz) {
+        var pig = helper.spawn(net.minecraft.world.entity.EntityTypes.PIG, POS);
+        pig.setYRot(0.0F);
+        pig.setYHeadRot(0.0F);
+        pig.setXRot(0.0F);
+        player.setPos(pig.getX(), pig.getY(), pig.getZ() + dz);
+        float before = pig.getHealth();
+        pig.hurtServer(helper.getLevel(), helper.getLevel().damageSources().playerAttack(player), 2.0F);
+        return before - pig.getHealth();
     }
 
     private static boolean hasEffect(Player player, String path) {

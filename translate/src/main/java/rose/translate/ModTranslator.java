@@ -28,7 +28,7 @@ import rose.rosetta.RedirectRules;
  */
 public final class ModTranslator {
     /** Bump when translation output changes, so cached jars are rebuilt. */
-    public static final int VERSION = 24;
+    public static final int VERSION = 25;
 
     private final NameLayer layer;
     private final RedirectRules redirects;

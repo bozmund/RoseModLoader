@@ -67,10 +67,7 @@ public class DeferredRegister<T> {
     private void addEntries(RegisterEvent event) {
         if (!event.getRegistryKey().equals(registry.getRegistryKey())) return;
         seenRegisterEvent = true;
-        if (registry.isDetached() && !entries.isEmpty()) {
-            Unsupported.registry(registry.getRegistryName().toString(), modid + " registers " + entries.size()
-                    + " entries into " + registry.getRegistryName() + ", which isn't a built-in registry on 26.3; they are kept but have no effect yet");
-        }
+        int unhandled = 0;
         for (var entry : entries.entrySet()) {
             RegistryObject<T> object = entry.getKey();
             ResourceKey key = object.getKey();
@@ -92,8 +89,19 @@ public class DeferredRegister<T> {
                 Unsupported.entry(object.getId().toString(), registry.getRegistryName().toString(), e);
                 continue;
             }
+            if (value instanceof rose.era.v1_20_1.enchantment.LegacyEnchantment legacy) {
+                // Data-driven on 26.3: LegacyEnchantments adds it to each server's registry.
+                rose.era.v1_20_1.enchantment.LegacyEnchantments.register(key, legacy);
+                object.bind(value);
+                continue;
+            }
             rose.dialect.forge.v1_20_1.VanillaRegistration.register(registry.vanilla(), key, registered);
             object.bind(value);
+            unhandled++;
+        }
+        if (registry.isDetached() && unhandled > 0) {
+            Unsupported.registry(registry.getRegistryName().toString(), modid + " registers " + unhandled
+                    + " entries into " + registry.getRegistryName() + ", which isn't a built-in registry on 26.3; they are kept but have no effect yet");
         }
     }
 

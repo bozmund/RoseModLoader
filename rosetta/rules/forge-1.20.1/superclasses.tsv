@@ -13,3 +13,4 @@ net/minecraft/world/level/levelgen/feature/Feature	rose/era/v1_20_1/worldgen/Leg
 net/minecraft/world/level/levelgen/placement/PlacementFilter	rose/era/v1_20_1/worldgen/LegacyPlacementFilter	26.x: PlacementFilter became an interface with a public shouldPlace; 1.20.1 subclasses override it protected
 net/minecraft/world/level/levelgen/placement/PlacementModifier	rose/era/v1_20_1/worldgen/LegacyPlacementModifier	26.x: PlacementModifier became an interface with modify(context, random, origin, output); 1.20.1 had getPositions(...) Stream and type()
 net/minecraft/world/item/BlockItem	rose/era/v1_20_1/item/LegacyBlockItem	1.21.2: a block item's name comes from Item.Properties (26.3 Items.registerBlock calls useBlockDescriptionPrefix()); 1.20.1 BlockItem.getDescriptionId() returned getBlock().getDescriptionId(); mod subclasses inherited it
+

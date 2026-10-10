@@ -3,6 +3,10 @@ package net.minecraft.world.item.enchantment;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
+import net.minecraft.core.Holder;
+import net.minecraft.core.HolderGetter;
+import net.minecraft.core.HolderSet;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
@@ -33,21 +37,36 @@ public final class EnchantmentCategory {
     private final String name;
     private final int ordinal;
     private final Predicate<Item> delegate;
+    private final TagKey<Item> tag;
 
-    private EnchantmentCategory(String name, Predicate<Item> delegate) {
+    private EnchantmentCategory(String name, Predicate<Item> delegate, TagKey<Item> tag) {
         this.name = name;
         this.ordinal = VALUES.size();
         this.delegate = delegate;
+        this.tag = tag;
         VALUES.add(this);
     }
 
     private static EnchantmentCategory of(String name, TagKey<Item> tag) {
-        return new EnchantmentCategory(name, item -> item.builtInRegistryHolder().is(tag));
+        return new EnchantmentCategory(name, item -> item.builtInRegistryHolder().is(tag), tag);
     }
 
     /** Forge: a new category for items matching {@code delegate}. */
     public static EnchantmentCategory create(String name, Predicate<Item> delegate) {
-        return new EnchantmentCategory(name, delegate);
+        return new EnchantmentCategory(name, delegate, null);
+    }
+
+    /**
+     * Rose: the items as a 26.3 enchantment's {@code supported_items}: the category's tag (resolved through
+     * {@code items}, the loading server's view of item tags), or the items its predicate accepts.
+     */
+    public HolderSet<Item> rose$items(HolderGetter<Item> items) {
+        if (tag != null) return items.getOrThrow(tag);
+        List<Holder<Item>> out = new ArrayList<>();
+        for (Item item : BuiltInRegistries.ITEM) {
+            if (delegate.test(item)) out.add(item.builtInRegistryHolder());
+        }
+        return HolderSet.direct(out);
     }
 
     public boolean canEnchant(Item item) {

@@ -7,4 +7,4 @@ net/minecraft/sounds/SoundEvent	net/minecraft/core/Holder	rose/era/v1_20_1/shim/
 net/minecraft/core/Holder	*	rose/era/v1_20_1/shim/Holders.value	a 1.20.1 caller expects the value where 26.3 returns or stores its Holder; Holder.value() gives it
 net/minecraft/world/level/gameevent/GameEvent	net/minecraft/core/Holder	rose/era/v1_20_1/shim/Holders.gameEvent	1.20.5: GameEvent fields are Holder.Reference<GameEvent> and Level/LevelAccessor.gameEvent take Holder<GameEvent>
 net/minecraft/core/Holder$Reference	*	rose/era/v1_20_1/shim/Holders.referenceValue	a 1.20.1 caller expects the value where 26.3 stores a Holder.Reference (e.g. GameEvent.BLOCK_CHANGE)
-net/minecraft/world/item/enchantment/Enchantment	net/minecraft/core/Holder	rose/era/v1_20_1/shim/EnchantmentShim.holder	1.21: enchantment APIs take Holder<Enchantment> from the server registry
+rose/era/v1_20_1/enchantment/LegacyEnchantment	net/minecraft/core/Holder	rose/era/v1_20_1/shim/EnchantmentShim.holder	1.21: enchantment APIs take Holder<Enchantment> from the server registry

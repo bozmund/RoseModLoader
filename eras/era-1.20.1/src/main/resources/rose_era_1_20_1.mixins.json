@@ -11,6 +11,7 @@
     "RecipeManagerMixin",
     "RecipeMapInvoker",
     "RegistryLoadTaskMixin",
+    "ResourceManagerRegistryLoadTaskMixin",
     "RegistryValuesAccessor",
     "TagLoaderMixin"
   ],
