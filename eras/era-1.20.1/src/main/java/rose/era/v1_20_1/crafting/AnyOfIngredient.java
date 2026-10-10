@@ -8,8 +8,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 
 /**
- * An ingredient matching anything one of its parts matches: 1.20.1 ingredient lists could mix custom types with
- * items and tags (FD: "a knife tool action, or #forge:tools/knives"), which 26.3's HolderSet ingredients can't.
+ * An ingredient matching anything one of its parts matches: 1.20.1 ingredient lists could mix custom types and tags
+ * with items (FD: "a knife tool action, or #forge:tools/knives"; "any raw meat, fish or vegetable"), which 26.3's
+ * HolderSet ingredients can't.
  * The superclass holds the first part's set for vanilla code that reads it directly.
  */
 public class AnyOfIngredient extends Ingredient {

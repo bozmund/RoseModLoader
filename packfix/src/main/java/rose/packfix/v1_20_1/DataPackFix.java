@@ -68,12 +68,17 @@ public final class DataPackFix {
         return List.copyOf(report);
     }
 
+    /** Generated item tags for ingredient lists with tags ({@code ns:path} to values); see {@link #ingredient}. */
+    private final Map<String, JsonArray> anyOfTags = new java.util.TreeMap<>();
+    private String recipeNamespace = "rose";
+
     /** Item models seen ({@code ns:path}); 1.21.4 needs an item definition for each. */
     private final Set<String> itemModels = new java.util.TreeSet<>();
 
     /**
      * Files the mod lacks for 26.3: an item definition ({@code assets/<ns>/items/<id>.json}) for every item model.
-     * 1.21.4 made item models selected by these definitions; without one an item renders as missing.
+     * 1.21.4 made item models selected by these definitions; without one an item renders as missing. Also the item
+     * tags generated for recipe ingredient lists ({@link #ingredient}). Call after every file went through fix().
      */
     public List<Fixed> extras() {
         List<Fixed> out = new ArrayList<>();
@@ -87,6 +92,13 @@ public final class DataPackFix {
             out.add(new Fixed("assets/" + item.substring(0, colon) + "/items/" + item.substring(colon + 1) + ".json",
                     GSON.toJson(definition).getBytes(StandardCharsets.UTF_8)));
         }
+        anyOfTags.forEach((id, values) -> {
+            int colon = id.indexOf(':');
+            JsonObject tag = new JsonObject();
+            tag.add("values", values);
+            out.add(new Fixed("data/" + id.substring(0, colon) + "/tags/item/" + id.substring(colon + 1) + ".json",
+                    GSON.toJson(tag).getBytes(StandardCharsets.UTF_8)));
+        });
         return out;
     }
 
@@ -128,6 +140,7 @@ public final class DataPackFix {
         if (folder.startsWith("recipe/") && path.endsWith(".json")) {
             JsonObject recipe = parse(content);
             if (recipe == null) return new Fixed(newPath, null);
+            recipeNamespace = namespace;
             JsonObject upgraded = upgradeRecipe(recipe, path);
             if (upgraded == null) return null;
             return new Fixed(newPath, GSON.toJson(upgraded).getBytes(StandardCharsets.UTF_8));
@@ -252,24 +265,65 @@ public final class DataPackFix {
 
     /**
      * 1.20.1 ingredient JSON to 1.21.2: {@code {"item": x}} becomes {@code "x"}, {@code {"tag": t}} becomes {@code "#t"},
-     * a list of items becomes a list of ids. Lists that mix tags and items can't be expressed; the first entry is kept.
+     * a list of items becomes a list of ids. A 1.21.2 list holds item ids only, so a list with tags (any cooked meat:
+     * {@code [{"tag": "forge:cooked_beef"}, {"tag": "forge:cooked_pork"}, ...]}) becomes a generated item tag with
+     * all of its entries ({@link #anyOfTag}). Lists with custom ingredient types can't be expressed; their first tag
+     * is kept and reported.
      */
-    static JsonElement ingredient(JsonElement old) {
+    JsonElement ingredient(JsonElement old) {
         if (old == null) return null;
         if (old.isJsonArray()) {
-            JsonArray items = new JsonArray();
-            for (JsonElement e : old.getAsJsonArray()) {
-                JsonElement converted = ingredient(e);
-                if (converted.isJsonPrimitive() && converted.getAsString().startsWith("#")) return converted;
-                items.add(converted);
+            List<JsonElement> parts = new ArrayList<>();
+            for (JsonElement e : old.getAsJsonArray()) parts.add(ingredient(e));
+            if (parts.size() == 1) return parts.getFirst();
+            boolean allIds = parts.stream().allMatch(e -> e.isJsonPrimitive() && e.getAsJsonPrimitive().isString());
+            boolean anyTag = parts.stream().anyMatch(DataPackFix::isTagReference);
+            if (allIds && anyTag) return new com.google.gson.JsonPrimitive("#" + anyOfTag(parts));
+            if (anyTag) {
+                JsonElement first = parts.stream().filter(DataPackFix::isTagReference).findFirst().orElseThrow();
+                report.add("ingredient list with custom types reduced to " + first + ": " + old);
+                return first;
             }
-            return items.size() == 1 ? items.get(0) : items;
+            JsonArray items = new JsonArray();
+            parts.forEach(items::add);
+            return items;
         }
         if (!old.isJsonObject()) return old;
         JsonObject o = old.getAsJsonObject();
         if (o.has("item")) return o.get("item");
         if (o.has("tag")) return new com.google.gson.JsonPrimitive("#" + o.get("tag").getAsString());
         return old;
+    }
+
+    private static boolean isTagReference(JsonElement e) {
+        return e.isJsonPrimitive() && e.getAsString().startsWith("#");
+    }
+
+    /**
+     * The id of a generated item tag holding {@code entries} (item ids and {@code #tags}), in the namespace of the
+     * recipe being upgraded. Named by its content, so recipes that list the same alternatives share one tag.
+     */
+    private String anyOfTag(List<JsonElement> entries) {
+        JsonArray values = new JsonArray();
+        StringBuilder key = new StringBuilder();
+        for (JsonElement e : entries) {
+            JsonObject entry = new JsonObject();
+            entry.add("id", e);
+            entry.addProperty("required", false);
+            values.add(entry);
+            key.append(e.getAsString()).append('\n');
+        }
+        String id = recipeNamespace + ":rose/any_of/" + java.util.HexFormat.of().formatHex(sha1(key.toString())).substring(0, 12);
+        anyOfTags.put(id, values);
+        return id;
+    }
+
+    private static byte[] sha1(String s) {
+        try {
+            return java.security.MessageDigest.getInstance("SHA-1").digest(s.getBytes(StandardCharsets.UTF_8));
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     /** Forge 1.20.1 conditions; other mods count as absent (the translated jar is cached without the mod list). */

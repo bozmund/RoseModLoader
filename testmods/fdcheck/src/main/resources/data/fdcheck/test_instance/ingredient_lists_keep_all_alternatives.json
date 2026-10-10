@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "fdcheck:ingredient_lists_keep_all_alternatives",
+  "structure": "minecraft:empty",
+  "max_ticks": 20,
+  "padding": 2
+}

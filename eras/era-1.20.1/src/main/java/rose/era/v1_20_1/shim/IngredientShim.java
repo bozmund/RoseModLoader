@@ -27,8 +27,9 @@ public final class IngredientShim {
     public static Ingredient fromJson(JsonElement json) {
         // A one-element list (a common way to write a single ingredient) is that ingredient.
         if (json.isJsonArray() && json.getAsJsonArray().size() == 1) return fromJson(json.getAsJsonArray().get(0));
-        // A list with custom types can't become one HolderSet: match any of its parts instead.
-        if (json.isJsonArray() && hasCustom(json.getAsJsonArray())) {
+        // A list with tags or custom types can't become one HolderSet (26.3 lists hold item ids only): match any of
+        // its parts instead.
+        if (json.isJsonArray() && needsParts(json.getAsJsonArray())) {
             java.util.List<Ingredient> parts = new java.util.ArrayList<>();
             for (JsonElement e : json.getAsJsonArray()) parts.add(fromJson(e));
             return new rose.era.v1_20_1.crafting.AnyOfIngredient(parts);
@@ -42,8 +43,11 @@ public final class IngredientShim {
                 .getOrThrow(message -> new JsonParseException("Bad 1.20.1 ingredient " + json + ": " + message));
     }
 
-    private static boolean hasCustom(JsonArray array) {
-        for (JsonElement e : array) if (e.isJsonObject() && e.getAsJsonObject().has("type")) return true;
+    private static boolean needsParts(JsonArray array) {
+        for (JsonElement e : array) {
+            if (e.isJsonObject() && (e.getAsJsonObject().has("type") || e.getAsJsonObject().has("tag"))) return true;
+            if (e.isJsonArray()) return true;
+        }
         return false;
     }
 
@@ -57,15 +61,11 @@ public final class IngredientShim {
         return Ingredient.of(java.util.Arrays.stream(stacks).map(net.minecraft.world.item.ItemStack::getItem));
     }
 
-    /** 1.20.1 ingredient JSON in 1.21.2 form: "id", "#tag" or a list of ids. */
+    /** 1.20.1 ingredient JSON in 1.21.2 form: "id", "#tag" or a list of ids (lists with tags never get here). */
     static JsonElement upgrade(JsonElement old) {
         if (old.isJsonArray()) {
             JsonArray ids = new JsonArray();
-            for (JsonElement e : old.getAsJsonArray()) {
-                JsonElement converted = upgrade(e);
-                if (converted.isJsonPrimitive() && converted.getAsString().startsWith("#")) return converted;
-                ids.add(converted);
-            }
+            for (JsonElement e : old.getAsJsonArray()) ids.add(upgrade(e));
             return ids.size() == 1 ? ids.get(0) : ids;
         }
         if (!old.isJsonObject()) return old;

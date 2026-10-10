@@ -82,6 +82,35 @@ class DataPackFixTest {
     }
 
     @Test
+    void ingredientListsWithTagsBecomeAGeneratedTag() {
+        // evidence: 1.21.2 ingredient format (Ingredient.CODEC: an id, "#tag", or a list of item ids only); FD 1.20.1
+        // recipes/barbecue_stick.json lists cooked meats as [{"tag": ...}, ..., {"item": "minecraft:cooked_rabbit"}]
+        String json = """
+                {"type":"minecraft:crafting_shapeless","ingredients":[{"item":"minecraft:stick"},
+                  [{"tag":"forge:cooked_beef"},{"tag":"forge:cooked_pork"},{"item":"minecraft:cooked_rabbit"}]],
+                 "result":{"item":"fd:barbecue_stick"}}""";
+        JsonObject recipe = upgrade("data/fd/recipes/barbecue_stick.json", json);
+        assertEquals("minecraft:stick", recipe.getAsJsonArray("ingredients").get(0).getAsString());
+        String tag = recipe.getAsJsonArray("ingredients").get(1).getAsString();
+        assertEquals(true, tag.startsWith("#fd:rose/any_of/"), tag);
+
+        DataPackFix.Fixed tagFile = fix.extras().stream().filter(f -> f.path().startsWith("data/fd/tags/item/rose/any_of/")).findFirst().orElseThrow();
+        assertEquals("data/fd/tags/item/" + tag.substring("#fd:".length()) + ".json", tagFile.path());
+        assertEquals("""
+                [{"id":"#forge:cooked_beef","required":false},{"id":"#forge:cooked_pork","required":false},\
+                {"id":"minecraft:cooked_rabbit","required":false}]""",
+                JsonParser.parseString(new String(tagFile.content(), StandardCharsets.UTF_8)).getAsJsonObject().get("values").toString());
+
+        // The same alternatives in another recipe share the tag; a list of items stays a list.
+        JsonObject other = upgrade("data/fd/recipes/other.json", json.replace("barbecue_stick", "other"));
+        assertEquals(tag, other.getAsJsonArray("ingredients").get(1).getAsString());
+        JsonObject items = upgrade("data/fd/recipes/items.json", """
+                {"type":"minecraft:crafting_shapeless","ingredients":[[{"item":"minecraft:egg"},{"item":"minecraft:sugar"}]],
+                 "result":{"item":"fd:x"}}""");
+        assertEquals("[\"minecraft:egg\",\"minecraft:sugar\"]", items.getAsJsonArray("ingredients").get(0).toString());
+    }
+
+    @Test
     void vanillaIdsRenamedSince1201AreUpdated() {
         // evidence: 26.3 DataFixers v4541 "Rename chain to iron_chain"
         String json = """

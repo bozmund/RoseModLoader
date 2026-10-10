@@ -49,6 +49,7 @@ public final class FdCheck implements ModInitializer {
         RoseGameTests.register(id("block_items_named_after_blocks"), FdCheck::blockItemsNamedAfterBlocks);
         RoseGameTests.register(id("cabinets_burn_in_furnaces"), FdCheck::cabinetsBurnInFurnaces);
         RoseGameTests.register(id("cooking_recipes_have_ingredients"), FdCheck::cookingRecipesHaveIngredients);
+        RoseGameTests.register(id("ingredient_lists_keep_all_alternatives"), FdCheck::ingredientListsKeepAllAlternatives);
     }
 
     private static Identifier id(String path) {
@@ -287,6 +288,29 @@ public final class FdCheck implements ModInitializer {
         helper.assertTrue(!placement.isImpossibleToPlace() && placement.ingredients().size() == 3,
                 "beef stew should have 3 ingredients (beef, carrot, potato), has " + placement.ingredients());
         helper.succeed();
+    }
+
+    /**
+     * A 1.20.1 ingredient list ("any of these tags or items") keeps all its alternatives: in a vanilla crafting recipe
+     * (barbecue stick: any cooked meat or fish, upgraded by packfix) and in FD's own cooking recipe (cabbage rolls:
+     * raw meat, fish, vegetables or mushrooms).
+     */
+    private static void ingredientListsKeepAllAlternatives(GameTestHelper helper) {
+        if (skip(helper)) return;
+        assertAccepts(helper, "barbecue_stick", net.minecraft.world.item.Items.COOKED_PORKCHOP, net.minecraft.world.item.Items.COOKED_RABBIT);
+        assertAccepts(helper, "cooking/cabbage_rolls", net.minecraft.world.item.Items.COD, net.minecraft.world.item.Items.CARROT);
+        helper.succeed();
+    }
+
+    private static void assertAccepts(GameTestHelper helper, String recipePath, Item... items) {
+        var key = net.minecraft.resources.ResourceKey.create(Registries.RECIPE, Identifier.fromNamespaceAndPath("farmersdelight", recipePath));
+        var recipe = helper.getLevel().getServer().getRecipeManager().byKey(key);
+        helper.assertTrue(recipe.isPresent(), "recipe missing: " + key);
+        var ingredients = recipe.get().value().placementInfo().ingredients();
+        for (Item item : items) {
+            helper.assertTrue(ingredients.stream().anyMatch(i -> i.test(new ItemStack(item))),
+                    recipePath + " should accept " + item + "; ingredients: " + ingredients);
+        }
     }
 
     private static boolean hasEffect(Player player, String path) {
