@@ -48,6 +48,7 @@ public final class FdCheck implements ModInitializer {
         RoseGameTests.register(id("meals_feed_and_give_effects"), FdCheck::mealsFeedAndGiveEffects);
         RoseGameTests.register(id("block_items_named_after_blocks"), FdCheck::blockItemsNamedAfterBlocks);
         RoseGameTests.register(id("cabinets_burn_in_furnaces"), FdCheck::cabinetsBurnInFurnaces);
+        RoseGameTests.register(id("cooking_recipes_have_ingredients"), FdCheck::cookingRecipesHaveIngredients);
     }
 
     private static Identifier id(String path) {
@@ -271,6 +272,21 @@ public final class FdCheck implements ModInitializer {
         furnace.setItem(0, new ItemStack(net.minecraft.world.item.Items.BEEF));
         furnace.setItem(1, cabinet);
         helper.succeedWhen(() -> helper.assertBlockProperty(POS, net.minecraft.world.level.block.AbstractFurnaceBlock.LIT, true));
+    }
+
+    /**
+     * FD's cooking pot recipes expose their inputs (1.20.1 getIngredients) as 26.3 placement info; without them 26.3
+     * ignores the recipe in its recipe sets ("can't be placed due to empty ingredients").
+     */
+    private static void cookingRecipesHaveIngredients(GameTestHelper helper) {
+        if (skip(helper)) return;
+        var key = net.minecraft.resources.ResourceKey.create(Registries.RECIPE, Identifier.fromNamespaceAndPath("farmersdelight", "cooking/beef_stew"));
+        var recipe = helper.getLevel().getServer().getRecipeManager().byKey(key);
+        helper.assertTrue(recipe.isPresent(), "recipe missing: " + key);
+        var placement = recipe.get().value().placementInfo();
+        helper.assertTrue(!placement.isImpossibleToPlace() && placement.ingredients().size() == 3,
+                "beef stew should have 3 ingredients (beef, carrot, potato), has " + placement.ingredients());
+        helper.succeed();
     }
 
     private static boolean hasEffect(Player player, String path) {

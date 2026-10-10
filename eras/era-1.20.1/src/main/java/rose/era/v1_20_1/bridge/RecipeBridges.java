@@ -1,9 +1,12 @@
 package rose.era.v1_20_1.bridge;
 
 import java.lang.invoke.MethodType;
+import java.util.List;
+import net.minecraft.core.NonNullList;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.PlacementInfo;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeBookCategories;
@@ -48,9 +51,18 @@ public final class RecipeBridges {
         return true;
     }
 
-    /** Old recipes aren't placeable by the 26.3 recipe book (it needs per-slot placement data). */
+    /**
+     * The recipe's inputs, from 1.20.1 {@code getIngredients()} (default: none). 26.3 ignores a non-special recipe
+     * without them ("can't be placed due to empty ingredients"). Empty ingredients are shaped-recipe gaps; the
+     * recipe book can't place 1.20.1 recipes slot by slot anyway, so only the inputs are kept.
+     */
+    @SuppressWarnings("unchecked")
     public static PlacementInfo placementInfo(Recipe<?> self) {
-        return PlacementInfo.NOT_PLACEABLE;
+        List<Ingredient> ingredients = Legacy.find(self, "getIngredients", MethodType.methodType(NonNullList.class))
+                .map(m -> (List<Ingredient>) Legacy.invoke(m, self))
+                .orElse(List.of());
+        List<Ingredient> present = ingredients.stream().filter(i -> !i.isEmpty()).toList();
+        return present.isEmpty() ? PlacementInfo.NOT_PLACEABLE : PlacementInfo.create(present);
     }
 
     public static RecipeBookCategory recipeBookCategory(Recipe<?> self) {
