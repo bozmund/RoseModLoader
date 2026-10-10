@@ -232,7 +232,7 @@ public final class OracleDump {
         json.add("book_category", guard(() -> new JsonPrimitive(String.valueOf(BuiltInRegistries.RECIPE_BOOK_CATEGORY.getKey(recipe.recipeBookCategory())))));
         json.add("ingredients", guard(() -> {
             JsonArray ingredients = new JsonArray();
-            recipe.placementInfo().ingredients().forEach(i -> ingredients.add(orError(Ingredient.CODEC.encodeStart(ops, i))));
+            recipe.placementInfo().ingredients().forEach(i -> ingredients.add(itemsOf(i)));
             return ingredients;
         }));
         json.add("display", guard(() -> {
@@ -242,6 +242,15 @@ public final class OracleDump {
         }));
         json.add("codec", guard(() -> orError(Recipe.DIRECT_CODEC.encodeStart(ops, recipe))));
         return json;
+    }
+
+    /** The items an ingredient accepts, sorted: an item and a tag holding only that item compare equal. */
+    private static JsonArray itemsOf(Ingredient ingredient) {
+        TreeSet<String> items = new TreeSet<>();
+        ingredient.items().forEach(h -> h.unwrapKey().ifPresent(k -> items.add(k.identifier().toString())));
+        JsonArray out = new JsonArray();
+        items.forEach(out::add);
+        return out;
     }
 
     private static JsonElement guard(java.util.function.Supplier<JsonElement> value) {
