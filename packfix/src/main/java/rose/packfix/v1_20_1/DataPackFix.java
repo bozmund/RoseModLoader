@@ -95,6 +95,7 @@ public final class DataPackFix {
     private final Map<String, JsonArray> modelOverrides = new java.util.HashMap<>();
     /** Item models ({@code ns:item/path}) whose parent was {@code builtin/entity}: the mod's item renderer draws them. */
     private final Set<String> rendererModels = new java.util.HashSet<>();
+    private final SignFix signs = new SignFix();
 
     /**
      * Files the mod lacks for 26.3: an item definition ({@code assets/<ns>/items/<id>.json}) for every item model.
@@ -111,6 +112,7 @@ public final class DataPackFix {
             out.add(new Fixed("assets/" + item.substring(0, colon) + "/items/" + item.substring(colon + 1) + ".json",
                     GSON.toJson(definition).getBytes(StandardCharsets.UTF_8)));
         }
+        out.addAll(signs.extras(report));
         anyOfTags.forEach((id, values) -> {
             int colon = id.indexOf(':');
             JsonObject tag = new JsonObject();
@@ -178,6 +180,7 @@ public final class DataPackFix {
 
     /** The fixed resource, or {@code null} to leave it out of the translated jar. */
     public Fixed fix(String path, byte[] content) {
+        if (signs.offer(path, content)) return null; // re-emitted, or replaced, by extras()
         Matcher item = ITEM_MODEL.matcher(path);
         if (item.matches()) {
             itemModels.add(item.group(1) + ":" + item.group(2));
