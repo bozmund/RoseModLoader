@@ -14,6 +14,7 @@ import net.minecraft.world.level.storage.TagValueInput;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
@@ -37,5 +38,15 @@ public abstract class BlockItemMixin {
         blockEntity.loadWithComponents(TagValueInput.create(ProblemReporter.DISCARDING, level.registryAccess(), merged));
         blockEntity.setChanged();
         cir.setReturnValue(true);
+    }
+
+    /** 1.20.1 placed blocks through the item's own updateCustomBlockEntityTag, which mod items override (LegacyBlockItem). */
+    @Redirect(method = "place", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/world/item/BlockItem;updateCustomBlockEntityTag(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/item/ItemStack;)Z"))
+    private boolean rose$legacyUpdateCustomBlockEntityTag(Level level, Player player, BlockPos pos, ItemStack stack) {
+        if ((Object) this instanceof rose.era.v1_20_1.item.LegacyBlockItem legacy) {
+            return legacy.updateCustomBlockEntityTag(pos, level, player, stack, level.getBlockState(pos));
+        }
+        return BlockItem.updateCustomBlockEntityTag(level, player, pos, stack);
     }
 }

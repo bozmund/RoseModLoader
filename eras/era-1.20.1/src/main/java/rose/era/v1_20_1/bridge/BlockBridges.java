@@ -89,6 +89,28 @@ public final class BlockBridges {
 
     private static final MethodType FALL_ON = MethodType.methodType(void.class, Level.class, BlockState.class, BlockPos.class, Entity.class, double.class);
 
+    /**
+     * 1.20.1 {@code updateEntityAfterFallOn(level, entity)}, as translated (with 1.21's name, updateEntityMovementAfterFallOn).
+     * 26.x dropped the hook for a bounce restitution property; EntityFallOnMixin calls a mod block's override where
+     * 1.20.1's Entity.move did.
+     */
+    private static final MethodType AFTER_FALL_ON = MethodType.methodType(void.class, net.minecraft.world.level.BlockGetter.class, Entity.class);
+
+    /** Whether the block overrides 1.20.1's updateEntityAfterFallOn. */
+    public static boolean hasAfterFallOn(Block block) {
+        return Legacy.find(block, "updateEntityMovementAfterFallOn", AFTER_FALL_ON).isPresent();
+    }
+
+    /** Runs the block's 1.20.1 updateEntityAfterFallOn override. */
+    public static void afterFallOn(Block block, net.minecraft.world.level.BlockGetter level, Entity entity) {
+        Legacy.invoke(Legacy.require(block, "updateEntityMovementAfterFallOn", AFTER_FALL_ON), block, level, entity);
+    }
+
+    /** 1.20.1 {@code super.updateEntityAfterFallOn(level, entity)}: Block's default stops the vertical motion. */
+    public static void superUpdateEntityAfterFallOn(Block self, net.minecraft.world.level.BlockGetter level, Entity entity) {
+        entity.setDeltaMovement(entity.getDeltaMovement().multiply(1.0, 0.0, 1.0));
+    }
+
     /** 1.20.1 {@code onRemove(state, level, pos, newState, isMoving)}: after the block was replaced. */
     public static void affectNeighborsAfterRemoval(BlockBehaviour self, BlockState state, ServerLevel level, BlockPos pos, boolean movedByPiston) {
         var old = Legacy.require(self, "onRemove", MethodType.methodType(void.class, BlockState.class, Level.class, BlockPos.class,

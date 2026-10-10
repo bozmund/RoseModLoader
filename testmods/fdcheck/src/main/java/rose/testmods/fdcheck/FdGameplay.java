@@ -83,6 +83,8 @@ final class FdGameplay {
         test("trampled_rich_soil_stays_rich", FdGameplay::trampledRichSoilStaysRich);
         test("dispensers_cut_on_cutting_boards", FdGameplay::dispensersCutOnCuttingBoards);
         test("trees_keep_rich_soil", FdGameplay::treesKeepRichSoil);
+        test("placed_skillets_keep_their_item", FdGameplay::placedSkilletsKeepTheirItem);
+        test("safety_nets_bounce", FdGameplay::safetyNetsBounce);
     }
 
     private static void test(String name, Consumer<GameTestHelper> test) {
@@ -174,6 +176,9 @@ final class FdGameplay {
         Player player = helper.makeMockServerPlayerInLevel(); // a mock Player can't open server menus
         helper.useBlock(POS, player);
         helper.assertTrue(player.containerMenu != player.inventoryMenu, "the cabinet's menu should be open");
+        // FD CabinetBlockEntity.startOpen counts the opener and sets the cabinet's OPEN state (its door animation)
+        helper.assertTrue(helper.getBlockState(POS).getValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.OPEN),
+                "an opened cabinet should be open: " + helper.getBlockState(POS));
         helper.succeed();
     }
 
@@ -537,6 +542,41 @@ final class FdGameplay {
         }
         helper.assertTrue(helper.getLevel().getBlockState(pos).is(Blocks.OAK_LOG), "the oak should have grown: " + helper.getLevel().getBlockState(pos));
         helper.assertTrue(helper.getBlockState(POS).is(block("rich_soil")), "the trunk turned the rich soil into " + helper.getBlockState(POS));
+        helper.succeed();
+    }
+
+    /**
+     * A skillet placed by a sneaking player keeps the item it was placed from (FD SkilletItem's 1.20.1
+     * updateCustomBlockEntityTag override; LegacyBlockItem): pick-block gives back the renamed skillet.
+     */
+    private static void placedSkilletsKeepTheirItem(GameTestHelper helper) {
+        if (skip(helper)) return;
+        helper.setBlock(POS, Blocks.STONE);
+        Player player = helper.makeMockServerPlayerInLevel();
+        player.setShiftKeyDown(true);
+        ItemStack skillet = new ItemStack(item("skillet"));
+        skillet.set(DataComponents.CUSTOM_NAME, net.minecraft.network.chat.Component.literal("Pan"));
+        player.setItemInHand(InteractionHand.MAIN_HAND, skillet);
+        var ground = helper.absolutePos(POS);
+        var hit = new net.minecraft.world.phys.BlockHitResult(net.minecraft.world.phys.Vec3.atCenterOf(ground), net.minecraft.core.Direction.UP, ground, false);
+        skillet.useOn(new net.minecraft.world.item.context.UseOnContext(player, InteractionHand.MAIN_HAND, hit));
+        helper.assertTrue(helper.getBlockState(POS.above()).is(block("skillet")), "the skillet should be placed: " + helper.getBlockState(POS.above()));
+        ItemStack picked = helper.getBlockState(POS.above()).getCloneItemStack(helper.getLevel(), helper.absolutePos(POS.above()), true);
+        helper.assertTrue("Pan".equals(picked.getHoverName().getString()), "the placed skillet forgot its item: " + picked);
+        helper.succeed();
+    }
+
+    /** Landing on a safety net bounces you back up (FD SafetyNetBlock's 1.20.1 updateEntityAfterFallOn; EntityFallOnMixin). */
+    private static void safetyNetsBounce(GameTestHelper helper) {
+        if (skip(helper)) return;
+        helper.setBlock(POS, block("safety_net"));
+        Pig pig = helper.spawn(EntityTypes.PIG, POS.above());
+        pig.setNoAi(true);
+        pig.setDeltaMovement(0, -1, 0);
+        pig.move(net.minecraft.world.entity.MoverType.SELF, pig.getDeltaMovement());
+        double bounce = pig.getDeltaMovement().y;
+        pig.discard();
+        helper.assertTrue(bounce > 0.5, "the pig should bounce off the safety net, its vertical motion is " + bounce);
         helper.succeed();
     }
 

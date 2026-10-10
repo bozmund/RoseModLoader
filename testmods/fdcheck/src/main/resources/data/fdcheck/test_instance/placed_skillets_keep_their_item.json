@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "fdcheck:placed_skillets_keep_their_item",
+  "structure": "minecraft:empty",
+  "max_ticks": 20,
+  "padding": 2
+}
