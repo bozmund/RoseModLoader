@@ -1,5 +1,6 @@
 package rose.analyzer;
 
+import rose.rosetta.BridgeRules;
 import rose.translate.ClassIndex;
 
 import java.nio.file.Files;
@@ -47,6 +48,7 @@ public final class AnalyzerMain {
 
         Report report = new Analyzer(layer, redirects, target, old)
                 .withConversions(ConversionRules.read(REDIRECTS.resolveSibling("conversions.tsv")))
+                .withBridges(BridgeRules.read(REDIRECTS.resolveSibling("bridges.tsv")))
                 .analyze(jar);
         String base = jar.getFileName().toString().replaceAll("\\.jar$", "");
         Path json = out.resolve(base + ".rose.json");

@@ -36,6 +36,7 @@ import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.MultiANewArrayInsnNode;
 import org.objectweb.asm.tree.TypeInsnNode;
 import rose.analyzer.Finding.Status;
+import rose.rosetta.BridgeRules;
 import rose.rosetta.NameLayer;
 import rose.rosetta.ConversionRules;
 import rose.rosetta.RedirectRules;
@@ -60,6 +61,8 @@ public final class Analyzer {
     private final RosettaRemapper remapper;
     private final RedirectRules redirects;
     private int redirected;
+    private int bridged;
+    private BridgeRules bridges = BridgeRules.empty();
     private int adapted;
     private CallAdapter adapter;
     private ConversionRules conversions = ConversionRules.empty();
@@ -95,6 +98,12 @@ public final class Analyzer {
         return this;
     }
 
+    /** Inheritance bridges the translator adds (see InheritanceBridger); overrides they cover aren't reported. */
+    public Analyzer withBridges(BridgeRules bridges) {
+        this.bridges = bridges;
+        return this;
+    }
+
     public Report analyze(Path modJar) throws IOException {
         modOriginal = ClassIndex.of(List.of(modJar), false);
         modTranslated = translatedIndex(modJar);
@@ -124,7 +133,7 @@ public final class Analyzer {
                 for (String config : mixinConfigs.split(",")) analyzeMixinConfig(zip, config.trim());
             }
         }
-        return new Report(modJar, modId, layer.source(), modOriginal.names().size(), references, redirected, adapted,
+        return new Report(modJar, modId, layer.source(), modOriginal.names().size(), references, redirected, adapted, bridged,
                 new ArrayList<>(findings.values()), forgeSurface, nested, contexts);
     }
 
@@ -269,12 +278,15 @@ public final class Analyzer {
         }
         String mapped = remapper.map(old);
         NameLayer.ClassEntry entry = layer.classEntry(old);
-        if (entry != null && entry.how() == NameLayer.How.GONE) {
+        // A class gone from vanilla is still resolved when Rose provides it: the era bridge re-creates some under
+        // their old name (SignItem, InteractionResultHolder), and class-rename rules point others at era classes.
+        boolean provided = target.contains(mapped);
+        if (entry != null && entry.how() == NameLayer.How.GONE && !provided) {
             add(Status.CLASS_GONE, "class", old, old, "-", where);
             return false;
         }
         if (entry != null && entry.how() == NameLayer.How.HEURISTIC) add(Status.HEURISTIC_CLASS, "class", old, old, mapped, where);
-        if (target.contains(mapped)) return true;
+        if (provided) return true;
         if (startsWithAny(old, MINECRAFT_PREFIXES)) add(Status.CLASS_MISSING, "class", old, old, mapped, where);
         else add(Status.UNKNOWN_CLASS, "class", old, old, mapped, where);
         return false;
@@ -371,6 +383,11 @@ public final class Analyzer {
         List<ClassIndex.Info> supers = ClassIndex.hierarchy(newOwner, modTranslated, target);
         List<ClassIndex.Info> above = supers.size() > 1 ? supers.subList(1, supers.size()) : List.of();
         if (!signatureResolves(newDesc) || !hierarchyComplete(newOwner)) return; // root cause reported elsewhere
+        String translatedName = entry != null && entry.exists() ? entry.newName() : readableName;
+        if (isBridged(newOwner, translatedName + newDesc)) {
+            bridged++;
+            return;
+        }
         if (entry == null || !entry.exists()) {
             boolean sameNameExists = hasMethodNamed(above, readableName);
             add(sameNameExists ? Status.OVERRIDE_SIGNATURE_CHANGED : Status.OVERRIDE_GONE, "override", symbol, readable,
@@ -381,6 +398,16 @@ public final class Analyzer {
         if (!overridden) {
             add(Status.OVERRIDE_SIGNATURE_CHANGED, "override", symbol, readable, newOwner + "." + entry.newName() + newDesc, node.name);
         }
+    }
+
+    /** Whether the translator gives this old override a bridge from the 26.3 method that replaced it. */
+    private boolean isBridged(String owner, String oldMethod) {
+        for (BridgeRules.Bridge bridge : bridges.bridges()) {
+            if (!bridge.always() && bridge.when().equals(oldMethod) && ClassIndex.isAssignable(owner, bridge.target(), modTranslated, target)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static boolean hasMethodNamed(List<ClassIndex.Info> hierarchy, String name) {
