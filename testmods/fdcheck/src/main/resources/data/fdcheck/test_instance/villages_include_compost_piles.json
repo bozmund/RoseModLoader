@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "fdcheck:villages_include_compost_piles",
+  "structure": "minecraft:empty",
+  "max_ticks": 20,
+  "padding": 2
+}

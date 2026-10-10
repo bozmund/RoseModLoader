@@ -57,6 +57,7 @@ public final class FdCheck implements ModInitializer {
         RoseGameTests.register(id("knife_slices_cake"), FdCheck::knifeSlicesCake);
         RoseGameTests.register(id("rabbit_stew_gives_jump_boost"), FdCheck::rabbitStewGivesJumpBoost);
         RoseGameTests.register(id("dog_food_heals_tamed_wolves"), FdCheck::dogFoodHealsTamedWolves);
+        RoseGameTests.register(id("villages_include_compost_piles"), FdCheck::villagesIncludeCompostPiles);
     }
 
     private static Identifier id(String path) {
@@ -451,6 +452,25 @@ public final class FdCheck implements ModInitializer {
         player.setItemInHand(InteractionHand.MAIN_HAND, food);
         player.interactOn(wolf, InteractionHand.MAIN_HAND, wolf.position());
         helper.assertTrue(wolf.getHealth() == wolf.getMaxHealth(), "dog food should heal the wolf, health " + wolf.getHealth());
+        helper.succeed();
+    }
+
+    /**
+     * FD's VillageStructures (ServerAboutToStartEvent) adds its compost piles to the village house pools, through
+     * fields its Forge access transformer opened up; the piece's structure file must load too.
+     */
+    private static void villagesIncludeCompostPiles(GameTestHelper helper) {
+        if (skip(helper)) return;
+        var server = helper.getLevel().getServer();
+        var pool = server.registryAccess().lookupOrThrow(Registries.TEMPLATE_POOL)
+                .getValue(Identifier.withDefaultNamespace("village/plains/houses"));
+        helper.assertTrue(pool != null, "no plains houses pool");
+        String piece = "farmersdelight:village/houses/plains_compost_pile";
+        helper.assertTrue(pool.getTemplates().stream().anyMatch(p -> p.getFirst().toString().contains(piece)),
+                "compost pile not in the pool's templates");
+        helper.assertTrue(pool.getShuffledTemplates(helper.getLevel().getRandom()).stream().anyMatch(e -> e.toString().contains(piece)),
+                "compost pile not among the pieces villages generate from");
+        helper.assertTrue(server.getStructureTemplateManager().get(Identifier.parse(piece)).isPresent(), "structure " + piece + " doesn't load");
         helper.succeed();
     }
 

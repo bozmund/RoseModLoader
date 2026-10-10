@@ -27,7 +27,9 @@ import rose.rosetta.RedirectRules;
 import rose.translate.ClassIndex;
 import rose.translate.AccessorReplacer;
 import rose.translate.ModTranslator;
+import rose.translate.RosettaRemapper;
 import rose.translate.SuperclassRebaser;
+import rose.translate.forge.AccessTransformerConverter;
 import rose.translate.forge.TypedListenerTransform;
 
 /**
@@ -95,24 +97,37 @@ public final class ForgeMods {
                 inputsHash, List.of(new TypedListenerTransform(), new SuperclassRebaser(SuperclassRebaser.read(superclasses)),
                         new AccessorReplacer(AccessorReplacer.read(accessors))));
 
+        AccessTransformerConverter atConverter = new AccessTransformerConverter(new RosettaRemapper(layer), game);
+
         List<ModMetadata> mods = new ArrayList<>();
         for (Path jar : jars) {
             String modId = modIdOf(jar);
             DataPackFix packFix = new DataPackFix(java.util.Set.of(modId, "forge", "minecraft"));
+            List<String> report = new ArrayList<>();
+            List<ModTranslator.Resource> widener = new ArrayList<>();
             Path translated = translator.translate(jar, cacheDir, new ModTranslator.ResourceTransform() {
                 @Override
                 public ModTranslator.Resource apply(String path, byte[] content) {
+                    if (path.equals(AccessTransformerConverter.SOURCE)) {
+                        String converted = atConverter.convert(new String(content, StandardCharsets.UTF_8), report);
+                        if (converted != null) {
+                            widener.add(new ModTranslator.Resource(AccessTransformerConverter.TARGET, converted.getBytes(StandardCharsets.UTF_8)));
+                        }
+                    }
                     DataPackFix.Fixed fixed = packFix.fix(path, content);
                     return fixed == null ? null : new ModTranslator.Resource(fixed.path(), fixed.content());
                 }
 
                 @Override
                 public List<ModTranslator.Resource> extras() {
-                    return packFix.extras().stream().map(f -> new ModTranslator.Resource(f.path(), f.content())).toList();
+                    List<ModTranslator.Resource> out = new ArrayList<>(widener);
+                    packFix.extras().forEach(f -> out.add(new ModTranslator.Resource(f.path(), f.content())));
+                    return out;
                 }
             });
-            if (!packFix.report().isEmpty()) {
-                Files.write(translated.resolveSibling(translated.getFileName() + ".packfix.txt"), packFix.report());
+            report.addAll(packFix.report());
+            if (!report.isEmpty()) {
+                Files.write(translated.resolveSibling(translated.getFileName() + ".packfix.txt"), report);
             }
             mods.add(describe(jar, translated));
         }
@@ -145,8 +160,9 @@ public final class ForgeMods {
             }
             Map<String, List<String>> entrypoints = new HashMap<>();
             scanAnnotations(zip, entrypoints);
+            String widener = zip.getEntry(AccessTransformerConverter.TARGET) != null ? AccessTransformerConverter.TARGET : null;
             return new ModMetadata(id, toml.getOrDefault("displayName", id), version, List.copyOf(mixins),
-                    Map.copyOf(entrypoints), translated, DIALECT, original);
+                    Map.copyOf(entrypoints), translated, DIALECT, original, widener);
         }
     }
 

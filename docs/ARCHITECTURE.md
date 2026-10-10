@@ -12,7 +12,7 @@ An old mod jar goes through the translation pipeline once. The result is cached 
 4. **Apply semantic rules** for APIs that changed meaning: call redirects to shims, class replacements.
 5. **Bridge inheritance**: generated methods for overridden vanilla methods whose signature changed.
 6. **Rebase Mixins** onto 26.3 and validate them. Any that fail become foundry tasks.
-7. **Upgrade assets/data** to 26.3 formats (packfix).
+7. **Upgrade assets/data** to 26.3 formats (packfix). A Forge `accesstransformer.cfg` becomes a 26.3 access widener (`AccessTransformerConverter`); entries for members 26.3 removed are reported.
 8. **Verify statically**: anything unresolved goes into the compatibility report.
 9. **Load** through Rose's class loader, with the matching dialect (e.g. Forge 1.20.1) active.
 
