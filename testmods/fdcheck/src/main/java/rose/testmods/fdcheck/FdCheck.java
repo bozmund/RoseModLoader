@@ -48,6 +48,7 @@ public final class FdCheck implements ModInitializer {
         RoseGameTests.register(id("cooking_pot_item_keeps_its_meal"), FdCheck::cookingPotItemKeepsItsMeal);
         RoseGameTests.register(id("meals_feed_and_give_effects"), FdCheck::mealsFeedAndGiveEffects);
         RoseGameTests.register(id("block_items_named_after_blocks"), FdCheck::blockItemsNamedAfterBlocks);
+        RoseGameTests.register(id("renamed_ids_still_load"), FdCheck::renamedIdsStillLoad);
         RoseGameTests.register(id("cabinets_burn_in_furnaces"), FdCheck::cabinetsBurnInFurnaces);
         RoseGameTests.register(id("cooking_recipes_have_ingredients"), FdCheck::cookingRecipesHaveIngredients);
         RoseGameTests.register(id("ingredient_lists_keep_all_alternatives"), FdCheck::ingredientListsKeepAllAlternatives);
@@ -268,6 +269,23 @@ public final class FdCheck implements ModInitializer {
             helper.assertTrue(item.getDescriptionId().equals(expected), name + " is named " + item.getDescriptionId() + ", expected " + expected);
         }
         helper.assertTrue(item("rice").getDescriptionId().equals("item.farmersdelight.rice"), "rice is named " + item("rice").getDescriptionId());
+        helper.succeed();
+    }
+
+    /** FD renamed basket to bamboo_basket with Forge aliases: saved stacks and blocks under the old id still load. */
+    private static void renamedIdsStillLoad(GameTestHelper helper) {
+        if (skip(helper)) return;
+        Identifier old = Identifier.fromNamespaceAndPath("farmersdelight", "basket");
+        helper.assertTrue(BuiltInRegistries.BLOCK.getValue(old) == block("bamboo_basket"),
+                "the old basket block id finds " + BuiltInRegistries.BLOCK.getValue(old));
+        helper.assertTrue(BuiltInRegistries.ITEM.getValue(old) == item("bamboo_basket"),
+                "the old basket item id finds " + BuiltInRegistries.ITEM.getValue(old));
+        var saved = new net.minecraft.nbt.CompoundTag();
+        saved.putString("id", old.toString());
+        saved.putInt("count", 2);
+        ItemStack loaded = ItemStack.CODEC.parse(helper.getLevel().registryAccess().createSerializationContext(net.minecraft.nbt.NbtOps.INSTANCE), saved)
+                .getOrThrow();
+        helper.assertTrue(loaded.is(item("bamboo_basket")) && loaded.getCount() == 2, "a saved basket stack loads as " + loaded);
         helper.succeed();
     }
 

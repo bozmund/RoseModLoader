@@ -11,7 +11,6 @@ import net.minecraft.core.Registry;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import rose.dialect.forge.v1_20_1.RegistryValues;
-import rose.dialect.forge.v1_20_1.Unsupported;
 
 /** An {@link IForgeRegistry} over a vanilla registry. */
 public class ForgeRegistry<V> implements IForgeRegistry<V> {
@@ -128,9 +127,9 @@ public class ForgeRegistry<V> implements IForgeRegistry<V> {
         return vanilla.getResourceKey(value).flatMap(this::getHolder);
     }
 
-    /** Forge used aliases to rename entries; 26.3 rewrites old ids with DataFixers instead. */
+    /** Forge renamed entries with aliases: lookups of the old id find the new entry (see RegistryAliases). */
     public void addAlias(Identifier from, Identifier to) {
-        Unsupported.feature("alias:" + getRegistryName(), "registry aliases (" + from + " -> " + to + ") are ignored");
+        rose.api.registry.RegistryAliases.add(vanilla.key(), from, to);
     }
 
     @Override

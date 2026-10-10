@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "fdcheck:renamed_ids_still_load",
+  "structure": "minecraft:empty",
+  "max_ticks": 20,
+  "padding": 2
+}
