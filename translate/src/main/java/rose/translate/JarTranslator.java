@@ -24,6 +24,7 @@ public final class JarTranslator {
     private final RedirectRules redirects;
     private final CallAdapter adapter;
     private final java.util.List<ModTranslator.ExtraTransform> extras;
+    private ClassIndex modClasses;
 
     public JarTranslator(Remapper remapper) {
         this(remapper, RedirectRules.empty(), null);
@@ -44,6 +45,12 @@ public final class JarTranslator {
         this.redirects = redirects;
         this.adapter = adapter;
         this.extras = java.util.List.copyOf(extras);
+    }
+
+    /** The mod's classes in their old names, so redirects leave super calls to the mod's own overrides alone. */
+    public JarTranslator withModClasses(ClassIndex oldNames) {
+        this.modClasses = oldNames;
+        return this;
     }
 
     public void translate(Path input, Path output) throws IOException {
@@ -75,7 +82,7 @@ public final class JarTranslator {
         // reader -> redirects (old names) -> remapper -> extras -> call adapter (new names) -> writer
         org.objectweb.asm.ClassVisitor afterRename = adapter != null ? adapter.visitor(writer) : writer;
         for (int i = extras.size() - 1; i >= 0; i--) afterRename = extras.get(i).wrap(afterRename);
-        reader.accept(new RedirectingClassVisitor(new ClassRemapper(afterRename, remapper), redirects), 0);
+        reader.accept(new RedirectingClassVisitor(new ClassRemapper(afterRename, remapper), redirects, modClasses), 0);
         return writer.toByteArray();
     }
 

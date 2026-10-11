@@ -65,6 +65,15 @@ class DataPackFixTest {
     }
 
     @Test
+    void tagReplaceThatIsNotABooleanIsDropped() {
+        // Ocean's Delight's diet tags say "replace": "false"; 1.20.1's lenient optionalFieldOf read it as absent
+        JsonObject tag = upgrade("data/diet/tags/items/grains.json", "{\"replace\":\"false\",\"values\":[\"od:fugu_roll\"]}");
+        assertEquals(false, tag.has("replace"));
+        JsonObject kept = upgrade("data/diet/tags/items/grains.json", "{\"replace\":true,\"values\":[]}");
+        assertEquals(true, kept.get("replace").getAsBoolean());
+    }
+
+    @Test
     void globalLootModifierConditionsAreUpgraded() {
         JsonObject modifier = upgrade("data/fd/loot_modifiers/straw.json", """
                 {"type":"fd:add_item","item":"fd:straw","conditions":[

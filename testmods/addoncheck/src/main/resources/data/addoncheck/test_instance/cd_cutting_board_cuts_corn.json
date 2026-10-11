@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "addoncheck:cd_cutting_board_cuts_corn",
+  "structure": "minecraft:empty",
+  "max_ticks": 100,
+  "padding": 2
+}

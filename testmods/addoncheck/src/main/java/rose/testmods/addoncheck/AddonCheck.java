@@ -23,6 +23,20 @@ public final class AddonCheck implements ModInitializer {
     public void onInitialize() {
         OceansDelightChecks.register();
         IronChestsChecks.register();
+        CornDelightChecks.register();
+        NaturesCompassChecks.register();
+        ComfortsChecks.register();
+        CuriosChecks.register();
+        AppleSkinChecks.register();
+        GeckoLibChecks.register();
+    }
+
+    /** The crafting recipe {@code grid} (3x3, row by row) matches, or null when none does. */
+    static ItemStack craft(GameTestHelper helper, java.util.List<ItemStack> grid) {
+        var input = net.minecraft.world.item.crafting.CraftingInput.of(3, 3, grid);
+        return helper.getLevel().recipeAccess()
+                .getRecipeFor(net.minecraft.world.item.crafting.RecipeType.CRAFTING, input, helper.getLevel())
+                .map(r -> r.value().assemble(input)).orElse(null);
     }
 
     static void test(String name, Consumer<GameTestHelper> test) {
@@ -68,6 +82,50 @@ public final class AddonCheck implements ModInitializer {
             return m.invoke(target);
         } catch (ReflectiveOperationException e) {
             throw new IllegalStateException("Can't call " + method + " on " + target, e);
+        }
+    }
+
+    /** A class from an installed mod, initialized. */
+    static Class<?> modClass(String name) {
+        try {
+            return Class.forName(name, true, RoseLoader.get().classLoader());
+        } catch (ClassNotFoundException e) {
+            throw new IllegalStateException("mod class missing: " + name, e);
+        }
+    }
+
+    /** Calls the public static method {@code name} of {@code owner} whose parameter types are {@code types}. */
+    static Object callStatic(Class<?> owner, String name, Class<?>[] types, Object... args) {
+        try {
+            return owner.getMethod(name, types).invoke(null, args);
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException("Can't call " + owner.getName() + "." + name, e);
+        }
+    }
+
+    static Object staticField(Class<?> owner, String name) {
+        try {
+            var field = owner.getDeclaredField(name);
+            field.setAccessible(true);
+            return field.get(null);
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException("Can't read " + owner.getName() + "." + name, e);
+        }
+    }
+
+    static Object field(Object target, String name) {
+        try {
+            return target.getClass().getField(name).get(target);
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException("Can't read " + name + " of " + target, e);
+        }
+    }
+
+    static ItemStack slot(Object handler, int slot) {
+        try {
+            return (ItemStack) handler.getClass().getMethod("getStackInSlot", int.class).invoke(handler, slot);
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException(e);
         }
     }
 

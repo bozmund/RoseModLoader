@@ -25,13 +25,37 @@ import rose.rosetta.RedirectRules;
  *
  * <p>Method references ({@code Owner::method}, {@code Owner::new}) to a redirected member become references to the
  * shim: the handle in the {@code invokedynamic}'s bootstrap arguments is swapped for a static one.
+ *
+ * <p>A {@code super} call to a method a mod class declares (an override of a redirected game method) stays a call to
+ * the mod's method: the rule is for the game's method, which the mod's override replaces.
  */
 public final class RedirectingClassVisitor extends ClassVisitor {
     private final RedirectRules rules;
+    private final ClassIndex modClasses;
 
     public RedirectingClassVisitor(ClassVisitor next, RedirectRules rules) {
+        this(next, rules, null);
+    }
+
+    /** @param modClasses the mod's classes in their old names, to keep super calls to its overrides; may be null */
+    public RedirectingClassVisitor(ClassVisitor next, RedirectRules rules, ClassIndex modClasses) {
         super(Opcodes.ASM9, next);
         this.rules = rules;
+        this.modClasses = modClasses;
+    }
+
+    /** The rule for a call, or {@code null}; {@code super} calls to the mod's own overrides have none. */
+    private RedirectRules.Redirect ruleFor(int opcode, String owner, String name, String desc) {
+        if (opcode == Opcodes.INVOKESPECIAL && modDeclares(owner, name + desc)) return null;
+        return rules.find(owner, name, desc);
+    }
+
+    private boolean modDeclares(String owner, String method) {
+        if (modClasses == null) return false;
+        for (ClassIndex.Info c = modClasses.get(owner); c != null; c = c.superName() == null ? null : modClasses.get(c.superName())) {
+            if (c.methods().contains(method) && !c.abstractMethods().contains(method)) return true;
+        }
+        return false;
     }
 
     @Override
@@ -51,7 +75,7 @@ public final class RedirectingClassVisitor extends ClassVisitor {
         return new MethodVisitor(Opcodes.ASM9, next) {
             @Override
             public void visitMethodInsn(int opcode, String owner, String method, String desc, boolean isInterface) {
-                RedirectRules.Redirect rule = method.equals("<init>") ? null : rules.find(owner, method, desc);
+                RedirectRules.Redirect rule = method.equals("<init>") ? null : ruleFor(opcode, owner, method, desc);
                 if (rule == null) {
                     super.visitMethodInsn(opcode, owner, method, desc, isInterface);
                     return;
@@ -144,7 +168,7 @@ public final class RedirectingClassVisitor extends ClassVisitor {
                 continue;
             }
             if (!(insn instanceof MethodInsnNode call) || call.name.equals("<init>")) continue;
-            RedirectRules.Redirect rule = rules.find(call.owner, call.name, call.desc);
+            RedirectRules.Redirect rule = ruleFor(call.getOpcode(), call.owner, call.name, call.desc);
             if (rule == null) continue;
             boolean isStatic = call.getOpcode() == Opcodes.INVOKESTATIC;
             method.instructions.set(call, new MethodInsnNode(Opcodes.INVOKESTATIC, rule.shimOwner(), rule.shimName(),

@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "addoncheck:cf_sleeping_bags_can_be_dyed",
+  "structure": "minecraft:empty",
+  "max_ticks": 100,
+  "padding": 2
+}

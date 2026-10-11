@@ -1,10 +1,13 @@
 package rose.era.v1_20_1.shim;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.Item;
@@ -65,6 +68,16 @@ public final class FoodPropertiesShim {
         return built;
     }
 
+    /** 1.20.1 {@code getNutrition()}. */
+    public static int getNutrition(FoodProperties self) {
+        return self.nutrition();
+    }
+
+    /** 1.20.1 {@code getSaturationModifier()}: 26.3 stores the saturation itself, nutrition * modifier * 2. */
+    public static float getSaturationModifier(FoodProperties self) {
+        return self.nutrition() == 0 ? 0.0F : self.saturation() / (self.nutrition() * 2.0F);
+    }
+
     /** 1.20.1 {@code isMeat()}. */
     public static boolean isMeat(FoodProperties self) {
         Extras e = EXTRAS.get(self);
@@ -85,14 +98,56 @@ public final class FoodPropertiesShim {
         Extras e = EXTRAS.get(food);
         if (e == null || (e.effects.isEmpty() && !e.fast)) return self.food(food);
         // Effects may point at mod effects registered after items, so build the Consumable later.
-        return self.component(DataComponents.FOOD, food).delayedComponent(DataComponents.CONSUMABLE, context -> {
-            Consumable.Builder consumable = Consumables.defaultFood();
-            if (e.fast) consumable.consumeSeconds(0.8F);
-            for (int i = 0; i < e.effects.size(); i++) {
-                consumable.onConsume(new ApplyStatusEffectsConsumeEffect(e.effects.get(i).get(), e.chances.get(i)));
+        return self.component(DataComponents.FOOD, food).delayedComponent(DataComponents.CONSUMABLE, context -> consumable(food));
+    }
+
+    /** The Consumable for a 1.20.1 food: eaten like food, faster if "fast", applying its effects. */
+    private static Consumable consumable(FoodProperties food) {
+        Extras e = EXTRAS.get(food);
+        if (e == null || (e.effects.isEmpty() && !e.fast)) return Consumables.DEFAULT_FOOD;
+        Consumable.Builder consumable = Consumables.defaultFood();
+        if (e.fast) consumable.consumeSeconds(0.8F);
+        for (int i = 0; i < e.effects.size(); i++) {
+            consumable.onConsume(new ApplyStatusEffectsConsumeEffect(e.effects.get(i).get(), e.chances.get(i)));
+        }
+        return consumable.build();
+    }
+
+    /**
+     * 1.20.1 items could be food by overriding {@code getFoodProperties()} (and {@code isEdible()}) instead of passing
+     * {@code Item.Properties.food}; 26.3 only reads the food component. For an item whose class overrides it, the
+     * override's food becomes the item's components when components are built (after the constructor has run).
+     */
+    public static void addOverriddenFood(ResourceKey<Item> key, Item item) {
+        Method food = legacyOverride(item.getClass(), "getFoodProperties", FoodProperties.class);
+        if (food == null) return;
+        Method edible = legacyOverride(item.getClass(), "isEdible", boolean.class);
+        BuiltInRegistries.DATA_COMPONENT_INITIALIZERS.add(key, (components, context, k) -> {
+            try {
+                if (edible != null && !(boolean) edible.invoke(item)) return;
+                FoodProperties properties = (FoodProperties) food.invoke(item);
+                if (properties == null) return;
+                components.set(DataComponents.FOOD, properties);
+                components.set(DataComponents.CONSUMABLE, consumable(properties));
+            } catch (ReflectiveOperationException e) {
+                throw new IllegalStateException("Can't read the food of " + key, e);
             }
-            return consumable.build();
         });
+    }
+
+    /** The no-argument method {@code name} a mod class between {@code type} and Item declares, or {@code null}. */
+    private static Method legacyOverride(Class<?> type, String name, Class<?> returns) {
+        for (Class<?> c = type; c != null && c != Item.class; c = c.getSuperclass()) {
+            try {
+                Method m = c.getDeclaredMethod(name);
+                if (m.getReturnType() != returns) return null;
+                m.setAccessible(true);
+                return m;
+            } catch (NoSuchMethodException ignored) {
+                // not declared here; look in the superclass
+            }
+        }
+        return null;
     }
 
     private FoodPropertiesShim() {}

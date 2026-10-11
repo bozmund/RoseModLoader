@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "addoncheck:cd_cooking_pot_boils_corn",
+  "structure": "minecraft:empty",
+  "max_ticks": 300,
+  "padding": 2
+}

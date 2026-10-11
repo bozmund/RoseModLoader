@@ -305,6 +305,11 @@ public final class DataPackFix {
     }
 
     static JsonObject optionalEntries(JsonObject tag) {
+        // 1.20.1's optionalFieldOf ignored a value it couldn't parse ("replace": "false"); 1.20.5 made it strict
+        if (tag.get("replace") instanceof JsonElement replace
+                && !(replace.isJsonPrimitive() && replace.getAsJsonPrimitive().isBoolean())) {
+            tag.remove("replace");
+        }
         JsonArray values = tag.getAsJsonArray("values");
         if (values == null) return tag;
         JsonArray out = new JsonArray();

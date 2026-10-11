@@ -100,6 +100,9 @@ public class DeferredRegister<T> {
                 continue;
             }
             rose.dialect.forge.v1_20_1.VanillaRegistration.register(registry.vanilla(), key, registered);
+            if (registered instanceof net.minecraft.world.item.Item item) {
+                rose.era.v1_20_1.shim.FoodPropertiesShim.addOverriddenFood(key, item);
+            }
             object.bind(value);
             unhandled++;
         }

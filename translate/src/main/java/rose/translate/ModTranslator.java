@@ -31,7 +31,7 @@ public final class ModTranslator {
      * Part of the cache key. Code changes already rebuild cached jars ({@link #codeHash}); bump this only when output
      * depends on something neither the code nor the rule files capture.
      */
-    public static final int VERSION = 26;
+    public static final int VERSION = 27;
 
     /** Where a translated mod's access widener goes (from its access transformer and {@link HiddenAccess}). */
     public static final String ACCESS_WIDENER = "META-INF/rose.accesswidener";
@@ -106,7 +106,7 @@ public final class ModTranslator {
             CallAdapter adapter = new CallAdapter(mod, game, conversions);
             List<ExtraTransform> all = new ArrayList<>(extras);
             all.add(new InheritanceBridger(bridges, mod, game));
-            JarTranslator full = new JarTranslator(remapper, redirects, adapter, all);
+            JarTranslator full = new JarTranslator(remapper, redirects, adapter, all).withModClasses(ClassIndex.of(List.of(input), false));
             Path tmp = output.resolveSibling(output.getFileName() + ".part");
             writeTranslated(input, tmp, full, remapper, resources, mod);
             Files.move(tmp, output, StandardCopyOption.REPLACE_EXISTING);

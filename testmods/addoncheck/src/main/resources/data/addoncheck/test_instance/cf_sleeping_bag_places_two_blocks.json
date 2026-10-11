@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "addoncheck:cf_sleeping_bag_places_two_blocks",
+  "structure": "minecraft:empty",
+  "max_ticks": 100,
+  "padding": 2
+}

@@ -296,6 +296,36 @@ public final class CallAdapter {
 
     private record Trampoline(String name, int opcode, String owner, String method, String oldDesc, boolean itf, Adaptation adaptation) {}
 
+    /** Whether {@code owner} is an interface now, or {@code null} if unknown. */
+    private Boolean isInterface(String owner) {
+        if (owner.startsWith("[")) return null;
+        ClassIndex.Info info = first.get(owner);
+        if (info == null && fallback != null) info = fallback.get(owner);
+        return info == null ? null : info.isInterface();
+    }
+
+    /**
+     * A class that became an interface (1.20.1's {@code InteractionResult} enum, 26.3's sealed interface) is called
+     * with {@code invokeinterface}, and an interface that became a class with {@code invokevirtual}.
+     */
+    private void matchOwnerKind(MethodInsnNode call) {
+        Boolean itf = isInterface(call.owner);
+        if (itf == null || itf == call.itf) return;
+        call.itf = itf;
+        if (call.getOpcode() == Opcodes.INVOKEVIRTUAL && itf) call.setOpcode(Opcodes.INVOKEINTERFACE);
+        else if (call.getOpcode() == Opcodes.INVOKEINTERFACE && !itf) call.setOpcode(Opcodes.INVOKEVIRTUAL);
+    }
+
+    private org.objectweb.asm.Handle matchOwnerKind(org.objectweb.asm.Handle h) {
+        int tag = h.getTag();
+        if (tag <= Opcodes.H_PUTSTATIC || tag == Opcodes.H_NEWINVOKESPECIAL) return h; // fields and constructors
+        Boolean itf = isInterface(h.getOwner());
+        if (itf == null || itf == h.isInterface()) return h;
+        if (tag == Opcodes.H_INVOKEVIRTUAL && itf) tag = Opcodes.H_INVOKEINTERFACE;
+        else if (tag == Opcodes.H_INVOKEINTERFACE && !itf) tag = Opcodes.H_INVOKEVIRTUAL;
+        return new org.objectweb.asm.Handle(tag, h.getOwner(), h.getName(), h.getDesc(), itf);
+    }
+
     /** A class visitor (run after renaming) that rewrites adaptable calls and field accesses. */
     public ClassVisitor visitor(ClassVisitor next) {
         return new ClassVisitor(Opcodes.ASM9, next) {
@@ -329,7 +359,12 @@ public final class CallAdapter {
                 for (AbstractInsnNode insn : method.instructions.toArray()) {
                     if (insn instanceof TypeInsnNode t && t.getOpcode() == Opcodes.NEW) {
                         pendingNew.computeIfAbsent(t.desc, k -> new java.util.ArrayDeque<>()).push(t);
+                    } else if (insn instanceof org.objectweb.asm.tree.InvokeDynamicInsnNode indy) {
+                        for (int i = 0; i < indy.bsmArgs.length; i++) {
+                            if (indy.bsmArgs[i] instanceof org.objectweb.asm.Handle h) indy.bsmArgs[i] = matchOwnerKind(h);
+                        }
                     } else if (insn instanceof MethodInsnNode call) {
+                        matchOwnerKind(call);
                         TypeInsnNode created = null;
                         if (call.getOpcode() == Opcodes.INVOKESPECIAL && call.name.equals("<init>")) {
                             var news = pendingNew.get(call.owner);

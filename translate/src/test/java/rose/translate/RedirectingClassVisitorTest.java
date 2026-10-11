@@ -207,4 +207,63 @@ class RedirectingClassVisitorTest {
                 "shim/Food.setChickenFood(Lgame/Ingredient;)V",
                 "shim/Food.setSize(Lgame/Item;I)V"), insns);
     }
+
+    /**
+     * mmlib's ItemDrinkBase overrides getFoodProperties ({@code m_41473_}) and calls {@code super.m_41473_()}, which is
+     * its parent ItemFoodBase's override: that call stays, while calls reaching the game's method are redirected.
+     */
+    @Test
+    void superCallsToTheModsOwnOverridesStay() throws java.io.IOException {
+        String food = "()Lgame/Food;";
+        RedirectRules rules = new RedirectRules(Map.of("game/Item.m_41473_" + food,
+                new Redirect("game/Item.m_41473_" + food, "shim/ItemShim", "getFoodProperties", "test")));
+        byte[] parent = foodItem("mod/FoodItem", "game/Item", Opcodes.INVOKESPECIAL, "game/Item");
+        byte[] child = foodItem("mod/DrinkItem", "mod/FoodItem", Opcodes.INVOKESPECIAL, "mod/FoodItem");
+        java.nio.file.Path jar = java.nio.file.Files.createTempFile("mod", ".jar");
+        try (var out = new java.util.zip.ZipOutputStream(java.nio.file.Files.newOutputStream(jar))) {
+            for (var e : Map.of("mod/FoodItem.class", parent, "mod/DrinkItem.class", child).entrySet()) {
+                out.putNextEntry(new java.util.zip.ZipEntry(e.getKey()));
+                out.write(e.getValue());
+                out.closeEntry();
+            }
+        }
+        ClassIndex mod = ClassIndex.of(List.of(jar), false);
+        java.nio.file.Files.delete(jar);
+        assertEquals(List.of("mod/FoodItem.m_41473_" + food), calls(child, rules, mod));
+        // FoodItem's own super call reaches the game's Item, which has no such method on 26.3
+        assertEquals(List.of("shim/ItemShim.getFoodProperties(Lgame/Item;)Lgame/Food;"), calls(parent, rules, mod));
+    }
+
+    /** {@code class name extends parent { Food m_41473_() { return super.m_41473_(); } }} */
+    private static byte[] foodItem(String name, String parent, int opcode, String owner) {
+        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        cw.visit(Opcodes.V21, Opcodes.ACC_PUBLIC, name, null, parent, null);
+        MethodVisitor mv = cw.visitMethod(Opcodes.ACC_PUBLIC, "m_41473_", "()Lgame/Food;", null, null);
+        mv.visitCode();
+        mv.visitVarInsn(Opcodes.ALOAD, 0);
+        mv.visitMethodInsn(opcode, owner, "m_41473_", "()Lgame/Food;", false);
+        mv.visitInsn(Opcodes.ARETURN);
+        mv.visitMaxs(0, 0);
+        mv.visitEnd();
+        cw.visitEnd();
+        return cw.toByteArray();
+    }
+
+    private static List<String> calls(byte[] bytes, RedirectRules rules, ClassIndex mod) {
+        ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        new ClassReader(bytes).accept(new RedirectingClassVisitor(writer, rules, mod), 0);
+        List<String> insns = new ArrayList<>();
+        new ClassReader(writer.toByteArray()).accept(new ClassVisitor(Opcodes.ASM9) {
+            @Override
+            public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
+                return new MethodVisitor(Opcodes.ASM9) {
+                    @Override
+                    public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
+                        insns.add(owner + "." + name + desc);
+                    }
+                };
+            }
+        }, 0);
+        return insns;
+    }
 }

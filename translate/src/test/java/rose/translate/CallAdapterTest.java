@@ -128,4 +128,35 @@ class CallAdapterTest {
         assertEquals(java.util.Arrays.asList("game/Effect", null, "T"),
                 CallAdapter.paramTypeArguments("<T:Ljava/lang/Object;>(Lgame/Holder<Lgame/Effect;>;ILgame/Holder<TT;>;)V", 3));
     }
+
+    /** 1.20.1 InteractionResult was an enum; 26.3's is an interface, so old invokevirtual calls must become invokeinterface. */
+    @Test
+    void callsOnAClassThatBecameAnInterfaceUseInvokeinterface(@TempDir Path dir) throws IOException {
+        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        cw.visit(Opcodes.V21, Opcodes.ACC_PUBLIC, "mod/User", null, "java/lang/Object", null);
+        MethodVisitor mv = cw.visitMethod(Opcodes.ACC_STATIC, "use", "(Lgame/Typed;)Z", null, null);
+        mv.visitCode();
+        mv.visitVarInsn(Opcodes.ALOAD, 0);
+        mv.visitInsn(Opcodes.ACONST_NULL);
+        mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "game/Typed", "is", "(Ljava/lang/Object;)Z", false);
+        mv.visitInsn(Opcodes.IRETURN);
+        mv.visitMaxs(0, 0);
+        mv.visitEnd();
+        cw.visitEnd();
+        ClassWriter out = new ClassWriter(0);
+        new org.objectweb.asm.ClassReader(cw.toByteArray()).accept(adapter(dir).visitor(out), 0);
+        java.util.List<String> calls = new java.util.ArrayList<>();
+        new org.objectweb.asm.ClassReader(out.toByteArray()).accept(new org.objectweb.asm.ClassVisitor(Opcodes.ASM9) {
+            @Override
+            public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
+                return new MethodVisitor(Opcodes.ASM9) {
+                    @Override
+                    public void visitMethodInsn(int opcode, String owner, String method, String d, boolean itf) {
+                        calls.add(opcode + " " + owner + "." + method + " itf=" + itf);
+                    }
+                };
+            }
+        }, 0);
+        assertEquals(java.util.List.of(Opcodes.INVOKEINTERFACE + " game/Typed.is itf=true"), calls);
+    }
 }
