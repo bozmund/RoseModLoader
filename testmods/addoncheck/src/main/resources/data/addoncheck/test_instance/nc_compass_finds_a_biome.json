@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "addoncheck:nc_compass_finds_a_biome",
+  "structure": "minecraft:empty",
+  "max_ticks": 200,
+  "padding": 2
+}

@@ -16,9 +16,13 @@ public final class ForgeServerEvents {
             MinecraftForge.EVENT_BUS.post(new ServerStartingEvent(server));
             MinecraftForge.EVENT_BUS.post(new ServerStartedEvent(server));
         });
-        RoseEvents.SERVER_TICK_END.register(server -> MinecraftForge.EVENT_BUS.post(new TickEvent.ServerTickEvent(TickEvent.Phase.END, server)));
+        RoseEvents.SERVER_TICK_END.register(server -> {
+            MinecraftForge.EVENT_BUS.post(new TickEvent.ServerTickEvent(TickEvent.Phase.END, server));
+            net.minecraftforge.common.WorldWorkerManager.tick(false);
+        });
         RoseEvents.SERVER_STOPPING.register(server -> {
             MinecraftForge.EVENT_BUS.post(new ServerStoppingEvent(server));
+            net.minecraftforge.common.WorldWorkerManager.clear();
             RegistryAccessHolder.setServer(null);
         });
     }

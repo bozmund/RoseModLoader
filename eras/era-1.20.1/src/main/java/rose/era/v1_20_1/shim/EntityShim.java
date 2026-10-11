@@ -105,4 +105,14 @@ public final class EntityShim {
     public static void oAttackAnim(net.minecraft.world.entity.LivingEntity self, float value) {
         self.swingState.oldAnimation = value;
     }
+
+    /** 1.20.1 {@code Entity.getServer()}: the server of a server-side entity, else null. */
+    public static net.minecraft.server.MinecraftServer getServer(net.minecraft.world.entity.Entity self) {
+        return self.level() instanceof net.minecraft.server.level.ServerLevel level ? level.getServer() : null;
+    }
+
+    /** Forge 1.20.1 {@code Holder.getTagKeys()}; 26.3 {@code Holder.tags()}. */
+    public static <T> java.util.stream.Stream<net.minecraft.tags.TagKey<T>> getTagKeys(net.minecraft.core.Holder<T> self) {
+        return self.tags();
+    }
 }

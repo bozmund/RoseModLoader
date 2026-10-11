@@ -25,4 +25,24 @@ public final class WorldgenShim {
     }
 
     private WorldgenShim() {}
+
+    private static final java.util.Map<net.minecraft.world.level.levelgen.RandomState, net.minecraft.world.level.biome.Climate.Sampler> SAMPLERS =
+            java.util.Collections.synchronizedMap(new java.util.WeakHashMap<>());
+    private static final java.util.Map<net.minecraft.world.level.biome.Climate.Sampler, java.util.Map<net.minecraft.world.level.biome.BiomeSource,
+            net.minecraft.world.level.biome.BiomeResolver>> RESOLVERS = java.util.Collections.synchronizedMap(new java.util.WeakHashMap<>());
+
+    /** 1.20.1 {@code RandomState.sampler()}: the climate sampler; 26.x builds samplers for a context (here uncached). */
+    public static net.minecraft.world.level.biome.Climate.Sampler sampler(net.minecraft.world.level.levelgen.RandomState self) {
+        return SAMPLERS.computeIfAbsent(self, s -> s.createClimateSampler(net.minecraft.world.level.levelgen.densityfunction.SamplerContext.EMPTY_UNCACHED));
+    }
+
+    /**
+     * 1.20.1 {@code BiomeSource.getNoiseBiome(quartX, quartY, quartZ, sampler)}; 26.x asks a BiomeResolver the source
+     * makes for a sampler.
+     */
+    public static net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome> getNoiseBiome(net.minecraft.world.level.biome.BiomeSource self,
+            int quartX, int quartY, int quartZ, net.minecraft.world.level.biome.Climate.Sampler sampler) {
+        var bySource = RESOLVERS.computeIfAbsent(sampler, s -> java.util.Collections.synchronizedMap(new java.util.WeakHashMap<>()));
+        return bySource.computeIfAbsent(self, source -> source.createResolver(sampler)).getNoiseBiome(quartX, quartY, quartZ);
+    }
 }

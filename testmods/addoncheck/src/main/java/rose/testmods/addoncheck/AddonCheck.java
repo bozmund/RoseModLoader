@@ -121,6 +121,15 @@ public final class AddonCheck implements ModInitializer {
         }
     }
 
+    /** Calls the public one-argument method {@code method} of {@code target}. */
+    static Object call2(Object target, String method, Class<?> type, Object arg) {
+        try {
+            return target.getClass().getMethod(method, type).invoke(target, arg);
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException("Can't call " + method + " on " + target, e);
+        }
+    }
+
     static ItemStack slot(Object handler, int slot) {
         try {
             return (ItemStack) handler.getClass().getMethod("getStackInSlot", int.class).invoke(handler, slot);
