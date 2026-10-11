@@ -33,6 +33,27 @@ public class ForgeConfigSpec implements IConfigSpec<ForgeConfigSpec> {
 
     public void save() {}
 
+    /**
+     * A config the mod loaded itself (NightConfig, e.g. {@code CommentedFileConfig}): its values are read, and the
+     * defaults of missing ones written back, as Forge's correct() did.
+     */
+    public void setConfig(com.electronwill.nightconfig.core.CommentedConfig config) {
+        for (ConfigValue<?> value : values) {
+            if (!config.contains(value.path)) config.set(value.path, value.get());
+        }
+        Map<String, Object> raw = new LinkedHashMap<>();
+        flatten("", config, raw);
+        rose$load(raw);
+    }
+
+    private static void flatten(String prefix, com.electronwill.nightconfig.core.UnmodifiableConfig config, Map<String, Object> out) {
+        for (var entry : config.valueMap().entrySet()) {
+            String key = prefix + entry.getKey();
+            if (entry.getValue() instanceof com.electronwill.nightconfig.core.UnmodifiableConfig nested) flatten(key + ".", nested, out);
+            else out.put(key, entry.getValue());
+        }
+    }
+
     @Override
     public void rose$load(Map<String, Object> raw) {
         for (ConfigValue<?> value : values) value.accept(raw.get(String.join(".", value.path)));

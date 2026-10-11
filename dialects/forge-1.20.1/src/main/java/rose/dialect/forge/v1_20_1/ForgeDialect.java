@@ -68,6 +68,7 @@ public final class ForgeDialect implements ModInitializer {
         ForgeServerEvents.register();
         LOG.info("[rose/forge] loading {} Forge 1.20.1 mod(s): {}", MODS.size(), MODS.stream().map(ForgeModContainer::modId).toList());
         for (ForgeModContainer mod : MODS) construct(mod);
+        postToMods(new net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent(), "RegisterCapabilitiesEvent");
         for (ResourceKey<? extends Registry<?>> key : registrationOrder()) {
             RegisterEvent event = new RegisterEvent(key, ForgeRegistryLookup.get(key.identifier()));
             for (ForgeModContainer mod : MODS) postToMod(mod, event, "RegisterEvent(" + key.identifier() + ")");
@@ -134,6 +135,17 @@ public final class ForgeDialect implements ModInitializer {
     }
 
     /** Posts a mod-bus event to every Forge mod. */
+    /** A creative tab filling its contents: every mod may add to it. A failing mod only loses its own additions. */
+    public static void buildTabContents(net.minecraftforge.event.BuildCreativeModeTabContentsEvent event) {
+        for (ForgeModContainer mod : MODS) {
+            try {
+                postToMod(mod, event, "BuildCreativeModeTabContentsEvent");
+            } catch (IllegalStateException e) {
+                com.mojang.logging.LogUtils.getLogger().warn("[rose/forge] {}", e.getMessage(), e.getCause());
+            }
+        }
+    }
+
     static void postToMods(Event event, String what) {
         for (ForgeModContainer mod : MODS) postToMod(mod, event, what);
     }

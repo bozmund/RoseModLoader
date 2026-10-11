@@ -65,6 +65,32 @@ class AccessWidenerTest {
     }
 
     @Test
+    void mutableAloneRemovesFinal() {
+        AccessWidener widener = new AccessWidener();
+        widener.read("accessWidener v2 named\nmutable field game/Sealed values Ljava/lang/Object;\n", "test");
+        assertEquals(Opcodes.ACC_PRIVATE, access(widener.transform("game/Sealed", sealed())).get("values"));
+    }
+
+    @Test
+    void wideningANestedClassAlsoUpdatesItsOuterClass() {
+        ClassWriter cw = new ClassWriter(0);
+        cw.visit(Opcodes.V21, Opcodes.ACC_PUBLIC, "game/Tab", null, "java/lang/Object", null);
+        cw.visitInnerClass("game/Tab$Output", "game/Tab", "Output", Opcodes.ACC_PROTECTED | Opcodes.ACC_STATIC | Opcodes.ACC_INTERFACE | Opcodes.ACC_ABSTRACT);
+        cw.visitEnd();
+        AccessWidener widener = new AccessWidener();
+        widener.read("accessWidener v2 named\naccessible class game/Tab$Output\n", "test");
+        int[] inner = new int[1];
+        new ClassReader(widener.transform("game/Tab", cw.toByteArray())).accept(new ClassVisitor(Opcodes.ASM9) {
+            @Override
+            public void visitInnerClass(String name, String outerName, String innerName, int access) {
+                inner[0] = access;
+            }
+        }, 0);
+        assertEquals(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC | Opcodes.ACC_INTERFACE | Opcodes.ACC_ABSTRACT, inner[0],
+                "javac reads a member class's access from its outer class");
+    }
+
+    @Test
     void otherClassesAreUntouched() {
         AccessWidener widener = new AccessWidener();
         widener.read("accessWidener v2 named\nextendable class game/Other\n", "test");

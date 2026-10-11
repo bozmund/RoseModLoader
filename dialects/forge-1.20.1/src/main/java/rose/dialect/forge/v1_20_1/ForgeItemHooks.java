@@ -16,6 +16,30 @@ import net.minecraft.world.item.context.UseOnContext;
  */
 public final class ForgeItemHooks {
     private static final Map<Class<?>, Optional<Method>> USE_FIRST = new ConcurrentHashMap<>();
+    private static final Map<Class<?>, Optional<Method>> INIT_CAPABILITIES = new ConcurrentHashMap<>();
+    private static final net.minecraft.resources.Identifier ITEM_CAPABILITIES = net.minecraft.resources.Identifier.fromNamespaceAndPath("forge", "item");
+
+    /**
+     * {@code IForgeItem.initCapabilities(stack, nbt)}: the provider an item attaches to each of its stacks, keyed like
+     * Forge's own item capability, or none.
+     */
+    public static Map<net.minecraft.resources.Identifier, net.minecraftforge.common.capabilities.ICapabilityProvider> initCapabilities(ItemStack stack) {
+        Item item = stack.getItem();
+        Method hook = INIT_CAPABILITIES.computeIfAbsent(item.getClass(), type -> {
+            try {
+                return Optional.of(type.getMethod("initCapabilities", ItemStack.class, net.minecraft.nbt.CompoundTag.class));
+            } catch (NoSuchMethodException e) {
+                return Optional.empty();
+            }
+        }).orElse(null);
+        if (hook == null) return Map.of();
+        try {
+            Object provider = hook.invoke(item, stack, null);
+            return provider instanceof net.minecraftforge.common.capabilities.ICapabilityProvider p ? Map.of(ITEM_CAPABILITIES, p) : Map.of();
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException(item + ".initCapabilities failed", e instanceof InvocationTargetException ite ? ite.getCause() : e);
+        }
+    }
 
     /**
      * {@code IForgeItem.onItemUseFirst(stack, context)}: runs before the block is used (Forge's ServerPlayerGameMode

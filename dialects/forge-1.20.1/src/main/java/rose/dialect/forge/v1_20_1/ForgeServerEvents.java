@@ -26,6 +26,7 @@ public final class ForgeServerEvents {
     public static void aboutToStart(MinecraftServer server) {
         RegistryAccessHolder.setServer(server);
         if (ForgeDialect.mods().isEmpty()) return;
+        net.minecraftforge.server.permission.PermissionAPI.initializePermissionAPI();
         MinecraftForge.EVENT_BUS.post(new ServerAboutToStartEvent(server));
         ForgeTrades.load(); // Forge's VillagerTradingManager listens to ServerAboutToStartEvent
         BiomeModifiers.apply(server);

@@ -32,6 +32,8 @@ public final class AccessWidener implements ClassTransformer {
     private final Map<String, Set<String>> accessibleMembers = new HashMap<>(); // owner -> name+desc
     private final Map<String, Set<String>> extendableMethods = new HashMap<>();
     private final Map<String, Set<String>> mutableFields = new HashMap<>();
+    /** Outer classes of widened nested classes: javac reads a member class's access from its outer's InnerClasses. */
+    private final Set<String> nestOwners = new HashSet<>();
 
     /** Adds the entries of one access widener file. {@code source} names it in error messages. */
     public void read(String text, String source) {
@@ -55,6 +57,7 @@ public final class AccessWidener implements ClassTransformer {
                     case "accessible" -> accessibleClasses.add(p[2]);
                     default -> throw bad(source, i, line);
                 }
+                if (p[2].contains("$")) nestOwners.add(p[2].substring(0, p[2].lastIndexOf('$')));
             } else if (p.length == 5 && (p[1].equals("method") || p[1].equals("field"))) {
                 String key = p[3] + p[4];
                 switch (access) {
@@ -83,7 +86,8 @@ public final class AccessWidener implements ClassTransformer {
 
     @Override
     public byte[] transform(String internalName, byte[] bytes) {
-        if (!extendableClasses.contains(internalName) && !accessibleClasses.contains(internalName)) return bytes;
+        if (!extendableClasses.contains(internalName) && !accessibleClasses.contains(internalName)
+                && !mutableFields.containsKey(internalName) && !nestOwners.contains(internalName)) return bytes;
         Set<String> accessible = accessibleMembers.getOrDefault(internalName, Set.of());
         Set<String> extendable = extendableMethods.getOrDefault(internalName, Set.of());
         Set<String> mutable = mutableFields.getOrDefault(internalName, Set.of());

@@ -32,7 +32,8 @@ import rose.loader.RoseLoader;
 public final class RoseEventBus implements IEventBus {
     private static final String SUBSCRIBE = "Lnet/minecraftforge/eventbus/api/SubscribeEvent;";
 
-    private record Listener(EventPriority priority, boolean receiveCanceled, Class<?> type, Consumer<Event> handler,
+    /** {@code generic}: for a generic event, the only type argument this listener takes ({@code null}: any). */
+    private record Listener(EventPriority priority, boolean receiveCanceled, Class<?> type, Class<?> generic, Consumer<Event> handler,
                             Object owner, long order) {}
 
     private final String name;
@@ -79,7 +80,8 @@ public final class RoseEventBus implements IEventBus {
                     ? lookup.findStatic(owner, s.name, methodType)
                     : lookup.findVirtual(owner, s.name, methodType).bindTo(instance);
             MethodHandle generic = handle.asType(MethodType.methodType(void.class, Event.class));
-            add(s.priority, s.receiveCanceled, eventType, event -> invoke(generic, event, where), registrant);
+            Class<?> typeArgument = s.generic == null ? null : Class.forName(s.generic.replace('/', '.'), false, owner.getClassLoader());
+            add(s.priority, s.receiveCanceled, eventType, typeArgument, event -> invoke(generic, event, where), registrant);
         } catch (ReflectiveOperationException | LinkageError e) {
             Unsupported.listener(where, e);
         }
@@ -95,7 +97,10 @@ public final class RoseEventBus implements IEventBus {
         }
     }
 
-    private record Subscriber(String name, Type eventType, boolean isStatic, EventPriority priority, boolean receiveCanceled) {}
+    /** {@code generic}: the event's type argument from the method's signature ({@code AttachCapabilitiesEvent<Entity>}), or null. */
+    private record Subscriber(String name, Type eventType, String generic, boolean isStatic, EventPriority priority, boolean receiveCanceled) {}
+
+    private static final java.util.regex.Pattern GENERIC_PARAM = java.util.regex.Pattern.compile("^\\(L[^<;]+<L([^;<]+)[;<]");
 
     /** {@code @SubscribeEvent} methods declared by {@code type}, read from its class file. */
     private static List<Subscriber> subscribers(Class<?> type) {
@@ -136,7 +141,9 @@ public final class RoseEventBus implements IEventBus {
                     public void visitEnd() {
                         Type[] args = Type.getArgumentTypes(desc);
                         if (subscribed && args.length == 1 && args[0].getSort() == Type.OBJECT) {
-                            out.add(new Subscriber(name, args[0], Modifier.isStatic(access), priority, receiveCanceled));
+                            java.util.regex.Matcher generic = signature == null ? null : GENERIC_PARAM.matcher(signature);
+                            String typeArgument = generic != null && generic.find() ? generic.group(1) : null;
+                            out.add(new Subscriber(name, args[0], typeArgument, Modifier.isStatic(access), priority, receiveCanceled));
                         }
                     }
                 };
@@ -203,7 +210,12 @@ public final class RoseEventBus implements IEventBus {
     }
 
     private synchronized void add(EventPriority priority, boolean receiveCanceled, Class<?> type, Consumer<Event> handler, Object owner) {
-        listeners.add(new Listener(priority, receiveCanceled, type, handler, owner, counter++));
+        add(priority, receiveCanceled, type, null, handler, owner);
+    }
+
+    private synchronized void add(EventPriority priority, boolean receiveCanceled, Class<?> type, Class<?> generic,
+                                  Consumer<Event> handler, Object owner) {
+        listeners.add(new Listener(priority, receiveCanceled, type, generic, handler, owner, counter++));
         List<Listener> sorted = new ArrayList<>(listeners);
         sorted.sort(Comparator.comparing(Listener::priority).thenComparingLong(Listener::order));
         listeners.clear();
@@ -226,6 +238,7 @@ public final class RoseEventBus implements IEventBus {
     public boolean post(Event event) {
         for (Listener l : listeners) {
             if (!l.type.isInstance(event)) continue;
+            if (l.generic != null && event instanceof net.minecraftforge.eventbus.api.GenericEvent<?> g && g.getGenericType() != l.generic) continue;
             if (event.isCanceled() && !l.receiveCanceled) continue;
             event.setPhase(l.priority);
             try {

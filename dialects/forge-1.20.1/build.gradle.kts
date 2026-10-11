@@ -6,6 +6,8 @@ val accessWidener = file("src/main/resources/rose_forge_1_20_1.accesswidener")
 val eraAccessWidener = rootProject.file("eras/era-1.20.1/src/main/resources/rose_era_1_20_1.accesswidener")
 val minecraft = rootProject.extra["minecraft"] as FileCollection
 val widenerTool by configurations.creating
+// Libraries Forge 1.20.1 shipped that old mods call directly; packed into this mod's jar.
+val bundled by configurations.creating
 
 // Compile against the game with this mod's access widener applied, as it is at runtime.
 val widenMinecraft by tasks.registering(JavaExec::class) {
@@ -31,4 +33,12 @@ dependencies {
     compileOnly(project(":loader")) // shared from the parent class loader at runtime
     compileOnly(project(":api"))    // ships inside the "rose" core mod
     compileOnly(project(":eras:era-1.20.1")) // the 1.20.1 era bridge, loaded next to the dialect
+    bundled(libs.bundles.nightconfig)
+    compileOnly(libs.bundles.nightconfig)
+}
+
+tasks.jar {
+    from(Callable { bundled.map { zipTree(it) } }) {
+        exclude("META-INF/**", "module-info.class")
+    }
 }

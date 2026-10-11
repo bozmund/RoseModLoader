@@ -86,6 +86,7 @@ public final class ForgeMods {
 
     public List<ModMetadata> load(List<Path> jars) throws IOException {
         if (jars.isEmpty()) return List.of();
+        jars = JarJar.expand(jars, cacheDir.resolve("jarjar"));
         if (!Files.exists(nameLayer)) {
             throw new IOException("Forge mods found but the Rosetta name layer is missing: " + nameLayer
                     + " (run ./gradlew :rosetta:buildNameLayers)");
@@ -97,7 +98,10 @@ public final class ForgeMods {
         inputsHash = ModTranslator.sha256(concat(inputsHash.getBytes(StandardCharsets.UTF_8), codeHash.getBytes(StandardCharsets.UTF_8)));
         // forge:mod_loaded conditions in one mod's data depend on which other mods are installed
         java.util.Set<String> knownMods = new java.util.TreeSet<>(List.of("forge", "minecraft"));
-        for (Path jar : jars) knownMods.add(modIdOf(jar));
+        for (Path jar : jars) {
+            String id = modIdOrNull(jar);
+            if (id != null) knownMods.add(id);
+        }
         inputsHash = ModTranslator.sha256(concat(inputsHash.getBytes(StandardCharsets.UTF_8), String.join(",", knownMods).getBytes(StandardCharsets.UTF_8)));
         NameLayer layer = NameLayer.read(nameLayer);
         ClassIndex game = ClassIndex.of(gameJars, true);
@@ -144,14 +148,22 @@ public final class ForgeMods {
         return mods;
     }
 
-    private static String modIdOf(Path jar) throws IOException {
+    /** The jar's (first) mod id, or {@code null} for a jar without mods.toml (a library nested with JarJar). */
+    static String modIdOrNull(Path jar) throws IOException {
         try (ZipFile zip = new ZipFile(jar.toFile())) {
-            return firstMod(read(zip, "META-INF/mods.toml")).getOrDefault("modId", "unknown");
+            if (zip.getEntry("META-INF/mods.toml") == null) return null;
+            return firstMod(read(zip, "META-INF/mods.toml")).get("modId");
         }
     }
 
     static ModMetadata describe(Path original, Path translated) throws IOException {
         try (ZipFile zip = new ZipFile(translated.toFile())) {
+            if (zip.getEntry("META-INF/mods.toml") == null) {
+                // a library nested with JarJar: on the classpath, nothing to construct
+                String name = original.getFileName().toString().replaceAll("\\.jar$", "");
+                String id = "jarjar_" + name.toLowerCase(java.util.Locale.ROOT).replaceAll("[^a-z0-9_]", "_");
+                return new ModMetadata(id, name, "0", List.of(), Map.of(), translated, DIALECT, original, null);
+            }
             Map<String, String> toml = firstMod(read(zip, "META-INF/mods.toml"));
             Manifest manifest = manifest(zip);
             String id = toml.get("modId");
@@ -219,7 +231,7 @@ public final class ForgeMods {
             }
             if (line.startsWith("[")) {
                 if (inMods && !out.isEmpty()) break;
-                inMods = line.equals("[[mods]]");
+                inMods = line.replaceFirst("\\s*#.*$", "").equals("[[mods]]"); // a header may carry a comment
                 continue;
             }
             if (!inMods || line.startsWith("#") || !line.contains("=")) continue;
