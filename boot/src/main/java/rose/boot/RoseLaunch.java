@@ -57,9 +57,11 @@ public final class RoseLaunch {
         classpath.addAll(game.libraries());
         RoseClassLoader loader = new RoseClassLoader(classpath, RoseLaunch.class.getClassLoader());
 
-        List<ModMetadata> mods = new ArrayList<>(ModDiscovery.discover(gameDir.resolve("mods"),
+        // rose.mods.dir: another mods folder (the oracle runs one mod alone in the GameTest setup)
+        Path modsDir = System.getProperty("rose.mods.dir") != null ? Path.of(System.getProperty("rose.mods.dir")) : gameDir.resolve("mods");
+        List<ModMetadata> mods = new ArrayList<>(ModDiscovery.discover(modsDir,
                 snapshotDevMods(ModDiscovery.parsePathList(System.getProperty("rose.dev.mods")), gameDir)));
-        mods.addAll(forgeMods(gameDir.resolve("mods"), runDir, classpath, mods));
+        mods.addAll(forgeMods(modsDir, runDir, classpath, mods));
         List<String> mixinConfigs = new ArrayList<>();
         for (ModMetadata mod : mods) {
             loader.addPath(mod.root());

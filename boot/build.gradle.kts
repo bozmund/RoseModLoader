@@ -79,8 +79,9 @@ tasks.register<JavaExec>("runGameTests") {
     })
 }
 
-// Oracle comparison, Rose side: the GameTest server dumps what the mods in run/gametest/mods/ registered
-// (testmods/oracle). `./gradlew oracle` runs this, the Fabric reference and the diff.
+// Oracle comparison, Rose side: the GameTest server dumps what the mod under comparison registered (testmods/oracle),
+// with only that mod's jars from run/gametest/mods/ installed (-Prose.oracle.jars, default FarmersDelight-*), so
+// add-ons there don't show up as differences. `./gradlew oracle` runs this, the Fabric reference and the diff.
 tasks.register<JavaExec>("dumpOracle") {
     description = "Dump the registries, recipes, loot tables and tags of mods running on Rose. Output: build/oracle/rose/"
     roseLaunch("gametest")
@@ -88,9 +89,19 @@ tasks.register<JavaExec>("dumpOracle") {
     outputs.upToDateWhen { false }
     val oracleDir = rootProject.layout.buildDirectory.dir("oracle").get().asFile
     val namespaces = providers.gradleProperty("rose.oracle.namespaces").orElse("farmersdelight")
-    doFirst { oracleDir.resolve("rose").deleteRecursively() }
+    val jars = providers.gradleProperty("rose.oracle.jars").orElse("FarmersDelight-*.jar")
+    val modsDir = oracleDir.resolve("mods")
+    doFirst {
+        oracleDir.resolve("rose").deleteRecursively()
+        modsDir.deleteRecursively()
+        project.copy {
+            from(rootProject.file("run/gametest/mods")) { include(jars.get()) }
+            into(modsDir)
+        }
+    }
     jvmArgumentProviders.add(CommandLineArgumentProvider {
-        listOf("-Drose.oracle.out=" + oracleDir.resolve("rose").absolutePath, "-Drose.oracle.namespaces=" + namespaces.get())
+        listOf("-Drose.oracle.out=" + oracleDir.resolve("rose").absolutePath, "-Drose.oracle.namespaces=" + namespaces.get(),
+            "-Drose.mods.dir=" + modsDir.absolutePath)
     })
     argumentProviders.add(CommandLineArgumentProvider {
         listOf("--", "--report", oracleDir.resolve("rose-gametest.xml").absolutePath, "--tests", "oracle:dump_written")
