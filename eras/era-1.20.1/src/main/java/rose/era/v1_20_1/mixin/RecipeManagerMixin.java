@@ -22,6 +22,11 @@ public abstract class RecipeManagerMixin {
     @Mutable
     private RecipeMap recipes;
 
+    @Shadow
+    @Final
+    @Mutable
+    private java.util.Collection<net.minecraft.world.item.crafting.RecipeHolder<?>> learnableRecipes;
+
     @Unique
     private HolderLookup.Provider rose$registries;
 
@@ -32,6 +37,10 @@ public abstract class RecipeManagerMixin {
 
     @Inject(method = "finalizeRecipeLoading", at = @At("HEAD"))
     private void rose$materialize(FeatureFlagSet enabledFlags, CallbackInfo ci) {
-        recipes = LegacyRecipes.materialize(recipes, rose$registries);
+        RecipeMap materialized = LegacyRecipes.materialize(recipes, rose$registries);
+        if (materialized == recipes) return;
+        recipes = materialized;
+        // computed in the constructor, when old recipes were still deferred (and so special, not learnable)
+        learnableRecipes = recipes.values().stream().filter(r -> !r.value().isSpecial()).toList();
     }
 }
