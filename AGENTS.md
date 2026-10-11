@@ -26,6 +26,7 @@ You are working on **Rose Mod Loader**, a Minecraft Java 26.3 mod loader that ru
 - One module's tests: `./gradlew :translate:test`
 - Prepare the corpus: `./gradlew corpusSetup`
 - In-game tests, headless, no EULA needed: `./gradlew runGameTests` (select with `-Prose.tests=sample:*`). The task fails if any required GameTest fails, and the report is written to `build/gametest/report.xml`.
+- Save compatibility: `ROSE_ACCEPT_EULA=1 testing/savecompat/run.sh` makes a Farmer's Delight 1.20.1 world (vanilla 1.20.1 server + `make_fd_world.py`), opens it on Rose's dedicated server and checks FD's blocks and block entity contents.
 - Oracle comparison: `./gradlew oracle` dumps FD's registries, blocks, items, recipes, loot tables and tags on Rose and on a Fabric 26.3 server running the native port, then diffs them into `build/oracle/farmersdelight.md`. Fixing a content difference should make its line disappear. Only add to `testing/oracle/*.allow.tsv` for changes the port made on purpose, with port-pair evidence.
 
 ## Seeing and driving the game (Agent Bridge)

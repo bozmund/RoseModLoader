@@ -14,8 +14,9 @@
     "RecipeManagerMixin",
     "RecipeMapInvoker",
     "RegistryLoadTaskMixin",
-    "ResourceManagerRegistryLoadTaskMixin",
     "RegistryValuesAccessor",
+    "ResourceManagerRegistryLoadTaskMixin",
+    "SimpleRegionStorageMixin",
     "TagLoaderMixin"
   ],
   "injectors": {

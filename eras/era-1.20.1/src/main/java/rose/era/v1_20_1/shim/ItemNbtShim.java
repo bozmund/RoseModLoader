@@ -79,10 +79,26 @@ public final class ItemNbtShim {
         return save(stack, new CompoundTag());
     }
 
-    /** 1.20.1 {@code ItemStack.of(tag)}: reads 26.3's format and 1.20.1's ({@code id}, {@code Count}, {@code tag}). */
+    /** 1.20.1's data version: stacks saved by 1.20.1 code are upgraded from here. */
+    private static final int DATA_VERSION_1_20_1 = 3465;
+
+    /**
+     * 1.20.1 {@code ItemStack.of(tag)}: reads 26.3's format and 1.20.1's ({@code id}, {@code Count}, {@code tag}). Old
+     * stacks go through vanilla's data fixers, as vanilla's own saved stacks do, so their tag becomes components
+     * (Damage, display.Name, Enchantments, ...); what the fixers don't know stays in custom_data.
+     */
     public static ItemStack of(CompoundTag tag) {
         if (tag == null || tag.isEmpty()) return ItemStack.EMPTY;
         if (tag.contains("Count") && !tag.contains("count")) {
+            try {
+                var upgraded = net.minecraft.util.datafix.DataFixers.getDataFixer().update(
+                        net.minecraft.util.datafix.fixes.References.ITEM_STACK, new com.mojang.serialization.Dynamic<>(NbtOps.INSTANCE, tag),
+                        DATA_VERSION_1_20_1, net.minecraft.SharedConstants.getCurrentVersion().dataVersion().version());
+                var parsed = ItemStack.OPTIONAL_CODEC.parse(ops(), upgraded.getValue()).result();
+                if (parsed.isPresent()) return parsed.get();
+            } catch (RuntimeException e) {
+                // fall back to reading the id and count ourselves
+            }
             Identifier id = Identifier.tryParse(tag.getStringOr("id", ""));
             Item item = id == null ? null : BuiltInRegistries.ITEM.getValue(id);
             if (item == null) return ItemStack.EMPTY;

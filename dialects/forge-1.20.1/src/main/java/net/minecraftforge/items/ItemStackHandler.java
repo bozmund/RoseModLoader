@@ -133,7 +133,13 @@ public class ItemStackHandler implements IItemHandler, IItemHandlerModifiable, I
             CompoundTag item = items.getCompoundOrEmpty(i);
             int slot = item.getIntOr("Slot", -1);
             if (slot < 0 || slot >= stacks.size()) continue;
-            ItemStack.CODEC.parse(ops, item).result().ifPresent(stack -> stacks.set(slot, stack));
+            if (item.contains("Count") && !item.contains("count")) {
+                // saved by 1.20.1 ({id, Count, tag}): upgraded like vanilla's old stacks
+                ItemStack stack = rose.era.v1_20_1.shim.ItemNbtShim.of(item);
+                if (!stack.isEmpty()) stacks.set(slot, stack);
+            } else {
+                ItemStack.CODEC.parse(ops, item).result().ifPresent(stack -> stacks.set(slot, stack));
+            }
         }
         onLoad();
     }
