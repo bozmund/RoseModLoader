@@ -55,14 +55,17 @@ public final class LegacyData {
      * placeholder that would fail the registry's freeze. Those placeholders are dropped: the references keep their
      * key (matching by key still works) and the element simply doesn't exist.
      */
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public static void dropSkippedPlaceholders(Registry<?> registry) {
         if (!(registry instanceof MappedRegistryAccess access)) return;
+        Registry raw = registry;
         // 1.20.1 advancements could name recipes that don't exist (a typo, a missing namespace); that only logged.
         // 26.3 decodes recipe_unlocked's recipes as holders, so with translated mods present such names are dropped too.
         boolean danglingRecipes = registry.key().equals(net.minecraft.core.registries.Registries.RECIPE)
                 && RoseLoader.get().mods().stream().anyMatch(m -> !m.isNative());
         access.rose$byKey().entrySet().removeIf(e -> {
-            if (e.getValue().isBound()) return false;
+            // values are bound only by freeze(), which runs after this: a placeholder is a key nothing registered
+            if (raw.registrationInfo((ResourceKey) e.getKey()).isPresent()) return false;
             boolean skipped = SKIPPED.contains(e.getKey());
             if (!skipped && !danglingRecipes) return false;
             access.rose$byLocation().remove(e.getKey().identifier());

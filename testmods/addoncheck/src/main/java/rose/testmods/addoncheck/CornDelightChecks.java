@@ -34,6 +34,7 @@ final class CornDelightChecks {
         test("cd_cooking_pot_boils_corn", CornDelightChecks::cookingPotBoilsCorn);
         test("cd_corn_seeds_smelt_into_popcorn", CornDelightChecks::seedsSmeltIntoPopcorn);
         test("cd_mmlib_villagers_share_corn", CornDelightChecks::villagersShareCorn);
+        test("cd_recipes_are_in_the_recipe_registry", CornDelightChecks::recipesAreInTheRegistry);
     }
 
     private static Item cd(String path) {
@@ -110,5 +111,19 @@ final class CornDelightChecks {
                 owner, java.util.Set.of(cd("corn")), farmer);
         helper.assertTrue(owner.getInventory().countItem(cd("corn")) == 20, "the villager kept " + owner.getInventory().countItem(cd("corn")) + " corn");
         helper.succeedWhen(() -> helper.assertItemEntityPresent(cd("corn"), POS.above(), 6.0));
+    }
+
+    /**
+     * Recipes are registry elements in 26.3; advancements (recipe rewards, recipe_unlocked) and /recipe find them by
+     * key in the registry, not through the recipe manager.
+     */
+    private static void recipesAreInTheRegistry(GameTestHelper helper) {
+        if (skip(helper, CD)) return;
+        var recipes = helper.getLevel().getServer().reloadableRegistries().lookup().lookupOrThrow(net.minecraft.core.registries.Registries.RECIPE);
+        for (String id : List.of("minecraft:bread", "corn_delight:cooking/boiled_corn", "corn_delight:popcorn")) {
+            var key = net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.RECIPE, net.minecraft.resources.Identifier.parse(id));
+            helper.assertTrue(recipes.get(key).isPresent(), "the recipe registry has no " + id);
+        }
+        helper.succeed();
     }
 }
