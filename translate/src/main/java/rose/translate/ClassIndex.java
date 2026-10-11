@@ -31,10 +31,11 @@ public final class ClassIndex {
      * @param signatures    generic signatures by {@code name+desc}, for methods that have one
      * @param access          the class's access flags
      * @param abstractMethods the subset of {@code methods} without a body
+     * @param hidden          methods ({@code name+desc}) and fields ({@code name:desc}) that are private or package-private
      */
     public record Info(String name, String superName, List<String> interfaces, Set<String> methods, Set<String> fields,
                 Set<String> methodNames, Set<String> staticMethods, Map<String, String> signatures,
-                int access, Set<String> abstractMethods) {
+                int access, Set<String> abstractMethods, Set<String> hidden) {
         public boolean isInterface() {
             return (access & Opcodes.ACC_INTERFACE) != 0;
         }
@@ -130,6 +131,7 @@ public final class ClassIndex {
         Set<String> staticMethods = new HashSet<>();
         Map<String, String> signatures = new HashMap<>();
         Set<String> abstractMethods = new HashSet<>();
+        Set<String> hidden = new HashSet<>();
         int[] classAccess = new int[1];
         String[] header = new String[2];
         List<String> interfaces = new ArrayList<>();
@@ -149,6 +151,7 @@ public final class ClassIndex {
                 if ((access & Opcodes.ACC_STATIC) != 0) staticMethods.add(name + desc);
                 if ((access & Opcodes.ACC_ABSTRACT) != 0) abstractMethods.add(name + desc);
                 if (signature != null) signatures.put(name + desc, signature);
+                if ((access & (Opcodes.ACC_PUBLIC | Opcodes.ACC_PROTECTED)) == 0) hidden.add(name + desc);
                 return null;
             }
 
@@ -156,10 +159,11 @@ public final class ClassIndex {
             public FieldVisitor visitField(int access, String name, String desc, String signature, Object value) {
                 fields.add(name + ":" + desc);
                 fields.add(name);
+                if ((access & (Opcodes.ACC_PUBLIC | Opcodes.ACC_PROTECTED)) == 0) hidden.add(name + ":" + desc);
                 return null;
             }
         }, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
         return new Info(header[0], header[1], List.copyOf(interfaces), methods, fields, methodNames, staticMethods, signatures,
-                classAccess[0], abstractMethods);
+                classAccess[0], abstractMethods, hidden);
     }
 }

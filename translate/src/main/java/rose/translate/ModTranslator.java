@@ -31,7 +31,10 @@ public final class ModTranslator {
      * Part of the cache key. Code changes already rebuild cached jars ({@link #codeHash}); bump this only when output
      * depends on something neither the code nor the rule files capture.
      */
-    public static final int VERSION = 25;
+    public static final int VERSION = 26;
+
+    /** Where a translated mod's access widener goes (from its access transformer and {@link HiddenAccess}). */
+    public static final String ACCESS_WIDENER = "META-INF/rose.accesswidener";
 
     private final NameLayer layer;
     private final RedirectRules redirects;
@@ -119,6 +122,7 @@ public final class ModTranslator {
         List<String> refmaps = refmapsOf(input);
         RefmapRemapper refmapRemapper = new RefmapRemapper(remapper);
         MixinRebaser rebaser = new MixinRebaser(mixinRetargets, game);
+        HiddenAccess hidden = new HiddenAccess(game);
         java.util.Set<String> written = new java.util.HashSet<>();
         try (ZipFile in = new ZipFile(input.toFile()); ZipOutputStream out = new ZipOutputStream(Files.newOutputStream(output))) {
             // refmaps first: the rebaser needs to know which selectors it moved before it sees the Mixin classes
@@ -140,7 +144,10 @@ public final class ModTranslator {
                 try (InputStream stream = in.getInputStream(entry)) {
                     bytes = stream.readAllBytes();
                 }
-                if (name.endsWith(".class")) bytes = rebaser.rebase(translator.translateClass(bytes));
+                if (name.endsWith(".class")) {
+                    bytes = rebaser.rebase(translator.translateClass(bytes));
+                    hidden.scan(bytes);
+                }
                 else if (mixinConfigs.contains(name)) bytes = tolerantMixinConfig(new String(bytes, StandardCharsets.UTF_8)).getBytes(StandardCharsets.UTF_8);
                 else if (rebasedRefmaps.containsKey(name)) bytes = rebasedRefmaps.get(name);
                 else {
@@ -154,7 +161,7 @@ public final class ModTranslator {
                 out.write(bytes);
                 out.closeEntry();
             }
-            for (Resource extra : resources.extras()) {
+            for (Resource extra : withHiddenAccess(resources.extras(), hidden.entries())) {
                 if (!written.add(extra.path())) continue; // the mod has its own
                 out.putNextEntry(new ZipEntry(extra.path()));
                 out.write(extra.content());
@@ -164,6 +171,24 @@ public final class ModTranslator {
         if (!rebaser.report().isEmpty()) {
             Files.write(output.resolveSibling(output.getFileName().toString().replaceAll("\\.part$", "") + ".mixins.txt"), rebaser.report());
         }
+    }
+
+    /** {@code extras} with the access widener extended (or added) so the mod reaches game members 26.3 hid. */
+    static List<Resource> withHiddenAccess(List<Resource> extras, java.util.Set<String> hidden) {
+        if (hidden.isEmpty()) return extras;
+        List<Resource> out = new ArrayList<>();
+        String widener = "accessWidener v2 named\n";
+        for (Resource extra : extras) {
+            if (extra.path().equals(ACCESS_WIDENER)) widener = new String(extra.content(), StandardCharsets.UTF_8);
+            else out.add(extra);
+        }
+        StringBuilder text = new StringBuilder(widener);
+        if (!widener.endsWith("\n")) text.append('\n');
+        for (String entry : hidden) {
+            if (!widener.contains(entry)) text.append(entry).append('\n');
+        }
+        out.add(new Resource(ACCESS_WIDENER, text.toString().getBytes(StandardCharsets.UTF_8)));
+        return out;
     }
 
     /**

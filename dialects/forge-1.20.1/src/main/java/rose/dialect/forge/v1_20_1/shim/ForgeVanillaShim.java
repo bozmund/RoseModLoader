@@ -95,6 +95,44 @@ public final class ForgeVanillaShim {
         return CreativeModeTab.builder(CreativeModeTab.Row.TOP, NEXT_COLUMN.getAndIncrement());
     }
 
+    /**
+     * Forge {@code Builder.withTabsBefore/withTabsAfter}: ordering hints for Forge's paginated tab list. Rose gives
+     * each mod tab its own column in registration order, so the hints have nothing to order.
+     */
+    public static CreativeModeTab.Builder tabsOrdered(CreativeModeTab.Builder self, net.minecraft.resources.ResourceKey<?>[] tabs) {
+        return self;
+    }
+
+    /** As above, with tab ids. */
+    public static CreativeModeTab.Builder tabsOrdered(CreativeModeTab.Builder self, Identifier[] tabs) {
+        return self;
+    }
+
+    /** Forge {@code Builder.withBackgroundLocation(id)}: the same full texture path 26.3's backgroundTexture takes. */
+    public static CreativeModeTab.Builder backgroundLocation(CreativeModeTab.Builder self, Identifier background) {
+        return self.backgroundTexture(background);
+    }
+
+    /** Forge {@code Builder.withSearchBar()}: 26.3 has a search bar only on its search tab; the tab still works without. */
+    public static CreativeModeTab.Builder searchBar(CreativeModeTab.Builder self) {
+        return self;
+    }
+
+    /** Forge {@code Builder.withSearchBar(width)}. */
+    public static CreativeModeTab.Builder searchBar(CreativeModeTab.Builder self, int width) {
+        return self;
+    }
+
+    /** Forge {@code Builder.withTabsImage(id)}: 26.3 draws tabs from GUI sprites; vanilla's look is kept. */
+    public static CreativeModeTab.Builder tabsImage(CreativeModeTab.Builder self, Identifier image) {
+        return self;
+    }
+
+    /** Forge {@code Builder.withLabelColor/withSlotColor}: cosmetic; 26.3's colors are kept. */
+    public static CreativeModeTab.Builder color(CreativeModeTab.Builder self, int color) {
+        return self;
+    }
+
     /** Past vanilla's tabs, so positions stay unique (vanilla validates that). */
     private static final java.util.concurrent.atomic.AtomicInteger NEXT_COLUMN = new java.util.concurrent.atomic.AtomicInteger(100);
 

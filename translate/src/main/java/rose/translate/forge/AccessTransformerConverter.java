@@ -16,7 +16,7 @@ import rose.translate.RosettaRemapper;
  */
 public final class AccessTransformerConverter {
     public static final String SOURCE = "META-INF/accesstransformer.cfg";
-    public static final String TARGET = "META-INF/rose.accesswidener";
+    public static final String TARGET = rose.translate.ModTranslator.ACCESS_WIDENER;
 
     private final RosettaRemapper remapper;
     private final ClassIndex game;
