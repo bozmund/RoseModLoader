@@ -85,6 +85,14 @@ public final class DataPackFix {
         return List.copyOf(report);
     }
 
+    private static Fixed itemTag(String id, JsonArray values) {
+        int colon = id.indexOf(':');
+        String namespace = colon < 0 ? "minecraft" : id.substring(0, colon);
+        JsonObject tag = new JsonObject();
+        tag.add("values", values);
+        return new Fixed("data/" + namespace + "/tags/item/" + id.substring(colon + 1) + ".json", GSON.toJson(tag).getBytes(StandardCharsets.UTF_8));
+    }
+
     /** Generated item tags for ingredient lists with tags ({@code ns:path} to values); see {@link #ingredient}. */
     private final Map<String, JsonArray> anyOfTags = new java.util.TreeMap<>();
     private String recipeNamespace = "rose";
@@ -113,13 +121,12 @@ public final class DataPackFix {
                     GSON.toJson(definition).getBytes(StandardCharsets.UTF_8)));
         }
         out.addAll(signs.extras(report));
-        anyOfTags.forEach((id, values) -> {
-            int colon = id.indexOf(':');
-            JsonObject tag = new JsonObject();
-            tag.add("values", values);
-            out.add(new Fixed("data/" + id.substring(0, colon) + "/tags/item/" + id.substring(colon + 1) + ".json",
-                    GSON.toJson(tag).getBytes(StandardCharsets.UTF_8)));
-        });
+        anyOfTags.forEach((id, values) -> out.add(itemTag(id, values)));
+        // 1.20.1 item predicates read a tag no pack defined as empty; 26.3 rejects the advancement. An empty part of
+        // the tag (tags merge across packs) changes nothing where the tag exists, and makes it exist where it doesn't.
+        for (String id : advancementItemTags) {
+            if (!anyOfTags.containsKey(id)) out.add(itemTag(id, new JsonArray()));
+        }
         return out;
     }
 
@@ -516,10 +523,29 @@ public final class DataPackFix {
                 JsonObject criterion = criteria.getAsJsonObject(name);
                 if (criterion.get("conditions") instanceof JsonObject conditions) {
                     upgradeCriterionConditions(criterion.has("trigger") ? criterion.get("trigger").getAsString() : "", conditions);
+                    collectItemTags(conditions);
                 }
             }
         }
         return advancement;
+    }
+
+    /** Item tags ({@code ns:path}) named by item predicates in old advancements; see {@link #extras()}. */
+    private final Set<String> advancementItemTags = new java.util.TreeSet<>();
+
+    private void collectItemTags(JsonElement e) {
+        if (e instanceof JsonArray array) {
+            array.forEach(this::collectItemTags);
+        } else if (e instanceof JsonObject object) {
+            for (String key : object.keySet()) {
+                JsonElement value = object.get(key);
+                if (key.equals("items") && value instanceof JsonPrimitive p && p.isString() && p.getAsString().startsWith("#")) {
+                    advancementItemTags.add(p.getAsString().substring(1));
+                } else {
+                    collectItemTags(value);
+                }
+            }
+        }
     }
 
     static void upgradeCriterionConditions(String trigger, JsonObject conditions) {

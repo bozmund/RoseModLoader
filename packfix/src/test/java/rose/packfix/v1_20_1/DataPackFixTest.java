@@ -128,6 +128,15 @@ class DataPackFixTest {
     }
 
     @Test
+    void itemTagsNamedByAdvancementsExist() {
+        // Comforts' rope_and_nail advancement names #c:iron_ingots, which no 1.20.1 Forge pack defines
+        upgrade("data/comforts/advancements/recipes/rope_and_nail.json", """
+                {"criteria":{"has_iron":{"trigger":"minecraft:inventory_changed","conditions":{"items":[{"tag":"c:iron_ingots"}]}}},
+                 "requirements":[["has_iron"]]}""");
+        assertEquals("[]", definition("data/c/tags/item/iron_ingots.json").get("values").toString());
+    }
+
+    @Test
     void recipeAdvancementGetsRecipesListAndSingularFolder() {
         String json = """
                 {"parent":"minecraft:recipes/root",
