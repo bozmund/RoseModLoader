@@ -17,4 +17,10 @@ public final class VillagerShim {
     }
 
     private VillagerShim() {}
+
+    /** 1.20.1 {@code VillagerProfession.name()}: the profession's id path ("farmer"); 26.3's name() is its display name. */
+    public static String name(net.minecraft.world.entity.npc.villager.VillagerProfession self) {
+        var id = net.minecraft.core.registries.BuiltInRegistries.VILLAGER_PROFESSION.getKey(self);
+        return id == null ? "none" : id.getPath();
+    }
 }

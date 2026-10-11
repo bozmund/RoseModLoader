@@ -23,4 +23,14 @@ public final class ForgeEventFactory {
     }
 
     private ForgeEventFactory() {}
+
+    public static net.minecraft.world.entity.player.Player.BedSleepingProblem onPlayerSleepInBed(net.minecraft.world.entity.player.Player player,
+            java.util.Optional<net.minecraft.core.BlockPos> pos) {
+        return rose.dialect.forge.v1_20_1.SleepEvents.sleepInBed(player, pos);
+    }
+
+    /** Whether the player may sleep now; DEFAULT is vanilla's 1.20.1 test, that it is night (not day). */
+    public static boolean fireSleepingTimeCheck(net.minecraft.world.entity.player.Player player, java.util.Optional<net.minecraft.core.BlockPos> pos) {
+        return rose.dialect.forge.v1_20_1.SleepEvents.sleepingTime(player, pos, !player.level().isBrightOutside());
+    }
 }

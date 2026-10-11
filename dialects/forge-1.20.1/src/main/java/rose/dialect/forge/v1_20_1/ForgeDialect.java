@@ -79,6 +79,7 @@ public final class ForgeDialect implements ModInitializer {
     /** After vanilla froze its registries (BuiltInRegistriesMixin): common setup, and on servers the rest. */
     public static void afterFreeze() {
         if (MODS.isEmpty()) return;
+        ForgeAttributes.gather(); // needs bound attribute holders; Forge fired these before common setup too
         dispatchLifecycle(FMLCommonSetupEvent::new);
         if (FMLEnvironment.dist.isDedicatedServer()) {
             dispatchLifecycle(FMLDedicatedServerSetupEvent::new);

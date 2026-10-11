@@ -54,4 +54,29 @@ public class BlockEvent extends Event {
             }
         }
     }
+
+    /** A player is about to break a block (server); canceling keeps it. */
+    @net.minecraftforge.eventbus.api.Cancelable
+    public static class BreakEvent extends BlockEvent {
+        private final net.minecraft.world.entity.player.Player player;
+        private int exp;
+
+        public BreakEvent(net.minecraft.world.level.Level level, BlockPos pos, BlockState state, net.minecraft.world.entity.player.Player player) {
+            super(level, pos, state);
+            this.player = player;
+        }
+
+        public net.minecraft.world.entity.player.Player getPlayer() {
+            return player;
+        }
+
+        /** Experience the break drops; Rose leaves 26.3's own experience drops alone. */
+        public int getExpToDrop() {
+            return exp;
+        }
+
+        public void setExpToDrop(int exp) {
+            this.exp = exp;
+        }
+    }
 }
