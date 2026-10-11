@@ -6,6 +6,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import net.minecraft.network.Connection;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
@@ -109,5 +110,18 @@ public class SimpleChannel {
 
     public <MSG> void sendTo(MSG message, ServerPlayer player) {
         RoseNetworking.sendToPlayer(player, new Message(toClient, indexOf(message), message));
+    }
+
+    /** To whoever is at the other end of {@code connection}: the server, or the player that connection belongs to. */
+    public <MSG> void sendTo(MSG message, Connection connection, NetworkDirection direction) {
+        if (direction == NetworkDirection.PLAY_TO_SERVER) {
+            sendToServer(message);
+            return;
+        }
+        var server = rose.dialect.forge.v1_20_1.RegistryAccessHolder.server();
+        if (server == null) return;
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            if (player.connection != null && player.connection.connection == connection) sendTo(message, player);
+        }
     }
 }

@@ -28,3 +28,4 @@ mutable field net/minecraft/world/level/chunk/ChunkGenerator featuresPerStep Lja
 # Forge 1.20.1 made MenuScreens.register public (mods register their container screens).
 accessible method net/minecraft/client/gui/screens/MenuScreens register (Lnet/minecraft/world/inventory/MenuType;Lnet/minecraft/client/gui/screens/MenuScreens$ScreenConstructor;)V
 accessible class net/minecraft/client/gui/screens/MenuScreens$ScreenConstructor
+accessible field net/minecraft/server/network/ServerCommonPacketListenerImpl connection Lnet/minecraft/network/Connection;

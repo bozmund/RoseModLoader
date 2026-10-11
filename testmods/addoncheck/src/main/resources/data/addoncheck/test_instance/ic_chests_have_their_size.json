@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "addoncheck:ic_chests_have_their_size",
+  "structure": "minecraft:empty",
+  "max_ticks": 20,
+  "padding": 2
+}

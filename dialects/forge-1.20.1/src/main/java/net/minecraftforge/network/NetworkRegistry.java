@@ -15,5 +15,38 @@ public final class NetworkRegistry {
         return new SimpleChannel(name);
     }
 
+    /** Forge's fluent channel setup; the version strings are not checked (see {@link #newSimpleChannel}). */
+    public static class ChannelBuilder {
+        private Identifier name;
+        private Supplier<String> version = () -> "1";
+        private Predicate<String> clientAccepted = v -> true;
+        private Predicate<String> serverAccepted = v -> true;
+
+        public static ChannelBuilder named(Identifier name) {
+            ChannelBuilder builder = new ChannelBuilder();
+            builder.name = name;
+            return builder;
+        }
+
+        public ChannelBuilder networkProtocolVersion(Supplier<String> version) {
+            this.version = version;
+            return this;
+        }
+
+        public ChannelBuilder clientAcceptedVersions(Predicate<String> accepted) {
+            this.clientAccepted = accepted;
+            return this;
+        }
+
+        public ChannelBuilder serverAcceptedVersions(Predicate<String> accepted) {
+            this.serverAccepted = accepted;
+            return this;
+        }
+
+        public SimpleChannel simpleChannel() {
+            return newSimpleChannel(name, version, clientAccepted, serverAccepted);
+        }
+    }
+
     private NetworkRegistry() {}
 }

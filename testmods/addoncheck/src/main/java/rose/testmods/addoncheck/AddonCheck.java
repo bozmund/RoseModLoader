@@ -22,6 +22,7 @@ public final class AddonCheck implements ModInitializer {
     @Override
     public void onInitialize() {
         OceansDelightChecks.register();
+        IronChestsChecks.register();
     }
 
     static void test(String name, Consumer<GameTestHelper> test) {

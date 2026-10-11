@@ -17,7 +17,7 @@ import java.util.Set;
  *   <li>conditions and functions are dispatched on {@code type} instead of {@code condition} / {@code function};</li>
  *   <li>renamed types: {@code block_state_property} to {@code match_block} ({@code blocks}, {@code state}),
  *       {@code looting_enchant} to {@code enchanted_count_increase}, {@code random_chance_with_looting} to
- *       {@code random_chance_with_enchanted_bonus};</li>
+ *       {@code random_chance_with_enchanted_bonus}, {@code copy_nbt} to {@code copy_custom_data};</li>
  *   <li>enchanting functions take {@code options} (1.21 data-driven enchantments);</li>
  *   <li>item predicates name tags in {@code items} and enchantments under {@code predicates}; entity predicates are
  *       maps of namespaced sub-predicates ({@code minecraft:flags}, {@code minecraft:entity_type}, ...).</li>
@@ -134,6 +134,8 @@ final class LootTableFix {
             case "minecraft:set_count", "minecraft:set_damage" -> {
                 if (f.get("add") instanceof JsonPrimitive add && !add.getAsBoolean()) f.remove("add");
             }
+            // 1.20.5: copy_nbt became copy_custom_data (same source and ops; it writes the item's custom_data)
+            case "minecraft:copy_nbt" -> type = "minecraft:copy_custom_data";
             case "minecraft:looting_enchant" -> {
                 type = "minecraft:enchanted_count_increase";
                 f.addProperty("enchantment", "minecraft:looting");

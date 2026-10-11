@@ -64,6 +64,16 @@ class LootTableFixTest {
     }
 
     @Test
+    void copyNbtBecomesCopyCustomData() {
+        // evidence: 1.20.5 changelog (copy_nbt renamed copy_custom_data); 26.3 LootItemFunctions registers copy_custom_data
+        JsonObject f = LootTableFix.function(json("""
+                {"function":"minecraft:copy_nbt","source":"block_entity","ops":[{"op":"replace","source":"Placed","target":"Placed"}]}"""));
+        assertEquals("minecraft:copy_custom_data", f.get("type").getAsString());
+        assertEquals("block_entity", f.get("source").getAsString());
+        assertEquals("Placed", f.getAsJsonArray("ops").get(0).getAsJsonObject().get("target").getAsString());
+    }
+
+    @Test
     void lootingChanceBecomesEnchantedBonus() {
         // evidence: entities/wither_skeleton.json, 1.20.1 vs 26.3
         JsonObject c = LootTableFix.condition(json("{\"condition\":\"minecraft:random_chance_with_looting\",\"chance\":0.025,\"looting_multiplier\":0.01}"));

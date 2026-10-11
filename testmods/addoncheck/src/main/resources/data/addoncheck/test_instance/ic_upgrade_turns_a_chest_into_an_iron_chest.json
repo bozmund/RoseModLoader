@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "addoncheck:ic_upgrade_turns_a_chest_into_an_iron_chest",
+  "structure": "minecraft:empty",
+  "max_ticks": 20,
+  "padding": 2
+}
