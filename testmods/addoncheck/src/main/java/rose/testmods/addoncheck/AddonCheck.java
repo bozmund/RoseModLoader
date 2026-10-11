@@ -31,6 +31,34 @@ public final class AddonCheck implements ModInitializer {
         GeckoLibChecks.register();
         test("creative_tabs_have_places", AddonCheck::creativeTabsHavePlaces);
         test("legacy_key_codes_are_26_3_keys", AddonCheck::legacyKeyCodes);
+        test("legacy_hud_icons_are_sprites", AddonCheck::legacyHudIcons);
+    }
+
+    /**
+     * 1.20.1 mods blit regions of textures/gui/icons.png (AppleSkin's food tooltip); Rose draws the 26.3 HUD sprite
+     * that replaced each region, and every such sprite exists.
+     */
+    private static void legacyHudIcons(GameTestHelper helper) {
+        Class<?> icons = modClass("rose.era.v1_20_1.client.LegacyIcons");
+        Object[][] expected = {
+                {16, 27, "hud/food_empty"}, {52, 27, "hud/food_full"}, {61, 27, "hud/food_half"}, {133, 27, "hud/food_empty_hunger"},
+                {88, 27, "hud/food_full_hunger"}, {52, 0, "hud/heart/full"}, {79, 0, "hud/heart/half_blinking"},
+                {97, 0, "hud/heart/poisoned_half"}, {169, 45, "hud/heart/absorbing_hardcore_half"}, {25, 45, "hud/heart/container_hardcore_blinking"},
+                {34, 9, "hud/armor_full"}, {25, 18, "hud/air_bursting"}, {100, 69, "hud/experience_bar_progress"}, {0, 0, "hud/crosshair"}};
+        for (Object[] e : expected) {
+            Object sprite = callStatic(icons, "sprite", new Class<?>[] {float.class, float.class}, (float) (int) e[0], (float) (int) e[1]);
+            helper.assertTrue(String.valueOf(sprite).equals("minecraft:" + e[2]), "icons.png at " + e[0] + "," + e[1] + " is " + sprite + ", not " + e[2]);
+        }
+        helper.assertTrue(callStatic(icons, "sprite", new Class<?>[] {float.class, float.class}, 250F, 250F) == null, "an empty part of the sheet has a sprite");
+        for (int v = 0; v < 112; v++) {
+            for (int u = 0; u < 196; u++) {
+                Object sprite = callStatic(icons, "sprite", new Class<?>[] {float.class, float.class}, (float) u, (float) v);
+                if (sprite == null) continue;
+                String path = "/assets/minecraft/textures/gui/sprites/" + ((Identifier) sprite).getPath() + ".png";
+                helper.assertTrue(Identifier.class.getResource(path) != null, "no 26.3 sprite " + sprite);
+            }
+        }
+        helper.succeed();
     }
 
     /**

@@ -14,27 +14,38 @@ import net.minecraft.resources.Identifier;
  * state) and changed several signatures.
  */
 public final class GuiShim {
+    /** 1.20.1 {@code RenderSystem.setShaderColor} as ARGB, applied to the legacy blits below. */
+    private static int shaderColor = -1;
+
     /** 1.20.1 {@code blit(texture, x, y, u, v, width, height)} sampled a 256x256 texture. */
     public static void blit(GuiGraphicsExtractor g, Identifier texture, int x, int y, int u, int v, int width, int height) {
-        g.blit(RenderPipelines.GUI_TEXTURED, texture, x, y, u, v, width, height, 256, 256);
+        draw(g, texture, x, y, u, v, width, height, width, height, 256, 256);
     }
 
     /** 1.20.1 {@code blit(texture, x, y, u, v, width, height, textureWidth, textureHeight)}. */
     public static void blit(GuiGraphicsExtractor g, Identifier texture, int x, int y, float u, float v, int width, int height,
                             int textureWidth, int textureHeight) {
-        g.blit(RenderPipelines.GUI_TEXTURED, texture, x, y, u, v, width, height, textureWidth, textureHeight);
+        draw(g, texture, x, y, u, v, width, height, width, height, textureWidth, textureHeight);
     }
 
     /** 1.20.1 {@code blit(texture, x, y, blitOffset, u, v, width, height, textureWidth, textureHeight)}: 26.3 GUI has no z offset. */
     public static void blit(GuiGraphicsExtractor g, Identifier texture, int x, int y, int blitOffset, float u, float v, int width, int height,
                             int textureWidth, int textureHeight) {
-        blit(g, texture, x, y, u, v, width, height, textureWidth, textureHeight);
+        draw(g, texture, x, y, u, v, width, height, width, height, textureWidth, textureHeight);
     }
 
     /** 1.20.1 {@code blit(texture, x, y, width, height, u, v, uWidth, vHeight, textureWidth, textureHeight)}: a scaled region. */
     public static void blit(GuiGraphicsExtractor g, Identifier texture, int x, int y, int width, int height, float u, float v,
                             int uWidth, int vHeight, int textureWidth, int textureHeight) {
-        g.blit(RenderPipelines.GUI_TEXTURED, texture, x, y, u, v, width, height, uWidth, vHeight, textureWidth, textureHeight);
+        draw(g, texture, x, y, u, v, width, height, uWidth, vHeight, textureWidth, textureHeight);
+    }
+
+    /** A 1.20.1 blit: regions of the old HUD sheet come from the sprites that replaced it, tinted by the shader color. */
+    private static void draw(GuiGraphicsExtractor g, Identifier texture, int x, int y, float u, float v, int width, int height,
+                             int uWidth, int vHeight, int textureWidth, int textureHeight) {
+        if (texture.equals(LegacyIcons.TEXTURE) && uWidth == width && vHeight == height
+                && LegacyIcons.blit(g, x, y, u, v, width, height, shaderColor)) return;
+        g.blit(RenderPipelines.GUI_TEXTURED, texture, x, y, u, v, width, height, uWidth, vHeight, textureWidth, textureHeight, shaderColor);
     }
 
     /**
@@ -52,6 +63,7 @@ public final class GuiShim {
 
     /** 1.20.1 {@code RenderSystem.setShaderColor}: a global tint for later draws; 26.3 passes colors per draw. */
     public static void setShaderColor(float r, float g, float b, float a) {
+        shaderColor = net.minecraft.util.ARGB.colorFromFloat(a, r, g, b);
     }
 
     /** 1.20.1 {@code RenderSystem.setShader(supplier)}: 26.3 GUI draws pick their pipeline per call (GUI_TEXTURED for blit). */

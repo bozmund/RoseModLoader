@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "addoncheck:legacy_hud_icons_are_sprites",
+  "structure": "minecraft:empty",
+  "max_ticks": 100,
+  "padding": 2
+}
