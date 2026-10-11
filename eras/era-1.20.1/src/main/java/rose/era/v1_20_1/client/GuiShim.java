@@ -83,4 +83,49 @@ public final class GuiShim {
     }
 
     private GuiShim() {}
+
+    /** 1.20.1 {@code Gui.getGuiTicks()}: 26.x moved the HUD (and its tick count) to {@code Gui.hud}. */
+    public static int getGuiTicks(net.minecraft.client.gui.Gui self) {
+        return self.hud.getGuiTicks();
+    }
+
+    /** 1.20.1 {@code options.hideGui} (F1); 26.x keeps it on the HUD. */
+    public static boolean hideGui(net.minecraft.client.Options self) {
+        return net.minecraft.client.Minecraft.getInstance().gui.hud.isHidden();
+    }
+
+    public static void hideGui(net.minecraft.client.Options self, boolean hidden) {
+        var hud = net.minecraft.client.Minecraft.getInstance().gui.hud;
+        if (hud.isHidden() != hidden) hud.toggle();
+    }
+
+    /** 1.20.1 {@code options.renderDebug} (F3); 26.x asks the debug overlay. */
+    public static boolean renderDebug(net.minecraft.client.Options self) {
+        return net.minecraft.client.Minecraft.getInstance().getDebugOverlay().showDebugScreen();
+    }
+
+    /** 1.20.1 {@code minecraft.screen}; 26.x keeps the screen on {@code Gui}. */
+    public static net.minecraft.client.gui.screens.Screen screen(net.minecraft.client.Minecraft self) {
+        return self.gui.screen();
+    }
+
+    // 1.20.1 GUI code set global GL blend and depth state around drawing; 26.x GUI pipelines carry their own.
+
+    public static void enableBlend() {
+    }
+
+    public static void disableBlend() {
+    }
+
+    public static void defaultBlendFunc() {
+    }
+
+    public static void blendFunc(int source, int destination) {
+    }
+
+    public static void enableDepthTest() {
+    }
+
+    public static void disableDepthTest() {
+    }
 }

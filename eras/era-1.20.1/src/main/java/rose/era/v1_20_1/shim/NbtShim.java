@@ -58,4 +58,57 @@ public final class NbtShim {
     }
 
     private NbtShim() {}
+
+    /**
+     * 1.20.1 {@code getList(key, elementType)}: the list under {@code key} if its elements have that tag type, else an
+     * empty list. 1.21.5 getters return Optionals and lists may mix types.
+     */
+    public static net.minecraft.nbt.ListTag getList(CompoundTag self, String key, int elementType) {
+        net.minecraft.nbt.ListTag list = self.getListOrEmpty(key);
+        if (list.isEmpty()) return list;
+        for (Tag element : list) {
+            if (element.getId() != elementType) return new net.minecraft.nbt.ListTag();
+        }
+        return list;
+    }
+
+    /** 1.20.1 {@code ListTag.getCompound(index)}: an empty compound when absent. */
+    public static CompoundTag getCompound(net.minecraft.nbt.ListTag self, int index) {
+        return self.getCompoundOrEmpty(index);
+    }
+
+    /** 1.20.1 {@code ListTag.getInt(index)}: 0 when absent. */
+    public static int getInt(net.minecraft.nbt.ListTag self, int index) {
+        return self.getIntOr(index, 0);
+    }
+
+    /** 1.20.1 {@code ListTag.getString(index)}: "" when absent. */
+    public static String getString(net.minecraft.nbt.ListTag self, int index) {
+        return self.getStringOr(index, "");
+    }
+
+    /** 1.20.1 {@code getUUID(key)}: stored as four ints; 1.21.5 reads it with UUIDUtil.CODEC. */
+    public static java.util.UUID getUUID(CompoundTag self, String key) {
+        return self.read(key, net.minecraft.core.UUIDUtil.CODEC).orElseThrow(() -> new IllegalArgumentException("No UUID under " + key));
+    }
+
+    /** 1.20.1 {@code putUUID(key, uuid)}. */
+    public static void putUUID(CompoundTag self, String key, java.util.UUID uuid) {
+        self.store(key, net.minecraft.core.UUIDUtil.CODEC, uuid);
+    }
+
+    /** 1.20.1 {@code StringTag.getAsString()}: the string itself; 26.3 StringTag is a record of its value. */
+    public static String getAsString(net.minecraft.nbt.StringTag self) {
+        return self.value();
+    }
+
+    /** 1.20.1 {@code TagParser.parseTag(text)}; 26.3 {@code parseCompoundFully}. */
+    public static CompoundTag parseTag(String text) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        return net.minecraft.nbt.TagParser.parseCompoundFully(text);
+    }
+
+    /** 1.20.1 {@code NbtIo.readCompressed(stream)} read without a size limit; 26.3 takes an accounter. */
+    public static CompoundTag readCompressed(java.io.InputStream in) throws java.io.IOException {
+        return net.minecraft.nbt.NbtIo.readCompressed(in, net.minecraft.nbt.NbtAccounter.create(Long.MAX_VALUE));
+    }
 }

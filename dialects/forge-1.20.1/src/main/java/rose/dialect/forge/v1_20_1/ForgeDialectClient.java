@@ -18,6 +18,7 @@ public final class ForgeDialectClient implements ClientModInitializer {
         ForgeDialect.postToMods(new net.minecraftforge.client.event.EntityRenderersEvent.RegisterLayerDefinitions(), "RegisterLayerDefinitions");
         // Forge fired this before renderers are built (the first resource reload builds them from the registrations).
         ForgeDialect.postToMods(new net.minecraftforge.client.event.EntityRenderersEvent.RegisterRenderers(), "RegisterRenderers");
+        ForgeDialect.postToMods(new net.minecraftforge.client.event.RegisterGuiOverlaysEvent(), "RegisterGuiOverlays");
         ForgeDialect.dispatchLifecycle(FMLClientSetupEvent::new);
         ForgeDialect.interModComms();
         ForgeDialect.dispatchLifecycle(FMLLoadCompleteEvent::new);
@@ -26,6 +27,8 @@ public final class ForgeDialectClient implements ClientModInitializer {
     /** Called as the client builds its particle providers, during Minecraft's construction. */
     public static void registerParticleProviders(net.minecraft.client.particle.ParticleResources resources) {
         if (!ForgeDialect.active() || ForgeDialect.mods().isEmpty()) return;
+        // Minecraft and its resource manager exist now; resources haven't loaded yet
+        net.minecraftforge.fml.DistExecutor.clientCreated();
         ForgeDialect.postToMods(new net.minecraftforge.client.event.RegisterParticleProvidersEvent(resources), "RegisterParticleProviders");
     }
 }

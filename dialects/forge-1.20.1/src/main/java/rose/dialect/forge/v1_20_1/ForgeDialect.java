@@ -42,6 +42,17 @@ public final class ForgeDialect implements ModInitializer {
     private static ForgeModContainer active;
 
     /** The mod being constructed or receiving a mod-bus event, for {@code FMLJavaModLoadingContext.get()}. */
+    /** Runs {@code run} as if {@code mod} were being loaded (its mod bus, its namespace). */
+    public static void runAs(ForgeModContainer mod, Runnable run) {
+        ForgeModContainer previous = active;
+        active = mod;
+        try {
+            run.run();
+        } finally {
+            active = previous;
+        }
+    }
+
     public static ForgeModContainer activeMod() {
         return active;
     }

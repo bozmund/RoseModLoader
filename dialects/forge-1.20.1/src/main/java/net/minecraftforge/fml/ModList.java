@@ -42,4 +42,9 @@ public class ModList {
             return new ModContainer(metadata.get());
         }));
     }
+
+    /** Every loaded mod's id and container. */
+    public void forEachModContainer(java.util.function.BiConsumer<String, ModContainer> action) {
+        for (String id : getModIds()) getModContainerById(id).ifPresent(container -> action.accept(id, container));
+    }
 }

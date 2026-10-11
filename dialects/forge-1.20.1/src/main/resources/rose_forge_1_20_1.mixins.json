@@ -47,8 +47,11 @@
     "VegetationBlockMixin"
   ],
   "client": [
+    "client.ClientConnectionEventsMixin",
     "client.ClientEventsMixin",
     "client.ClientInteractionEventsMixin",
+    "client.GuiForgeMixin",
+    "client.HudOverlayMixin",
     "client.ParticleResourcesMixin",
     "client.TooltipEventsMixin"
   ],

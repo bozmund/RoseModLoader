@@ -57,7 +57,12 @@ public class SimpleChannel {
             encode(handler(payload.index()), payload.message(), buf);
         }, buf -> {
             int index = buf.readVarInt();
-            return new Message(type, index, handler(index).decoder.apply(buf));
+            // 1.20.1 handed decoders the payload in a buffer of its own, which lived until the message was handled
+            // (SpectreLib keeps it) and whose unread rest didn't matter; 26.3 frees the packet buffer after decoding.
+            byte[] bytes = new byte[buf.readableBytes()];
+            buf.readBytes(bytes);
+            RegistryFriendlyByteBuf own = new RegistryFriendlyByteBuf(io.netty.buffer.Unpooled.wrappedBuffer(bytes), buf.registryAccess());
+            return new Message(type, index, handler(index).decoder.apply(own));
         });
     }
 

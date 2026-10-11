@@ -79,6 +79,29 @@ public final class ModTranslator {
         this.extras = List.copyOf(extras);
     }
 
+    private java.util.Set<String> mixinDrops = java.util.Set.of();
+
+    /** Mixins disabled on purpose ({@code mixin-drops.tsv}: {@code fully.qualified.Mixin<TAB>evidence}). */
+    public ModTranslator withMixinDrops(java.util.Set<String> drops) {
+        this.mixinDrops = java.util.Set.copyOf(drops);
+        return this;
+    }
+
+    /** Reads {@code mixin-drops.tsv}; a missing file means none. */
+    public static java.util.Set<String> readMixinDrops(Path file) throws IOException {
+        java.util.Set<String> out = new java.util.HashSet<>();
+        if (!Files.exists(file)) return out;
+        int lineNo = 0;
+        for (String line : Files.readAllLines(file)) {
+            lineNo++;
+            if (line.isBlank() || line.startsWith("#")) continue;
+            String[] p = line.split("\t");
+            if (p.length < 2 || p[1].isBlank()) throw new IOException(file + ":" + lineNo + ": expected mixinClass<TAB>evidence");
+            out.add(p[0]);
+        }
+        return out;
+    }
+
     /** Mixin targets that moved in 26.3 ({@code mixin-retargets.tsv}); the rebaser moves the mods' Mixins with them. */
     public ModTranslator withMixinRetargets(rose.rosetta.MixinRetargetRules rules) {
         this.mixinRetargets = rules;
@@ -148,7 +171,7 @@ public final class ModTranslator {
                     bytes = rebaser.rebase(translator.translateClass(bytes));
                     hidden.scan(bytes);
                 }
-                else if (mixinConfigs.contains(name)) bytes = tolerantMixinConfig(new String(bytes, StandardCharsets.UTF_8)).getBytes(StandardCharsets.UTF_8);
+                else if (mixinConfigs.contains(name)) bytes = tolerantMixinConfig(new String(bytes, StandardCharsets.UTF_8), mixinDrops).getBytes(StandardCharsets.UTF_8);
                 else if (rebasedRefmaps.containsKey(name)) bytes = rebasedRefmaps.get(name);
                 else {
                     Resource fixed = resources.apply(name, bytes);
@@ -197,7 +220,24 @@ public final class ModTranslator {
      * doesn't apply, and the rest of the mod still loads.
      */
     static String tolerantMixinConfig(String json) {
+        return tolerantMixinConfig(json, java.util.Set.of());
+    }
+
+    /**
+     * As {@link #tolerantMixinConfig(String)}, without the Mixins in {@code dropped} (fully qualified names): Mixins Rose
+     * disables on purpose ({@code mixin-drops.tsv}), because they can't work on 26.3 and would break the game.
+     */
+    static String tolerantMixinConfig(String json, java.util.Set<String> dropped) {
         var root = JsonParser.parseString(json).getAsJsonObject();
+        String pkg = root.has("package") ? root.get("package").getAsString() + "." : "";
+        for (String side : List.of("mixins", "client", "server")) {
+            if (!(root.get(side) instanceof com.google.gson.JsonArray list)) continue;
+            com.google.gson.JsonArray kept = new com.google.gson.JsonArray();
+            for (var entry : list) {
+                if (!dropped.contains(pkg + entry.getAsString())) kept.add(entry);
+            }
+            root.add(side, kept);
+        }
         root.addProperty("required", false);
         var injectors = root.has("injectors") ? root.getAsJsonObject("injectors") : new com.google.gson.JsonObject();
         injectors.addProperty("defaultRequire", 0);
