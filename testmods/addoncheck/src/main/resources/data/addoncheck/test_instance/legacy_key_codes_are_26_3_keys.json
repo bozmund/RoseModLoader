@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "addoncheck:legacy_key_codes_are_26_3_keys",
+  "structure": "minecraft:empty",
+  "max_ticks": 100,
+  "padding": 2
+}

@@ -29,6 +29,40 @@ public final class AddonCheck implements ModInitializer {
         CuriosChecks.register();
         AppleSkinChecks.register();
         GeckoLibChecks.register();
+        test("creative_tabs_have_places", AddonCheck::creativeTabsHavePlaces);
+        test("legacy_key_codes_are_26_3_keys", AddonCheck::legacyKeyCodes);
+    }
+
+    /**
+     * 1.20.1 mods name keys by GLFW key code (AppleSkin and Curios check shift with isKeyDown(window, 340)); 26.3 key
+     * codes are SDL scancodes, and mouse buttons count from 1.
+     */
+    private static void legacyKeyCodes(GameTestHelper helper) {
+        Class<?> codes = modClass("rose.era.v1_20_1.client.LegacyKeyCodes");
+        int[][] keys = {{340, 225}, {344, 229}, {341, 224}, {65, 4}, {48, 39}, {256, 41}, {290, 58}, {32, 44}, {-1, 0}};
+        for (int[] k : keys) {
+            int got = (int) callStatic(codes, "key", new Class<?>[] {int.class}, k[0]);
+            helper.assertTrue(got == k[1], "GLFW key " + k[0] + " became " + got + ", not " + k[1]);
+        }
+        int[][] buttons = {{0, 1}, {1, 3}, {2, 2}, {3, 4}};
+        for (int[] b : buttons) {
+            int got = (int) callStatic(codes, "mouseButton", new Class<?>[] {int.class}, b[0]);
+            helper.assertTrue(got == b[1], "GLFW mouse button " + b[0] + " became " + got + ", not " + b[1]);
+        }
+        helper.succeed();
+    }
+
+    /**
+     * Every creative tab sits in one of vanilla's seven places per row, or (Forge mods' tabs) at column 100 and up,
+     * which Rose shows on pages of their own.
+     */
+    private static void creativeTabsHavePlaces(GameTestHelper helper) {
+        java.util.List<String> misplaced = new java.util.ArrayList<>();
+        for (var tab : BuiltInRegistries.CREATIVE_MODE_TAB) {
+            if (tab.column() > 6 && tab.column() < 100) misplaced.add(BuiltInRegistries.CREATIVE_MODE_TAB.getKey(tab) + "@" + tab.row() + "/" + tab.column());
+        }
+        helper.assertTrue(misplaced.isEmpty(), "creative tabs off the screen: " + misplaced);
+        helper.succeed();
     }
 
     /** The crafting recipe {@code grid} (3x3, row by row) matches, or null when none does. */

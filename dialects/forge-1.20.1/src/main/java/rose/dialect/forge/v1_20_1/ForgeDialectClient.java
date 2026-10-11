@@ -19,6 +19,7 @@ public final class ForgeDialectClient implements ClientModInitializer {
         // Forge fired this before renderers are built (the first resource reload builds them from the registrations).
         ForgeDialect.postToMods(new net.minecraftforge.client.event.EntityRenderersEvent.RegisterRenderers(), "RegisterRenderers");
         ForgeDialect.postToMods(new net.minecraftforge.client.event.RegisterGuiOverlaysEvent(), "RegisterGuiOverlays");
+        ForgeDialect.postToMods(new net.minecraftforge.client.event.RegisterClientTooltipComponentFactoriesEvent(), "RegisterClientTooltipComponentFactories");
         ForgeDialect.dispatchLifecycle(FMLClientSetupEvent::new);
         ForgeDialect.interModComms();
         ForgeDialect.dispatchLifecycle(FMLLoadCompleteEvent::new);
@@ -29,6 +30,22 @@ public final class ForgeDialectClient implements ClientModInitializer {
         if (!ForgeDialect.active() || ForgeDialect.mods().isEmpty()) return;
         // Minecraft and its resource manager exist now; resources haven't loaded yet
         net.minecraftforge.fml.DistExecutor.clientCreated();
+        registerKeyMappings();
         ForgeDialect.postToMods(new net.minecraftforge.client.event.RegisterParticleProvidersEvent(resources), "RegisterParticleProviders");
+    }
+
+    /**
+     * Forge asked mods for key mappings while the client was created; they join Options.keyMappings (the controls
+     * screen and options.txt), and the saved bindings are read again so theirs apply.
+     */
+    private static void registerKeyMappings() {
+        var event = new net.minecraftforge.client.event.RegisterKeyMappingsEvent();
+        ForgeDialect.postToMods(event, "RegisterKeyMappings");
+        if (event.mappings().isEmpty()) return;
+        var options = net.minecraft.client.Minecraft.getInstance().options;
+        options.keyMappings = org.apache.commons.lang3.ArrayUtils.addAll(options.keyMappings,
+                event.mappings().toArray(new net.minecraft.client.KeyMapping[0]));
+        options.load();
+        net.minecraft.client.KeyMapping.resetMapping();
     }
 }

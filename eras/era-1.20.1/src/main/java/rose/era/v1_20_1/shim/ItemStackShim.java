@@ -19,4 +19,16 @@ public final class ItemStackShim {
     }
 
     private ItemStackShim() {}
+
+    /**
+     * 1.20.1 {@code getAttributeModifiers(slot)}: the stack's modifiers for a slot by attribute. 1.20.5 moved them to
+     * the attribute_modifiers component (26.3 forEachModifier), keyed by attribute holders.
+     */
+    public static com.google.common.collect.Multimap<net.minecraft.world.entity.ai.attributes.Attribute, net.minecraft.world.entity.ai.attributes.AttributeModifier>
+            getAttributeModifiers(ItemStack self, net.minecraft.world.entity.EquipmentSlot slot) {
+        com.google.common.collect.Multimap<net.minecraft.world.entity.ai.attributes.Attribute, net.minecraft.world.entity.ai.attributes.AttributeModifier> out =
+                com.google.common.collect.LinkedHashMultimap.create();
+        self.forEachModifier(slot, (attribute, modifier) -> out.put(attribute.value(), modifier));
+        return out;
+    }
 }

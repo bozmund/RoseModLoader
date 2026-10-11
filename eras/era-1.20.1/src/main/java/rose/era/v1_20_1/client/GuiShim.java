@@ -3,7 +3,6 @@ package rose.era.v1_20_1.client;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.recipebook.RecipeBookComponent;
 import net.minecraft.client.renderer.RenderPipelines;
@@ -69,9 +68,9 @@ public final class GuiShim {
     }
 
     /** 1.20.1 {@code new ImageButton(x, y, w, h, u, v, yDiffTex, texture, onPress)}: a button cut from a texture. */
-    public static ImageButton imageButton(int x, int y, int width, int height, int u, int v, int yDiffTex, Identifier texture, Button.OnPress onPress) {
+    public static LegacyImageButton imageButton(int x, int y, int width, int height, int u, int v, int yDiffTex, Identifier texture, Button.OnPress onPress) {
         // vanilla's recipe book toggle: 26.3 draws it from sprites
-        if (texture.equals(RECIPE_BUTTON)) return new ImageButton(x, y, width, height, RecipeBookComponent.RECIPE_BUTTON_SPRITES, onPress);
+        if (texture.equals(RECIPE_BUTTON)) return new LegacyImageButton(x, y, width, height, RecipeBookComponent.RECIPE_BUTTON_SPRITES, onPress);
         return new LegacyImageButton(x, y, width, height, u, v, yDiffTex, texture, onPress);
     }
 

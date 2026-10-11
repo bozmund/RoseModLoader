@@ -27,6 +27,7 @@ final class CuriosChecks {
         test("cu_looting_level_event_fires", CuriosChecks::lootingLevelEventFires);
         test("cu_break_event_experience_drops", CuriosChecks::breakEventExperienceDrops);
         test("cu_fortune_mixin_applies", CuriosChecks::fortuneMixinApplies);
+        test("cu_drop_rules_keep_their_overrides", CuriosChecks::dropRulesKeepTheirOverrides);
     }
 
     /** Positions whose BreakEvent experience the listener below sets to 42. */
@@ -173,5 +174,30 @@ final class CuriosChecks {
                     .stream().filter(e -> e.getItem().is(net.minecraft.world.item.Items.DIAMOND)).mapToInt(e -> e.getItem().getCount()).sum();
             helper.assertTrue(diamonds >= 1 && diamonds <= 4, "fortune III diamond ore dropped " + diamonds + " diamonds");
         });
+    }
+
+    /**
+     * Curios' DropRulesEvent (fired when a wearer dies) keeps its overrides as 1.20.1 {@code net.minecraft.util.Tuple}s,
+     * a class 26.3 no longer has; the era provides it.
+     */
+    private static void dropRulesKeepTheirOverrides(GameTestHelper helper) {
+        if (skip(helper, CU)) return;
+        Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        Object handler = ((Optional<?>) call(callStatic(api(), "getCuriosInventory", new Class<?>[] {LivingEntity.class}, player), "resolve")).orElseThrow();
+        Class<?> dropRule = modClass("top.theillusivec4.curios.api.type.capability.ICurio$DropRule");
+        Class<?> event = modClass("top.theillusivec4.curios.api.event.DropRulesEvent");
+        java.util.function.Predicate<net.minecraft.world.item.ItemStack> predicate = stack -> true;
+        try {
+            Object e = event.getConstructor(LivingEntity.class, modClass("top.theillusivec4.curios.api.type.capability.ICuriosItemHandler"),
+                    net.minecraft.world.damagesource.DamageSource.class, int.class, boolean.class)
+                    .newInstance(player, handler, helper.getLevel().damageSources().generic(), 0, false);
+            Object keep = dropRule.getField("ALWAYS_KEEP").get(null);
+            event.getMethod("addOverride", java.util.function.Predicate.class, dropRule).invoke(e, predicate, keep);
+            Object tuple = ((List<?>) event.getMethod("getOverrides").invoke(e)).get(0);
+            helper.assertTrue(call(tuple, "getA") == predicate && call(tuple, "getB") == keep, "the override reads back as " + tuple);
+        } catch (ReflectiveOperationException ex) {
+            throw new IllegalStateException(ex);
+        }
+        helper.succeed();
     }
 }

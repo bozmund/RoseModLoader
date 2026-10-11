@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "addoncheck:cu_drop_rules_keep_their_overrides",
+  "structure": "minecraft:empty",
+  "max_ticks": 100,
+  "padding": 2
+}

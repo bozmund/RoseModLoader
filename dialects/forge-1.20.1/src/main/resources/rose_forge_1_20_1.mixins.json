@@ -11,6 +11,7 @@
     "BuiltInRegistriesMixin",
     "CommandsMixin",
     "CreativeTabContentsMixin",
+    "CreativeTabPositionMixin",
     "CropBlockMixin",
     "DataComponentInitializersAccessor",
     "DefaultAttributesMixin",
@@ -47,12 +48,21 @@
     "VegetationBlockMixin"
   ],
   "client": [
+    "client.AbstractContainerScreenAccessor",
+    "client.CreativeScreenPagesMixin",
     "client.ClientConnectionEventsMixin",
     "client.ClientEventsMixin",
+    "client.ContainerScreenForgeMixin",
+    "client.ContainerTooltipItemMixin",
     "client.ClientInteractionEventsMixin",
     "client.GuiForgeMixin",
     "client.HudOverlayMixin",
+    "client.KeyInputEventsMixin",
     "client.ParticleResourcesMixin",
+    "client.ScreenAccessor",
+    "client.ScreenEventsMixin",
+    "client.ScreenMouseEventsMixin",
+    "client.TooltipComponentsMixin",
     "client.TooltipEventsMixin"
   ],
   "injectors": {

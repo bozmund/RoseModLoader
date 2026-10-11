@@ -32,3 +32,6 @@ accessible field net/minecraft/server/network/ServerCommonPacketListenerImpl con
 accessible class net/minecraft/world/item/CreativeModeTab$Output
 accessible class net/minecraft/world/item/CreativeModeTab$TabVisibility
 accessible field net/minecraft/commands/synchronization/ArgumentTypeInfos BY_CLASS Ljava/util/Map;
+
+# Forge 1.20.1 RegisterKeyMappingsEvent adds mods' mappings to the options
+mutable field net/minecraft/client/Options keyMappings [Lnet/minecraft/client/KeyMapping;

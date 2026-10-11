@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "addoncheck:creative_tabs_have_places",
+  "structure": "minecraft:empty",
+  "max_ticks": 100,
+  "padding": 2
+}

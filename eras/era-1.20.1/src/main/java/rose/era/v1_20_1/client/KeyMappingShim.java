@@ -25,14 +25,25 @@ public final class KeyMappingShim {
         BY_LEGACY.put("key.categories.ui", KeyMapping.Category.MISC);
     }
 
-    /** 1.20.1 {@code new KeyMapping(name, keyCode, category)}. */
+    /** 1.20.1 {@code new KeyMapping(name, keyCode, category)}, keyCode a GLFW key. */
     public static KeyMapping keyMapping(String name, int keyCode, String category) {
-        return new KeyMapping(name, keyCode, category(category));
+        return new KeyMapping(name, LegacyKeyCodes.key(keyCode), category(category));
     }
 
-    /** 1.20.1 {@code new KeyMapping(name, type, keyCode, category)}. */
+    /** 1.20.1 {@code new KeyMapping(name, type, keyCode, category)}, keyCode a GLFW key or mouse button. */
     public static KeyMapping keyMapping(String name, InputConstants.Type type, int keyCode, String category) {
-        return new KeyMapping(name, type, keyCode, category(category));
+        return new KeyMapping(name, type, code(type, keyCode), category(category));
+    }
+
+    /** A 1.20.1 key code of {@code type} as 26.3's. */
+    public static int code(InputConstants.Type type, int keyCode) {
+        return type == InputConstants.Type.MOUSE ? LegacyKeyCodes.mouseButton(keyCode) : LegacyKeyCodes.key(keyCode);
+    }
+
+    /** 1.20.1 {@code InputConstants.isKeyDown(window, glfwKey)}; 26.3 reads the keyboard state of its one window. */
+    public static boolean isKeyDown(long window, int keyCode) {
+        int key = LegacyKeyCodes.key(keyCode);
+        return key != 0 && InputConstants.isKeyDown(key);
     }
 
     /** The 26.3 category for a 1.20.1 category key, registered the first time a mod names it. */

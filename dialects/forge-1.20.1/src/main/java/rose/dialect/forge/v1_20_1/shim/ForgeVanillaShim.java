@@ -96,6 +96,15 @@ public final class ForgeVanillaShim {
     }
 
     /**
+     * {@code new CreativeModeTab.Builder(row, column)} or {@code builder(row, column)} in a Forge mod: Forge 1.20.1's
+     * creative screen placed every tab by its index on its page (CreativeTabsScreenPage), never by the given place, so
+     * mods passed any column (Ocean's Delight: TOP/9). The tab becomes a paged mod tab like {@link #creativeTabBuilder()}.
+     */
+    public static CreativeModeTab.Builder creativeTabBuilder(CreativeModeTab.Row row, int column) {
+        return creativeTabBuilder();
+    }
+
+    /**
      * Forge {@code Builder.withTabsBefore/withTabsAfter}: ordering hints for Forge's paginated tab list. Rose gives
      * each mod tab its own column in registration order, so the hints have nothing to order.
      */
