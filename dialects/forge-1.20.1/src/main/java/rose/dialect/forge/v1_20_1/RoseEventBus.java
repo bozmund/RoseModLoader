@@ -38,6 +38,8 @@ public final class RoseEventBus implements IEventBus {
     private final String name;
     private final List<Listener> listeners = new CopyOnWriteArrayList<>();
     private long counter;
+    /** Per event class: does any listener take it. Cleared whenever listeners change. */
+    private final java.util.Map<Class<?>, Boolean> wanted = new java.util.concurrent.ConcurrentHashMap<>();
 
     public RoseEventBus(String name) {
         this.name = name;
@@ -206,11 +208,18 @@ public final class RoseEventBus implements IEventBus {
         sorted.sort(Comparator.comparing(Listener::priority).thenComparingLong(Listener::order));
         listeners.clear();
         listeners.addAll(sorted);
+        wanted.clear();
+    }
+
+    /** Whether posting an event of this class would reach anyone: hot hooks (every entity tick) skip building it. */
+    public boolean hasListeners(Class<? extends Event> type) {
+        return wanted.computeIfAbsent(type, t -> listeners.stream().anyMatch(l -> l.type.isAssignableFrom(t)));
     }
 
     @Override
     public void unregister(Object object) {
         listeners.removeIf(l -> l.owner == object);
+        wanted.clear();
     }
 
     @Override

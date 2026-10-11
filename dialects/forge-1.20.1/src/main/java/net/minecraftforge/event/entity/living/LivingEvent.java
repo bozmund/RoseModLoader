@@ -15,4 +15,12 @@ public class LivingEvent extends EntityEvent {
     public LivingEntity getEntity() {
         return livingEntity;
     }
+
+    /** Every living entity tick, before it runs; canceling skips the tick (Forge's LivingEntity.tick patch). */
+    @net.minecraftforge.eventbus.api.Cancelable
+    public static class LivingTickEvent extends LivingEvent {
+        public LivingTickEvent(LivingEntity entity) {
+            super(entity);
+        }
+    }
 }

@@ -9,6 +9,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
+import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.living.LivingKnockBackEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -22,10 +23,17 @@ import rose.dialect.forge.v1_20_1.LivingEvents;
 /**
  * Forge 1.20.1 living events, fired where Forge's patches fired them: LivingHurtEvent before armor (ForgeHooks
  * .onLivingHurt in actuallyHurt), LivingDamageEvent after armor and absorption (onLivingDamage), LivingKnockBackEvent
- * before knockback (Player has its own actuallyHurt: PlayerEventsMixin), LivingEntityUseItemEvent.Finish when an item is used up.
+ * before knockback (Player has its own actuallyHurt: PlayerEventsMixin), LivingEntityUseItemEvent.Finish when an item is used up,
+ * LivingTickEvent before each tick (ForgeHooks.onLivingTick; canceling skips the tick).
  */
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityEventsMixin {
+    @Inject(method = "tick", at = @At("HEAD"), cancellable = true)
+    private void rose$livingTick(CallbackInfo ci) {
+        if (!ForgeDialect.active() || !((rose.dialect.forge.v1_20_1.RoseEventBus) MinecraftForge.EVENT_BUS).hasListeners(LivingEvent.LivingTickEvent.class)) return;
+        if (MinecraftForge.EVENT_BUS.post(new LivingEvent.LivingTickEvent((LivingEntity) (Object) this))) ci.cancel();
+    }
+
     @Unique
     private static final ThreadLocal<Boolean> rose$knockbackPosted = ThreadLocal.withInitial(() -> false);
 
