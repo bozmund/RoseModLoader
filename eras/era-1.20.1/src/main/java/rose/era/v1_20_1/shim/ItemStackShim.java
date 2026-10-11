@@ -5,6 +5,33 @@ import net.minecraft.world.item.ItemStack;
 
 /** Redirect targets for 1.20.1 {@code ItemStack} methods that changed in 26.3. */
 public final class ItemStackShim {
+    /** The entity holding the stack whose 1.20.1 item property is being read (LegacyItemProperty), if any. */
+    private static final ThreadLocal<net.minecraft.world.entity.Entity> PROPERTY_OWNER = new ThreadLocal<>();
+
+    /** Runs {@code read} with {@code owner} as the holder 1.20.1 {@code isFramed}/{@code getFrame} answer from. */
+    public static float withPropertyOwner(net.minecraft.world.entity.Entity owner, java.util.function.Supplier<Float> read) {
+        net.minecraft.world.entity.Entity previous = PROPERTY_OWNER.get();
+        PROPERTY_OWNER.set(owner);
+        try {
+            return read.get();
+        } finally {
+            PROPERTY_OWNER.set(previous);
+        }
+    }
+
+    /**
+     * 1.20.1 {@code stack.isFramed()}: stacks remembered the item frame showing them; 26.3 stacks don't, and item
+     * models get the frame as their owner instead, which is known while a 1.20.1 item property is read.
+     */
+    public static boolean isFramed(ItemStack self) {
+        return PROPERTY_OWNER.get() instanceof net.minecraft.world.entity.decoration.ItemFrame;
+    }
+
+    /** 1.20.1 {@code stack.getFrame()}: see {@link #isFramed}. */
+    public static net.minecraft.world.entity.decoration.ItemFrame getFrame(ItemStack self) {
+        return PROPERTY_OWNER.get() instanceof net.minecraft.world.entity.decoration.ItemFrame frame ? frame : null;
+    }
+
     /**
      * 1.20.1 {@code ItemStack.is(Item)}: {@code return this.getItem() == item;}. 26.3 only has
      * {@code is(Predicate<Holder<Item>>)}, but {@code getItem()} is unchanged.

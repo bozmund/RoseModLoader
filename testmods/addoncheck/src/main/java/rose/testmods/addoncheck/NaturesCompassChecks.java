@@ -20,6 +20,8 @@ final class NaturesCompassChecks {
         test("nc_compass_registered", NaturesCompassChecks::compassRegistered);
         test("nc_compass_recipe_crafts", NaturesCompassChecks::compassRecipe);
         test("nc_compass_finds_a_biome", NaturesCompassChecks::compassFindsABiome);
+        test("nc_compass_points_somewhere_before_a_search", NaturesCompassChecks::compassAngle);
+        test("nc_compass_knows_its_frame", NaturesCompassChecks::compassKnowsItsFrame);
     }
 
     private static void compassRegistered(GameTestHelper helper) {
@@ -62,5 +64,38 @@ final class NaturesCompassChecks {
             Object state = AddonCheck.call2(compass, "getState", ItemStack.class, stack);
             helper.assertTrue(String.valueOf(state).equals("FOUND"), "the compass is " + state + " looking for " + biome);
         });
+    }
+
+    /**
+     * Before a search the compass needle points at the world spawn, which NC reads with 1.20.1
+     * {@code getSharedSpawnPos} (26.3: getRespawnData).
+     */
+    private static void compassAngle(GameTestHelper helper) {
+        if (skip(helper, NC)) return;
+        var level = helper.getLevel();
+        Object pos = AddonCheck.callStatic(AddonCheck.modClass("rose.era.v1_20_1.shim.LevelShim"), "getSharedSpawnPos",
+                new Class<?>[] {net.minecraft.world.level.Level.class}, level);
+        helper.assertTrue(level.getRespawnData().pos().equals(pos), "the 1.20.1 spawn position is " + pos);
+        helper.succeed();
+    }
+
+    /**
+     * NC's needle turns with the item frame showing it (1.20.1 {@code isFramed}/{@code getFrame}); 26.3 stacks don't
+     * know their frame, so Rose answers from the frame its item property is read for.
+     */
+    @SuppressWarnings("unchecked")
+    private static void compassKnowsItsFrame(GameTestHelper helper) {
+        if (skip(helper, NC)) return;
+        Class<?> shim = AddonCheck.modClass("rose.era.v1_20_1.shim.ItemStackShim");
+        ItemStack stack = new ItemStack(item(NC, "naturescompass"));
+        var frame = helper.spawn(net.minecraft.world.entity.EntityTypes.ITEM_FRAME, net.minecraft.core.BlockPos.ZERO.above(2));
+        java.util.function.Supplier<Float> framed = () -> (boolean) AddonCheck.callStatic(shim, "isFramed", new Class<?>[] {ItemStack.class}, stack) ? 1F : 0F;
+        Class<?>[] types = {net.minecraft.world.entity.Entity.class, java.util.function.Supplier.class};
+        helper.assertTrue((float) AddonCheck.callStatic(shim, "withPropertyOwner", types, frame, framed) == 1F, "a stack in a frame isn't framed");
+        helper.assertTrue((float) AddonCheck.callStatic(shim, "withPropertyOwner", types, null, framed) == 0F, "a stack outside a frame is framed");
+        Object got = AddonCheck.callStatic(shim, "withPropertyOwner", types, frame, (java.util.function.Supplier<Float>)
+                () -> AddonCheck.callStatic(shim, "getFrame", new Class<?>[] {ItemStack.class}, stack) == frame ? 1F : 0F);
+        helper.assertTrue((float) got == 1F, "getFrame isn't the frame");
+        helper.succeed();
     }
 }

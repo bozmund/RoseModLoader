@@ -36,6 +36,7 @@ final class CornDelightChecks {
         test("cd_mmlib_villagers_share_corn", CornDelightChecks::villagersShareCorn);
         test("cd_recipes_are_in_the_recipe_registry", CornDelightChecks::recipesAreInTheRegistry);
         test("cd_villager_trades_make_offers", CornDelightChecks::villagerTradesMakeOffers);
+        test("cd_client_setup_links", CornDelightChecks::clientSetupLinks);
     }
 
     private static Item cd(String path) {
@@ -157,6 +158,24 @@ final class CornDelightChecks {
             }
         }
         helper.assertTrue(offers > 0, "Corn Delight added no villager trades");
+        helper.succeed();
+    }
+
+    /**
+     * Corn Delight's client setup class passes a 1.20.1 ModelResourceLocation (a ResourceLocation then, gone in 26.3)
+     * where an identifier is expected; unless that verifies, the class doesn't link and its setupClient listener
+     * (Curios compat) is lost with it.
+     */
+    private static void clientSetupLinks(GameTestHelper helper) {
+        if (skip(helper, CD)) return;
+        Class<?> setup = AddonCheck.modClass("net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent");
+        try {
+            Class<?> events = Class.forName("cn.mcmod.corn_delight.client.ClientSetupEvents", false, rose.loader.RoseLoader.get().classLoader());
+            java.lang.invoke.MethodHandles.privateLookupIn(events, java.lang.invoke.MethodHandles.lookup())
+                    .findStatic(events, "setupClient", java.lang.invoke.MethodType.methodType(void.class, setup));
+        } catch (ReflectiveOperationException | LinkageError e) {
+            throw new IllegalStateException("Corn Delight's ClientSetupEvents doesn't link", e);
+        }
         helper.succeed();
     }
 }

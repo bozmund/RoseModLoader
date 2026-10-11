@@ -23,7 +23,10 @@ public record LegacyItemProperty(Identifier property) implements RangeSelectItem
     @Override
     public float get(ItemStack stack, @Nullable ClientLevel level, @Nullable ItemOwner owner, int seed) {
         ItemPropertyFunction function = ItemProperties.getProperty(stack.getItem(), property);
-        return function == null ? 0.0F : function.call(stack, level, owner == null ? null : owner.asLivingEntity(), seed);
+        if (function == null) return 0.0F;
+        net.minecraft.world.entity.Entity holder = owner instanceof net.minecraft.world.entity.Entity entity ? entity : null;
+        return rose.era.v1_20_1.shim.ItemStackShim.withPropertyOwner(holder,
+                () -> function.call(stack, level, owner == null ? null : owner.asLivingEntity(), seed));
     }
 
     @Override

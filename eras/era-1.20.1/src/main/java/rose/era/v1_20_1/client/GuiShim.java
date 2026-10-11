@@ -120,6 +120,11 @@ public final class GuiShim {
         return self.gui.screen();
     }
 
+    /** 1.20.1 {@code minecraft.setScreen(screen)}; 26.x opens screens on {@code Gui}. */
+    public static void setScreen(net.minecraft.client.Minecraft self, net.minecraft.client.gui.screens.Screen screen) {
+        self.gui.setScreen(screen);
+    }
+
     // 1.20.1 GUI code set global GL blend and depth state around drawing; 26.x GUI pipelines carry their own.
 
     public static void enableBlend() {

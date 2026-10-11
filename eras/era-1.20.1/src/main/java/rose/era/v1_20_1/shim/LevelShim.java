@@ -19,6 +19,16 @@ import org.jspecify.annotations.Nullable;
 
 /** Redirect targets for 1.20.1 {@code Level} fields that 26.3 hides behind methods, and small world helpers. */
 public final class LevelShim {
+    /** 1.20.1 {@code level.getSharedSpawnPos()}: the world spawn, in 26.3 the position of {@code getRespawnData()}. */
+    public static net.minecraft.core.BlockPos getSharedSpawnPos(Level self) {
+        return self.getRespawnData().pos();
+    }
+
+    /** 1.20.1 {@code level.getSharedSpawnAngle()}: the spawn yaw, in 26.3 {@code getRespawnData().yaw()}. */
+    public static float getSharedSpawnAngle(Level self) {
+        return self.getRespawnData().yaw();
+    }
+
     /** 1.20.1 public field {@code level.isClientSide}; 26.3 made it private with {@code isClientSide()}. */
     public static boolean isClientSide(Level self) {
         return self.isClientSide();
