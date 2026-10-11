@@ -34,3 +34,4 @@ Thumbs.db
 # Foundry per-task scratch inside worktrees (context packs, agent notes)
 .foundry/
 /foundry/work/
+__pycache__/
