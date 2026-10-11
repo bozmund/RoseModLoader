@@ -23,6 +23,7 @@ final class CuriosChecks {
     static void register() {
         test("cu_slot_types_loaded", CuriosChecks::slotTypesLoaded);
         test("cu_players_have_a_curios_inventory", CuriosChecks::playersHaveAnInventory);
+        test("cu_block_experience_is_forges", CuriosChecks::blockExperienceIsForges);
     }
 
     private static Class<?> api() {
@@ -47,6 +48,29 @@ final class CuriosChecks {
         Optional<?> handler = (Optional<?>) call(lazy, "resolve");
         helper.assertTrue(handler.isPresent(), "the player has no curios inventory");
         helper.assertTrue(call(handler.get(), "getWearer") == player, "the curios inventory belongs to someone else");
+        helper.succeed();
+    }
+
+    /**
+     * Curios' block-break listener reads Forge's {@code BlockState.getExpDrop(level, random, pos, fortune, silkTouch)};
+     * Rose answers with Forge 1.20.1's amounts.
+     */
+    private static void blockExperienceIsForges(GameTestHelper helper) {
+        if (skip(helper, CU)) return;
+        Class<?> shim = modClass("rose.era.v1_20_1.shim.BlockStateShim");
+        Class<?>[] types = {net.minecraft.world.level.block.state.BlockState.class, net.minecraft.world.level.LevelReader.class,
+                net.minecraft.util.RandomSource.class, net.minecraft.core.BlockPos.class, int.class, int.class};
+        var level = helper.getLevel();
+        var random = net.minecraft.util.RandomSource.create(1);
+        for (int i = 0; i < 20; i++) {
+            int diamond = (int) callStatic(shim, "getExpDrop", types, net.minecraft.world.level.block.Blocks.DIAMOND_ORE.defaultBlockState(), level, random, net.minecraft.core.BlockPos.ZERO, 0, 0);
+            helper.assertTrue(diamond >= 3 && diamond <= 7, "diamond ore drops " + diamond + " experience");
+            int redstone = (int) callStatic(shim, "getExpDrop", types, net.minecraft.world.level.block.Blocks.REDSTONE_ORE.defaultBlockState(), level, random, net.minecraft.core.BlockPos.ZERO, 0, 0);
+            helper.assertTrue(redstone >= 1 && redstone <= 5, "redstone ore drops " + redstone + " experience");
+        }
+        int silk = (int) callStatic(shim, "getExpDrop", types, net.minecraft.world.level.block.Blocks.DIAMOND_ORE.defaultBlockState(), level, random, net.minecraft.core.BlockPos.ZERO, 0, 1);
+        int stone = (int) callStatic(shim, "getExpDrop", types, net.minecraft.world.level.block.Blocks.STONE.defaultBlockState(), level, random, net.minecraft.core.BlockPos.ZERO, 0, 0);
+        helper.assertTrue(silk == 0 && stone == 0, "silk touch gives " + silk + ", stone " + stone);
         helper.succeed();
     }
 }

@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "addoncheck:cu_block_experience_is_forges",
+  "structure": "minecraft:empty",
+  "max_ticks": 100,
+  "padding": 2
+}

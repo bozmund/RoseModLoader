@@ -64,13 +64,26 @@ public class BlockEvent extends Event {
         public BreakEvent(net.minecraft.world.level.Level level, BlockPos pos, BlockState state, net.minecraft.world.entity.player.Player player) {
             super(level, pos, state);
             this.player = player;
+            // as Forge: what the block drops for the held tool (none if it can't harvest the block)
+            if (state != null && (!state.requiresCorrectToolForDrops() || player.hasCorrectToolForDrops(state))) {
+                var tool = player.getMainHandItem();
+                this.exp = rose.era.v1_20_1.shim.BlockStateShim.getExpDrop(state, level, level.getRandom(), pos,
+                        level(level, tool, net.minecraft.world.item.enchantment.Enchantments.FORTUNE),
+                        level(level, tool, net.minecraft.world.item.enchantment.Enchantments.SILK_TOUCH));
+            }
+        }
+
+        private static int level(net.minecraft.world.level.Level level, net.minecraft.world.item.ItemStack tool,
+                                 net.minecraft.resources.ResourceKey<net.minecraft.world.item.enchantment.Enchantment> enchantment) {
+            return level.registryAccess().lookupOrThrow(net.minecraft.core.registries.Registries.ENCHANTMENT).get(enchantment)
+                    .map(h -> net.minecraft.world.item.enchantment.EnchantmentHelper.getItemEnchantmentLevel(h, tool)).orElse(0);
         }
 
         public net.minecraft.world.entity.player.Player getPlayer() {
             return player;
         }
 
-        /** Experience the break drops; Rose leaves 26.3's own experience drops alone. */
+        /** Experience the break drops, as Forge computed it; changing it doesn't change 26.3's own drops yet. */
         public int getExpToDrop() {
             return exp;
         }

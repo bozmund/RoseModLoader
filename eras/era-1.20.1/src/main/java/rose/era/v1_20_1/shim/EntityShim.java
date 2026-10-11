@@ -87,4 +87,22 @@ public final class EntityShim {
     public static void placeItemBackInInventory(net.minecraft.world.entity.player.Inventory inventory, ItemStack stack) {
         inventory.placeItemBackInInventory(stack, Prediction.SERVER_ONLY);
     }
+
+    // 1.20.1 LivingEntity.attackAnim / oAttackAnim (arm swing progress); 26.x keeps them in the private SwingState.
+
+    public static float attackAnim(net.minecraft.world.entity.LivingEntity self) {
+        return self.swingState.animation;
+    }
+
+    public static void attackAnim(net.minecraft.world.entity.LivingEntity self, float value) {
+        self.swingState.animation = value;
+    }
+
+    public static float oAttackAnim(net.minecraft.world.entity.LivingEntity self) {
+        return self.swingState.oldAnimation;
+    }
+
+    public static void oAttackAnim(net.minecraft.world.entity.LivingEntity self, float value) {
+        self.swingState.oldAnimation = value;
+    }
 }

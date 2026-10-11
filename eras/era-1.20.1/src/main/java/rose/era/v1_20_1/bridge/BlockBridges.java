@@ -144,6 +144,23 @@ public final class BlockBridges {
         return (VoxelShape) Legacy.invoke(old, self, state, EmptyBlockGetter.INSTANCE, BlockPos.ZERO);
     }
 
+    /**
+     * 1.20.1 {@code void playerWillDestroy(level, pos, state, player)}; 26.3 returns the state the block is destroyed
+     * with, which vanilla's own method returns unchanged.
+     */
+    public static BlockState playerWillDestroy(Block self, Level level, BlockPos pos, BlockState state, Player player) {
+        var old = Legacy.require(self, "playerWillDestroy", MethodType.methodType(void.class, Level.class, BlockPos.class, BlockState.class, Player.class));
+        Legacy.invoke(old, self, level, pos, state, player);
+        return state;
+    }
+
+    /** A mod block's 1.20.1 {@code super.playerWillDestroy(...)}: vanilla's own method, called non-virtually. */
+    public static void superPlayerWillDestroy(Block self, Level level, BlockPos pos, BlockState state, Player player) {
+        Legacy.invoke(Legacy.superMethod(self, "playerWillDestroy", PLAYER_WILL_DESTROY), self, level, pos, state, player);
+    }
+
+    private static final MethodType PLAYER_WILL_DESTROY = MethodType.methodType(BlockState.class, Level.class, BlockPos.class, BlockState.class, Player.class);
+
     /** 1.20.1 {@code fallOn(level, state, pos, entity, float fallDistance)}; 26.3 uses a double. */
     public static void fallOn(net.minecraft.world.level.block.Block self, Level level, BlockState state, BlockPos pos, Entity entity, double fallDistance) {
         var old = Legacy.require(self, "fallOn", MethodType.methodType(void.class, Level.class, BlockState.class, BlockPos.class, Entity.class, float.class));

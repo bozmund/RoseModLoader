@@ -34,6 +34,7 @@ final class ComfortsChecks {
         test("cf_sleeping_bags_can_be_dyed", ComfortsChecks::sleepingBagsCanBeDyed);
         test("cf_sleeping_bag_places_two_blocks", ComfortsChecks::sleepingBagPlacesTwoBlocks);
         test("cf_sleeping_bags_auto_place_only_at_night", ComfortsChecks::autoPlaceOnlyAtNight);
+        test("cf_breaking_a_sleeping_bag_removes_both_halves", ComfortsChecks::breakingRemovesBothHalves);
     }
 
     private static void contentRegistered(GameTestHelper helper) {
@@ -138,5 +139,27 @@ final class ComfortsChecks {
         level.clockManager().setTotalTicks(level.registryAccess().getOrThrow(net.minecraft.world.clock.WorldClocks.OVERWORLD), ticks);
         level.environmentAttributes().invalidateTickCache();
         level.updateSkyBrightness();
+    }
+
+    /** A player breaking one half runs Comforts' playerWillDestroy (a 1.20.1 void override); both halves go. */
+    private static void breakingRemovesBothHalves(GameTestHelper helper) {
+        if (skip(helper, CF)) return;
+        helper.setBlock(POS, Blocks.STONE);
+        @SuppressWarnings("removal")
+        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        player.setShiftKeyDown(true);
+        player.setPose(net.minecraft.world.entity.Pose.CROUCHING);
+        ItemStack bag = new ItemStack(item(CF, "sleeping_bag_red"));
+        player.setItemInHand(InteractionHand.MAIN_HAND, bag);
+        var abs = helper.absolutePos(POS);
+        player.gameMode.useItemOn(player, helper.getLevel(), bag, InteractionHand.MAIN_HAND,
+                new BlockHitResult(Vec3.atCenterOf(abs).add(0, 0.5, 0), Direction.UP, abs, false));
+        var red = block(CF, "sleeping_bag_red");
+        helper.assertBlockPresent(red, POS.above());
+        player.gameMode.destroyBlock(helper.absolutePos(POS.above()));
+        helper.succeedWhen(() -> {
+            helper.assertBlockNotPresent(red, POS.above());
+            for (Direction d : Direction.Plane.HORIZONTAL) helper.assertBlockNotPresent(red, POS.above().relative(d));
+        });
     }
 }

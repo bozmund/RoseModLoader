@@ -51,3 +51,7 @@ accessible field net/minecraft/client/gui/screens/inventory/AbstractContainerScr
 accessible method net/minecraft/client/renderer/blockentity/BlockEntityRenderers register (Lnet/minecraft/world/level/block/entity/BlockEntityType;Lnet/minecraft/client/renderer/blockentity/BlockEntityRendererProvider;)V
 accessible field com/mojang/blaze3d/vertex/PoseStack lastIndex I
 accessible method net/minecraft/world/entity/ai/behavior/TradeWithVillager throwHalfStack (Lnet/minecraft/world/entity/npc/villager/Villager;Ljava/util/function/Predicate;Lnet/minecraft/world/entity/LivingEntity;)V
+accessible field net/minecraft/world/entity/LivingEntity swingState Lnet/minecraft/world/entity/LivingEntity$SwingState;
+accessible field net/minecraft/world/entity/LivingEntity$SwingState animation F
+accessible field net/minecraft/world/entity/LivingEntity$SwingState oldAnimation F
+accessible field net/minecraft/world/level/block/DropExperienceBlock xpRange Lnet/minecraft/util/valueproviders/IntProvider;
