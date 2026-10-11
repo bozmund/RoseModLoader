@@ -46,10 +46,17 @@ public final class MixinRebaser {
     /** Per Mixin class (internal name): refmap key to the retarget applied to its value. */
     private final Map<String, Map<String, Retarget>> retargeted = new HashMap<>();
     private final List<String> report = new ArrayList<>();
+    private rose.rosetta.ConversionRules conversions = rose.rosetta.ConversionRules.empty();
 
     public MixinRebaser(MixinRetargetRules rules, ClassIndex game) {
         this.rules = rules;
         this.game = game;
+    }
+
+    /** Value conversions, for {@code @Shadow} fields whose type changed in 26.3 (see {@link #shadowField}). */
+    public MixinRebaser withConversions(rose.rosetta.ConversionRules conversions) {
+        this.conversions = conversions;
+        return this;
     }
 
     /** What was rebased, or couldn't be. */
@@ -85,12 +92,17 @@ public final class MixinRebaser {
 
     /** A translated class, with its Mixin selectors and handlers moved to retargeted methods. Others are unchanged. */
     public byte[] rebase(byte[] bytes) {
-        if (rules.isEmpty()) return bytes;
+        if (rules.isEmpty() && conversions.isEmpty()) return bytes;
         ClassNode node = new ClassNode();
         new ClassReader(bytes).accept(node, 0);
         List<String> targets = mixinTargets(node);
         if (targets.isEmpty()) return bytes;
         boolean changed = false;
+        for (org.objectweb.asm.tree.FieldNode field : node.fields) {
+            if (hasAnnotation(field.visibleAnnotations, SHADOW) || hasAnnotation(field.invisibleAnnotations, SHADOW)) {
+                changed |= shadowField(node, field, targets);
+            }
+        }
         for (MethodNode method : new ArrayList<>(node.methods)) {
             if (has(method, SHADOW)) changed |= shadow(node, method, targets);
             AnnotationNode inject = annotation(method, INJECT);
@@ -339,6 +351,59 @@ public final class MixinRebaser {
             if ("targets".equals(mixin.values.get(i))) ((List<String>) value).forEach(t -> out.add(t.replace('.', '/')));
         }
         return out;
+    }
+
+    /**
+     * A {@code @Shadow} field whose type changed in 26.3 (1.20.1 {@code Enchantment enchantment} is 26.3's
+     * {@code Holder<Enchantment> enchantment}) takes the new type, and each read is converted back to the old type with
+     * a conversion rule ({@code conversions.tsv}, new type to old). A written field is left alone and reported.
+     */
+    private boolean shadowField(ClassNode node, org.objectweb.asm.tree.FieldNode field, List<String> targets) {
+        Type oldType = Type.getType(field.desc);
+        if (oldType.getSort() != Type.OBJECT) return false;
+        for (String target : targets) {
+            ClassIndex.Info info = game.get(target);
+            if (info == null || !info.fields().contains(field.name) || info.fields().contains(field.name + ":" + field.desc)) continue;
+            String newDesc = info.fields().stream().filter(f -> f.startsWith(field.name + ":")).findFirst().map(f -> f.substring(field.name.length() + 1)).orElse(null);
+            if (newDesc == null || Type.getType(newDesc).getSort() != Type.OBJECT) return false;
+            var conversion = conversions.find(Type.getType(newDesc).getInternalName(), oldType.getInternalName());
+            if (conversion == null || writes(node, field)) {
+                report.add(node.name + ": can't rebase @Shadow " + field.name + " (" + field.desc + " is " + newDesc + " in " + target + ")");
+                return false;
+            }
+            for (MethodNode method : node.methods) {
+                for (AbstractInsnNode insn : method.instructions.toArray()) {
+                    if (!(insn instanceof org.objectweb.asm.tree.FieldInsnNode get) || !get.owner.equals(node.name) || !get.name.equals(field.name)
+                            || !get.desc.equals(field.desc)) continue;
+                    get.desc = newDesc;
+                    InsnList convert = new InsnList();
+                    convert.add(new MethodInsnNode(Opcodes.INVOKESTATIC, conversion.helperOwner(), conversion.helperName(), conversion.helperDescriptor(), false));
+                    if (conversion.anyTarget()) convert.add(new org.objectweb.asm.tree.TypeInsnNode(Opcodes.CHECKCAST, oldType.getInternalName()));
+                    method.instructions.insert(get, convert);
+                }
+            }
+            report.add(node.name + ": @Shadow " + field.name + " " + field.desc + " -> " + newDesc + " (reads converted)");
+            field.desc = newDesc;
+            field.signature = null;
+            return true;
+        }
+        return false;
+    }
+
+    private static boolean writes(ClassNode node, org.objectweb.asm.tree.FieldNode field) {
+        for (MethodNode method : node.methods) {
+            for (AbstractInsnNode insn : method.instructions.toArray()) {
+                if (insn instanceof org.objectweb.asm.tree.FieldInsnNode put && (put.getOpcode() == Opcodes.PUTFIELD || put.getOpcode() == Opcodes.PUTSTATIC)
+                        && put.owner.equals(node.name) && put.name.equals(field.name)) return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean hasAnnotation(List<AnnotationNode> annotations, String desc) {
+        if (annotations == null) return false;
+        for (AnnotationNode a : annotations) if (a.desc.equals(desc)) return true;
+        return false;
     }
 
     private static boolean has(MethodNode method, String desc) {

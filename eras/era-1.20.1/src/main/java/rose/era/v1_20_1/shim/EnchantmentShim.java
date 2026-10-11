@@ -63,6 +63,13 @@ public final class EnchantmentShim {
         return enchantment.holder();
     }
 
+    /** Conversion {@code Holder -> Enchantment}: the 1.20.1 view of a registry enchantment (the same instance per key). */
+    public static LegacyEnchantment legacy(Holder<Enchantment> holder) {
+        ResourceKey<Enchantment> key = holder.unwrapKey().orElseThrow(() -> new IllegalStateException("unregistered enchantment " + holder));
+        LegacyEnchantment registered = rose.era.v1_20_1.enchantment.LegacyEnchantments.get(key);
+        return registered != null ? registered : LegacyEnchantment.of(key);
+    }
+
     /** 1.20.1 {@code EnchantmentHelper.getItemEnchantmentLevel} and Forge {@code getTagEnchantmentLevel}: the level on the stack. */
     public static int getTagEnchantmentLevel(LegacyEnchantment enchantment, ItemStack stack) {
         return enchantment == null || EraContext.server() == null ? 0 : EnchantmentHelper.getItemEnchantmentLevel(enchantment.holder(), stack);

@@ -121,7 +121,7 @@ public final class ModTranslator {
         List<String> mixinConfigs = mixinConfigsOf(input);
         List<String> refmaps = refmapsOf(input);
         RefmapRemapper refmapRemapper = new RefmapRemapper(remapper);
-        MixinRebaser rebaser = new MixinRebaser(mixinRetargets, game);
+        MixinRebaser rebaser = new MixinRebaser(mixinRetargets, game).withConversions(conversions);
         HiddenAccess hidden = new HiddenAccess(game, mod);
         java.util.Set<String> written = new java.util.HashSet<>();
         try (ZipFile in = new ZipFile(input.toFile()); ZipOutputStream out = new ZipOutputStream(Files.newOutputStream(output))) {

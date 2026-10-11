@@ -26,6 +26,7 @@ final class CuriosChecks {
         test("cu_block_experience_is_forges", CuriosChecks::blockExperienceIsForges);
         test("cu_looting_level_event_fires", CuriosChecks::lootingLevelEventFires);
         test("cu_break_event_experience_drops", CuriosChecks::breakEventExperienceDrops);
+        test("cu_fortune_mixin_applies", CuriosChecks::fortuneMixinApplies);
     }
 
     /** Positions whose BreakEvent experience the listener below sets to 42. */
@@ -145,6 +146,32 @@ final class CuriosChecks {
             int total = helper.getLevel().getEntitiesOfClass(net.minecraft.world.entity.ExperienceOrb.class, new net.minecraft.world.phys.AABB(abs).inflate(3))
                     .stream().mapToInt(net.minecraft.world.entity.ExperienceOrb::getValue).sum();
             helper.assertTrue(total == 42, "breaking dropped " + total + " experience, not the event's 42");
+        });
+    }
+
+    /**
+     * Curios' MixinApplyBonusCount adds curio fortune to fortune loot functions. Its @Shadow field changed type in 26.3
+     * (Holder<Enchantment>); once rebased, the handler is part of ApplyBonusCount and fortune drops still roll.
+     */
+    private static void fortuneMixinApplies(GameTestHelper helper) {
+        if (skip(helper, CU)) return;
+        boolean merged = java.util.Arrays.stream(net.minecraft.world.level.storage.loot.functions.ApplyBonusCount.class.getDeclaredMethods())
+                .anyMatch(m -> m.getName().contains("applyFortune"));
+        helper.assertTrue(merged, "Curios' fortune handler isn't in ApplyBonusCount");
+        var pos = net.minecraft.core.BlockPos.ZERO.above(1);
+        helper.setBlock(pos, net.minecraft.world.level.block.Blocks.DIAMOND_ORE);
+        var player = (net.minecraft.server.level.ServerPlayer) helper.makeMockServerPlayer(GameType.SURVIVAL);
+        var pickaxe = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.DIAMOND_PICKAXE);
+        var fortune = helper.getLevel().registryAccess().lookupOrThrow(net.minecraft.core.registries.Registries.ENCHANTMENT)
+                .getOrThrow(net.minecraft.world.item.enchantment.Enchantments.FORTUNE);
+        pickaxe.enchant(fortune, 3);
+        player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, pickaxe);
+        var abs = helper.absolutePos(pos);
+        helper.assertTrue(player.gameMode.destroyBlock(abs), "the diamond ore wasn't broken");
+        helper.succeedWhen(() -> {
+            int diamonds = helper.getLevel().getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class, new net.minecraft.world.phys.AABB(abs).inflate(3))
+                    .stream().filter(e -> e.getItem().is(net.minecraft.world.item.Items.DIAMOND)).mapToInt(e -> e.getItem().getCount()).sum();
+            helper.assertTrue(diamonds >= 1 && diamonds <= 4, "fortune III diamond ore dropped " + diamonds + " diamonds");
         });
     }
 }

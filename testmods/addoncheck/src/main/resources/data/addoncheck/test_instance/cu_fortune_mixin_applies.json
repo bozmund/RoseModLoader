@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "addoncheck:cu_fortune_mixin_applies",
+  "structure": "minecraft:empty",
+  "max_ticks": 100,
+  "padding": 2
+}

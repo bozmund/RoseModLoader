@@ -175,4 +175,45 @@ class MixinRebaserTest {
     private static MethodNode method(ClassNode node, String name) {
         return node.methods.stream().filter(m -> m.name.equals(name)).findFirst().orElse(null);
     }
+
+    /** Curios' MixinApplyBonusCount shadows 1.20.1 {@code Enchantment enchantment}; 26.3 has {@code Holder<Enchantment>}. */
+    @Test
+    void shadowFieldsTakeTheNewTypeAndReadsAreConverted() throws IOException {
+        Path jar = tmp.resolve("bonus.jar");
+        try (ZipOutputStream out = new ZipOutputStream(Files.newOutputStream(jar))) {
+            entry(out, "game/Bonus", "java/lang/Object", writer ->
+                    writer.visitField(Opcodes.ACC_PRIVATE | Opcodes.ACC_FINAL, "enchantment", "Lgame/Holder;", null, null).visitEnd());
+        }
+        var conversions = new rose.rosetta.ConversionRules(Map.of("game/Holder->era/LegacyEnchantment",
+                new rose.rosetta.ConversionRules.Conversion("game/Holder", "era/LegacyEnchantment", "era/Shim", "legacy", "test")));
+        MixinRebaser rebaser = new MixinRebaser(new MixinRetargetRules(Map.of()), ClassIndex.of(List.of(jar), false)).withConversions(conversions);
+
+        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        cw.visit(Opcodes.V17, Opcodes.ACC_PUBLIC, "mod/BonusMixin", null, "java/lang/Object", null);
+        AnnotationVisitor mixin = cw.visitAnnotation("Lorg/spongepowered/asm/mixin/Mixin;", false);
+        AnnotationVisitor value = mixin.visitArray("value");
+        value.visit(null, Type.getObjectType("game/Bonus"));
+        value.visitEnd();
+        mixin.visitEnd();
+        var field = cw.visitField(0, "enchantment", "Lera/LegacyEnchantment;", null, null);
+        field.visitAnnotation("Lorg/spongepowered/asm/mixin/Shadow;", false).visitEnd();
+        field.visitEnd();
+        MethodVisitor mv = cw.visitMethod(Opcodes.ACC_PRIVATE, "isFortune", "()Ljava/lang/Object;", null, null);
+        mv.visitCode();
+        mv.visitVarInsn(Opcodes.ALOAD, 0);
+        mv.visitFieldInsn(Opcodes.GETFIELD, "mod/BonusMixin", "enchantment", "Lera/LegacyEnchantment;");
+        mv.visitInsn(Opcodes.ARETURN);
+        mv.visitMaxs(0, 0);
+        mv.visitEnd();
+        cw.visitEnd();
+
+        ClassNode out = read(rebaser.rebase(cw.toByteArray()));
+        assertEquals("Lgame/Holder;", out.fields.getFirst().desc);
+        var insns = method(out, "isFortune").instructions;
+        var get = (org.objectweb.asm.tree.FieldInsnNode) java.util.Arrays.stream(insns.toArray())
+                .filter(i -> i instanceof org.objectweb.asm.tree.FieldInsnNode).findFirst().orElseThrow();
+        assertEquals("Lgame/Holder;", get.desc);
+        var convert = (org.objectweb.asm.tree.MethodInsnNode) get.getNext();
+        assertEquals("era/Shim.legacy(Lgame/Holder;)Lera/LegacyEnchantment;", convert.owner + "." + convert.name + convert.desc);
+    }
 }

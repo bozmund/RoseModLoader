@@ -21,6 +21,11 @@ import rose.era.v1_20_1.ExtraTags;
 public final class LegacyEnchantments {
     private static final Map<ResourceKey<Enchantment>, LegacyEnchantment> ENTRIES = new LinkedHashMap<>();
 
+    /** The mod enchantment registered under {@code key}, or {@code null}. */
+    public static synchronized LegacyEnchantment get(ResourceKey<Enchantment> key) {
+        return ENTRIES.get(key);
+    }
+
     public static synchronized void register(ResourceKey<Enchantment> key, LegacyEnchantment legacy) {
         legacy.setKey(key);
         ENTRIES.put(key, legacy);
