@@ -24,7 +24,17 @@ final class CuriosChecks {
         test("cu_slot_types_loaded", CuriosChecks::slotTypesLoaded);
         test("cu_players_have_a_curios_inventory", CuriosChecks::playersHaveAnInventory);
         test("cu_block_experience_is_forges", CuriosChecks::blockExperienceIsForges);
+        test("cu_looting_level_event_fires", CuriosChecks::lootingLevelEventFires);
+        test("cu_break_event_experience_drops", CuriosChecks::breakEventExperienceDrops);
     }
+
+    /** Positions whose BreakEvent experience the listener below sets to 42. */
+    private static final java.util.Set<net.minecraft.core.BlockPos> GENEROUS = java.util.concurrent.ConcurrentHashMap.newKeySet();
+    private static volatile boolean listeningToBreaks;
+
+    /** Entities a LootingLevelEvent was fired for (the listener is added once, by the first test that needs it). */
+    private static final java.util.Set<Object> LOOTED = java.util.concurrent.ConcurrentHashMap.newKeySet();
+    private static volatile boolean listening;
 
     private static Class<?> api() {
         return modClass("top.theillusivec4.curios.api.CuriosApi");
@@ -72,5 +82,69 @@ final class CuriosChecks {
         int stone = (int) callStatic(shim, "getExpDrop", types, net.minecraft.world.level.block.Blocks.STONE.defaultBlockState(), level, random, net.minecraft.core.BlockPos.ZERO, 0, 0);
         helper.assertTrue(silk == 0 && stone == 0, "silk touch gives " + silk + ", stone " + stone);
         helper.succeed();
+    }
+
+    /**
+     * Curios adds curio looting through Forge's LootingLevelEvent, which Forge fired while a kill's loot was rolled.
+     * A cow killed by a player rolls beef with an enchanted_count_increase (looting) function.
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private static void lootingLevelEventFires(GameTestHelper helper) {
+        if (skip(helper, CU)) return;
+        if (!listening) {
+            listening = true;
+            Object bus = AddonCheck.staticField(modClass("net.minecraftforge.common.MinecraftForge"), "EVENT_BUS");
+            Class<?> priority = modClass("net.minecraftforge.eventbus.api.EventPriority");
+            Class<?> event = modClass("net.minecraftforge.event.entity.living.LootingLevelEvent");
+            java.util.function.Consumer<Object> listener = e -> LOOTED.add(call(e, "getEntity"));
+            try {
+                bus.getClass().getMethod("addListener", priority, boolean.class, Class.class, java.util.function.Consumer.class)
+                        .invoke(bus, Enum.valueOf((Class) priority, "NORMAL"), false, event, listener);
+            } catch (ReflectiveOperationException e) {
+                throw new IllegalStateException(e);
+            }
+        }
+        var cow = helper.spawn(net.minecraft.world.entity.EntityTypes.COW, net.minecraft.core.BlockPos.ZERO.above(2));
+        Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+        cow.hurtServer(helper.getLevel(), helper.getLevel().damageSources().playerAttack(player), 100.0F);
+        helper.succeedWhen(() -> helper.assertTrue(LOOTED.contains(cow), "no LootingLevelEvent for the killed cow"));
+    }
+
+    /** Curios changes a BreakEvent's experience (curio fortune); like Forge, the event's amount is what drops. */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private static void breakEventExperienceDrops(GameTestHelper helper) {
+        if (skip(helper, CU)) return;
+        if (!listeningToBreaks) {
+            listeningToBreaks = true;
+            Object bus = AddonCheck.staticField(modClass("net.minecraftforge.common.MinecraftForge"), "EVENT_BUS");
+            Class<?> priority = modClass("net.minecraftforge.eventbus.api.EventPriority");
+            Class<?> event = modClass("net.minecraftforge.event.level.BlockEvent$BreakEvent");
+            java.util.function.Consumer<Object> listener = e -> {
+                if (GENEROUS.contains(call(e, "getPos"))) {
+                    try {
+                        e.getClass().getMethod("setExpToDrop", int.class).invoke(e, 42);
+                    } catch (ReflectiveOperationException ex) {
+                        throw new IllegalStateException(ex);
+                    }
+                }
+            };
+            try {
+                bus.getClass().getMethod("addListener", priority, boolean.class, Class.class, java.util.function.Consumer.class)
+                        .invoke(bus, Enum.valueOf((Class) priority, "NORMAL"), false, event, listener);
+            } catch (ReflectiveOperationException e) {
+                throw new IllegalStateException(e);
+            }
+        }
+        var pos = net.minecraft.core.BlockPos.ZERO.above(1);
+        helper.setBlock(pos, net.minecraft.world.level.block.Blocks.STONE);
+        var abs = helper.absolutePos(pos);
+        GENEROUS.add(abs);
+        var player = (net.minecraft.server.level.ServerPlayer) helper.makeMockServerPlayer(GameType.SURVIVAL);
+        helper.assertTrue(player.gameMode.destroyBlock(abs), "the stone wasn't broken");
+        helper.succeedWhen(() -> {
+            int total = helper.getLevel().getEntitiesOfClass(net.minecraft.world.entity.ExperienceOrb.class, new net.minecraft.world.phys.AABB(abs).inflate(3))
+                    .stream().mapToInt(net.minecraft.world.entity.ExperienceOrb::getValue).sum();
+            helper.assertTrue(total == 42, "breaking dropped " + total + " experience, not the event's 42");
+        });
     }
 }

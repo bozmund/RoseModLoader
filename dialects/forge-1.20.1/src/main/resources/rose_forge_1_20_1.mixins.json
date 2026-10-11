@@ -6,6 +6,7 @@
   "mixins": [
     "AttributeSupplierAccessor",
     "BlockBreakEventMixin",
+    "BlockExperienceMixin",
     "BlockPropertiesMixin",
     "BuiltInRegistriesMixin",
     "CommandsMixin",
@@ -14,6 +15,7 @@
     "DataComponentInitializersAccessor",
     "DefaultAttributesMixin",
     "EndermanAngerMixin",
+    "LootingLevelMixin",
     "EntityCapabilitiesMixin",
     "EntityDropCaptureMixin",
     "EntitySectionEventsMixin",
