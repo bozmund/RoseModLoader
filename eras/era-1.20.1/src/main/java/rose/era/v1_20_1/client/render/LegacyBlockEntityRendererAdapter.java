@@ -27,6 +27,11 @@ public final class LegacyBlockEntityRendererAdapter<T extends BlockEntity>
         this.legacy = legacy;
     }
 
+    /** The old renderer this adapts. */
+    public LegacyBlockEntityRenderer<T> legacy() {
+        return legacy;
+    }
+
     /** A dialect's provider wrapper: 26.3 creates renderers from a Context, as 1.20.1 did. */
     public static <T extends BlockEntity> BlockEntityRendererProvider<T, State> provider(LegacyBlockEntityRendererProvider<T> legacy) {
         return provider(null, legacy);
@@ -78,6 +83,7 @@ public final class LegacyBlockEntityRendererAdapter<T extends BlockEntity>
     @SuppressWarnings("unchecked")
     public void submit(State state, PoseStack pose, SubmitNodeCollector collector, CameraRenderState camera) {
         if (state.blockEntity == null || failed) return;
+        int depth = pose.lastIndex;
         pose.pushPose();
         try {
             legacy.submit((T) state.blockEntity, state.partialTick, pose, new LegacyBuffers(collector, legacy.getClass().getName()),
@@ -88,7 +94,8 @@ public final class LegacyBlockEntityRendererAdapter<T extends BlockEntity>
             failed = true;
             LogUtils.getLogger().warn("[rose] block entity renderer {} disabled: {}", legacy.getClass().getName(), e.toString());
         } finally {
-            pose.popPose();
+            // a renderer that threw may have pushed more than it popped; 26.3 checks the stack is balanced
+            while (pose.lastIndex > depth) pose.popPose();
         }
     }
 

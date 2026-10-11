@@ -23,7 +23,8 @@ public final class ClientItemExtensions {
             try {
                 hook.invoke(item, (Consumer<IClientItemExtensions>) extensions -> found[0] = extensions);
             } catch (ReflectiveOperationException | RuntimeException | LinkageError e) {
-                LogUtils.getLogger().warn("[rose/forge] {}.initializeClient failed: {}", item.getClass().getName(), e.toString());
+                Throwable cause = e instanceof java.lang.reflect.InvocationTargetException ite && ite.getCause() != null ? ite.getCause() : e;
+                LogUtils.getLogger().warn("[rose/forge] {}.initializeClient failed: {}", item.getClass().getName(), cause.toString());
                 continue;
             }
             if (found[0] == null) continue;

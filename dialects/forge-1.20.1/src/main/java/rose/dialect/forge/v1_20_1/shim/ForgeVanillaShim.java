@@ -133,6 +133,12 @@ public final class ForgeVanillaShim {
         return self;
     }
 
+    /** {@code super.initializeClient(consumer)} from a mod item: Forge's IForgeItem default registers nothing. */
+    public static void initializeClient(Item self, java.util.function.Consumer<?> consumer) {}
+
+    /** As above, from a mod block item. */
+    public static void initializeClient(net.minecraft.world.item.BlockItem self, java.util.function.Consumer<?> consumer) {}
+
     /** Past vanilla's tabs, so positions stay unique (vanilla validates that). */
     private static final java.util.concurrent.atomic.AtomicInteger NEXT_COLUMN = new java.util.concurrent.atomic.AtomicInteger(100);
 

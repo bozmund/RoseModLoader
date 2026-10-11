@@ -48,3 +48,5 @@ accessible field net/minecraft/client/renderer/blockentity/BlockEntityRenderers 
 accessible method net/minecraft/client/gui/screens/recipebook/GhostSlots setInput (Lnet/minecraft/world/inventory/Slot;Lnet/minecraft/util/context/ContextMap;Lnet/minecraft/world/item/crafting/display/SlotDisplay;)V
 accessible method net/minecraft/client/gui/screens/recipebook/GhostSlots setResult (Lnet/minecraft/world/inventory/Slot;Lnet/minecraft/util/context/ContextMap;Lnet/minecraft/world/item/crafting/display/SlotDisplay;)V
 accessible field net/minecraft/client/gui/screens/inventory/AbstractContainerScreen hoveredSlot Lnet/minecraft/world/inventory/Slot;
+accessible method net/minecraft/client/renderer/blockentity/BlockEntityRenderers register (Lnet/minecraft/world/level/block/entity/BlockEntityType;Lnet/minecraft/client/renderer/blockentity/BlockEntityRendererProvider;)V
+accessible field com/mojang/blaze3d/vertex/PoseStack lastIndex I

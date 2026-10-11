@@ -10,15 +10,23 @@ import org.objectweb.asm.Opcodes;
 /**
  * Game members a translated mod uses that 26.3 no longer lets it reach: fields, methods and classes that were public
  * or protected in the old version and are private or package-private now (1.20.1 mods read
- * {@code CreativeModeTabs.SPAWN_EGGS}; 26.3 made it private). They become access widener entries for the mod, so the
- * old code links as it did.
+ * {@code CreativeModeTabs.SPAWN_EGGS}; 26.3 made it private), and fields the mod assigns that 26.3 made final (old
+ * screens set {@code AbstractContainerScreen.imageWidth}). They become access widener entries for the mod, so the old
+ * code links as it did.
  */
 public final class HiddenAccess {
     private final ClassIndex game;
+    private final ClassIndex mod;
     private final Set<String> entries = new TreeSet<>();
 
-    public HiddenAccess(ClassIndex game) {
+    /** @param mod the mod's own classes, so members reached through them are traced to the game class declaring them */
+    public HiddenAccess(ClassIndex game, ClassIndex mod) {
         this.game = game;
+        this.mod = mod;
+    }
+
+    public HiddenAccess(ClassIndex game) {
+        this(game, new ClassIndex(false));
     }
 
     /** Looks at one translated class. */
@@ -39,6 +47,7 @@ public final class HiddenAccess {
                     @Override
                     public void visitFieldInsn(int opcode, String owner, String field, String fieldDesc) {
                         member(self, owner, field + ":" + fieldDesc, "field " + field + " " + fieldDesc, false);
+                        if (opcode == Opcodes.PUTFIELD || opcode == Opcodes.PUTSTATIC) assigned(owner, field, fieldDesc);
                     }
 
                     @Override
@@ -67,7 +76,7 @@ public final class HiddenAccess {
     }
 
     private void member(String from, String owner, String key, String entry, boolean method) {
-        for (ClassIndex.Info c = game.get(owner); c != null; c = c.superName() == null ? null : game.get(c.superName())) {
+        for (ClassIndex.Info c = info(owner); c != null; c = c.superName() == null ? null : info(c.superName())) {
             boolean declared = method ? c.methods().contains(key) : c.fields().contains(key);
             if (!declared) continue;
             if (isGame(c.name()) && c.hidden().contains(key) && !packageOf(c.name()).equals(packageOf(from))) {
@@ -76,6 +85,20 @@ public final class HiddenAccess {
             }
             return;
         }
+    }
+
+    private void assigned(String owner, String field, String desc) {
+        String key = field + ":" + desc;
+        for (ClassIndex.Info c = info(owner); c != null; c = c.superName() == null ? null : info(c.superName())) {
+            if (!c.fields().contains(key)) continue;
+            if (isGame(c.name()) && c.finalFields().contains(key)) entries.add("mutable field " + c.name() + " " + field + " " + desc);
+            return;
+        }
+    }
+
+    private ClassIndex.Info info(String type) {
+        ClassIndex.Info own = mod.get(type);
+        return own != null ? own : game.get(type);
     }
 
     private static boolean isGame(String type) {

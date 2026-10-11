@@ -5,6 +5,7 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
 import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.Handle;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
@@ -21,6 +22,9 @@ import rose.rosetta.RedirectRules;
  *
  * <p>A constructor rule ({@code owner.<init>(args)V}) turns {@code new Owner(args)} into a static factory call
  * {@code Shim.name(args)} that returns the object: the {@code NEW}/{@code DUP} pair is removed.
+ *
+ * <p>Method references ({@code Owner::method}, {@code Owner::new}) to a redirected member become references to the
+ * shim: the handle in the {@code invokedynamic}'s bootstrap arguments is swapped for a static one.
  */
 public final class RedirectingClassVisitor extends ClassVisitor {
     private final RedirectRules rules;
@@ -68,6 +72,11 @@ public final class RedirectingClassVisitor extends ClassVisitor {
             }
 
             @Override
+            public void visitInvokeDynamicInsn(String name, String desc, Handle bootstrap, Object... args) {
+                super.visitInvokeDynamicInsn(name, desc, bootstrap, redirectHandles(args));
+            }
+
+            @Override
             public void visitFieldInsn(int opcode, String owner, String field, String desc) {
                 RedirectRules.Redirect rule = rules.findField(owner, field, desc, !isRead(opcode));
                 if (rule == null) {
@@ -88,8 +97,36 @@ public final class RedirectingClassVisitor extends ClassVisitor {
         return opcode == Opcodes.GETSTATIC || opcode == Opcodes.PUTSTATIC;
     }
 
+    /** Bootstrap arguments with handles to redirected methods and constructors pointing at their shims. */
+    private Object[] redirectHandles(Object[] args) {
+        Object[] out = args;
+        for (int i = 0; i < args.length; i++) {
+            if (!(args[i] instanceof Handle handle)) continue;
+            Handle redirected = redirect(handle);
+            if (redirected == handle) continue;
+            if (out == args) out = args.clone();
+            out[i] = redirected;
+        }
+        return out;
+    }
+
+    private Handle redirect(Handle handle) {
+        int tag = handle.getTag();
+        boolean constructor = tag == Opcodes.H_NEWINVOKESPECIAL;
+        boolean call = tag == Opcodes.H_INVOKESTATIC || tag == Opcodes.H_INVOKEVIRTUAL || tag == Opcodes.H_INVOKEINTERFACE;
+        if (!constructor && !call) return handle;
+        RedirectRules.Redirect rule = rules.find(handle.getOwner(), handle.getName(), handle.getDesc());
+        if (rule == null || (constructor != handle.getName().equals("<init>"))) return handle;
+        return new Handle(Opcodes.H_INVOKESTATIC, rule.shimOwner(), rule.shimName(),
+                rule.shimDescriptor(constructor || tag == Opcodes.H_INVOKESTATIC), false);
+    }
+
     private void redirectCalls(MethodNode method) {
         for (AbstractInsnNode insn : method.instructions.toArray()) {
+            if (insn instanceof org.objectweb.asm.tree.InvokeDynamicInsnNode indy) {
+                indy.bsmArgs = redirectHandles(indy.bsmArgs);
+                continue;
+            }
             if (insn instanceof TypeInsnNode type && type.getOpcode() == Opcodes.INSTANCEOF) {
                 RedirectRules.Redirect rule = rules.findInstanceOf(type.desc);
                 if (rule != null) {

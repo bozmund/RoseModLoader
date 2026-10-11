@@ -15,6 +15,7 @@ public final class ForgeDialectClient implements ClientModInitializer {
                 new net.minecraftforge.client.event.RegisterRecipeBookCategoriesEvent(), "RegisterRecipeBookCategories"));
         // Forge asked items for these as they were constructed, so before any client event
         rose.dialect.forge.v1_20_1.client.ClientItemExtensions.collect();
+        ForgeDialect.postToMods(new net.minecraftforge.client.event.EntityRenderersEvent.RegisterLayerDefinitions(), "RegisterLayerDefinitions");
         // Forge fired this before renderers are built (the first resource reload builds them from the registrations).
         ForgeDialect.postToMods(new net.minecraftforge.client.event.EntityRenderersEvent.RegisterRenderers(), "RegisterRenderers");
         ForgeDialect.dispatchLifecycle(FMLClientSetupEvent::new);

@@ -108,7 +108,7 @@ public final class ModTranslator {
             all.add(new InheritanceBridger(bridges, mod, game));
             JarTranslator full = new JarTranslator(remapper, redirects, adapter, all);
             Path tmp = output.resolveSibling(output.getFileName() + ".part");
-            writeTranslated(input, tmp, full, remapper, resources);
+            writeTranslated(input, tmp, full, remapper, resources, mod);
             Files.move(tmp, output, StandardCopyOption.REPLACE_EXISTING);
         } finally {
             Files.deleteIfExists(renamed);
@@ -117,12 +117,12 @@ public final class ModTranslator {
     }
 
     private void writeTranslated(Path input, Path output, JarTranslator translator, RosettaRemapper remapper,
-                                 ResourceTransform resources) throws IOException {
+                                 ResourceTransform resources, ClassIndex mod) throws IOException {
         List<String> mixinConfigs = mixinConfigsOf(input);
         List<String> refmaps = refmapsOf(input);
         RefmapRemapper refmapRemapper = new RefmapRemapper(remapper);
         MixinRebaser rebaser = new MixinRebaser(mixinRetargets, game);
-        HiddenAccess hidden = new HiddenAccess(game);
+        HiddenAccess hidden = new HiddenAccess(game, mod);
         java.util.Set<String> written = new java.util.HashSet<>();
         try (ZipFile in = new ZipFile(input.toFile()); ZipOutputStream out = new ZipOutputStream(Files.newOutputStream(output))) {
             // refmaps first: the rebaser needs to know which selectors it moved before it sees the Mixin classes

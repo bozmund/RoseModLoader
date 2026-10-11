@@ -6,3 +6,4 @@
 # Mojang already renamed it by 1.21.11). Rose also proposes unique same-simple-name moves itself ("HEURISTIC" in the
 # name layer); promote a heuristic here once it is checked against corpus/minecraft/26.3/src.
 net/minecraft/client/gui/GuiGraphics	net/minecraft/client/gui/GuiGraphicsExtractor	26.x: GuiGraphics became GuiGraphicsExtractor (drawing extracts render state); same role and drawing methods (blit, fill, text, item), Screen.render became extractRenderState
+net/minecraft/client/resources/model/Material	net/minecraft/client/resources/model/sprite/SpriteId	1.21.11 Material(atlasLocation, texture) is 26.3 sprite.SpriteId(atlasLocation, texture); 26.3 sprite.Material is a new (sprite, forceTranslucent) type

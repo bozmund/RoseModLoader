@@ -30,6 +30,41 @@ class HiddenAccessTest {
     }
 
     @Test
+    void finalGameFieldsTheModAssignsBecomeMutable() throws IOException {
+        Path jar = tmp.resolve("screens.jar");
+        try (ZipOutputStream out = new ZipOutputStream(Files.newOutputStream(jar))) {
+            ClassWriter cw = new ClassWriter(0);
+            cw.visit(Opcodes.V21, Opcodes.ACC_PUBLIC, "net/minecraft/client/gui/screens/Screen", null, "java/lang/Object", null);
+            cw.visitField(Opcodes.ACC_PROTECTED | Opcodes.ACC_FINAL, "imageWidth", "I", null, null).visitEnd();
+            cw.visitEnd();
+            out.putNextEntry(new ZipEntry("net/minecraft/client/gui/screens/Screen.class"));
+            out.write(cw.toByteArray());
+            out.closeEntry();
+        }
+        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        cw.visit(Opcodes.V21, Opcodes.ACC_PUBLIC, "mod/ChestScreen", null, "net/minecraft/client/gui/screens/Screen", null);
+        MethodVisitor m = cw.visitMethod(Opcodes.ACC_PUBLIC, "init", "()V", null, null);
+        m.visitCode();
+        m.visitVarInsn(Opcodes.ALOAD, 0);
+        m.visitIntInsn(Opcodes.SIPUSH, 230);
+        m.visitFieldInsn(Opcodes.PUTFIELD, "mod/ChestScreen", "imageWidth", "I");
+        m.visitInsn(Opcodes.RETURN);
+        m.visitMaxs(0, 0);
+        m.visitEnd();
+        cw.visitEnd();
+        Path modJar = tmp.resolve("mod.jar");
+        try (ZipOutputStream out = new ZipOutputStream(Files.newOutputStream(modJar))) {
+            out.putNextEntry(new ZipEntry("mod/ChestScreen.class"));
+            out.write(cw.toByteArray());
+            out.closeEntry();
+        }
+        // javac addresses the inherited field through the mod's own class; the mod index leads to the game class
+        HiddenAccess hidden = new HiddenAccess(ClassIndex.of(List.of(jar), false), ClassIndex.of(List.of(modJar), false));
+        hidden.scan(cw.toByteArray());
+        assertEquals(Set.of("mutable field net/minecraft/client/gui/screens/Screen imageWidth I"), hidden.entries());
+    }
+
+    @Test
     void samePackageAndPublicMembersNeedNothing() throws IOException {
         HiddenAccess hidden = new HiddenAccess(game());
         hidden.scan(mod("net/minecraft/world/item/ModTabs"));

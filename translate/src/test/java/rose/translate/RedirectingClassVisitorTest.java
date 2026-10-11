@@ -76,6 +76,53 @@ class RedirectingClassVisitorTest {
                 "shim/ModifierShim.create(Ljava/lang/String;D)Lgame/Modifier;"), insns, "no NEW left; nested constructions paired");
     }
 
+    /** {@code Function<Stack, ...> f = Stack::is-like unbound reference; Modifier::new}: both handles go to the shims. */
+    @Test
+    void methodReferencesGoToShims() {
+        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        cw.visit(Opcodes.V21, Opcodes.ACC_PUBLIC, "mod/Refs", null, "java/lang/Object", null);
+        MethodVisitor mv = cw.visitMethod(Opcodes.ACC_STATIC, "refs", "()V", null, null);
+        mv.visitCode();
+        org.objectweb.asm.Handle lmf = new org.objectweb.asm.Handle(Opcodes.H_INVOKESTATIC, "java/lang/invoke/LambdaMetafactory", "metafactory",
+                "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;"
+                        + "Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;", false);
+        mv.visitInvokeDynamicInsn("test", "()Ljava/util/function/BiPredicate;", lmf,
+                org.objectweb.asm.Type.getType("(Ljava/lang/Object;Ljava/lang/Object;)Z"),
+                new org.objectweb.asm.Handle(Opcodes.H_INVOKEVIRTUAL, "game/Stack", "is", "(Lgame/Item;)Z", false),
+                org.objectweb.asm.Type.getType("(Lgame/Stack;Lgame/Item;)Z"));
+        mv.visitInsn(Opcodes.POP);
+        mv.visitInvokeDynamicInsn("apply", "()Ljava/util/function/BiFunction;", lmf,
+                org.objectweb.asm.Type.getType("(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"),
+                new org.objectweb.asm.Handle(Opcodes.H_NEWINVOKESPECIAL, "game/Modifier", "<init>", "(Ljava/lang/String;D)V", false),
+                org.objectweb.asm.Type.getType("(Ljava/lang/String;Ljava/lang/Double;)Lgame/Modifier;"));
+        mv.visitInsn(Opcodes.POP);
+        mv.visitInsn(Opcodes.RETURN);
+        mv.visitMaxs(0, 0);
+        mv.visitEnd();
+        cw.visitEnd();
+        for (RedirectRules rules : List.of(RULES, new RedirectRules(Map.of("game/Stack.is(Lgame/Item;)Z",
+                new Redirect("game/Stack.is(Lgame/Item;)Z", "shim/StackShim", "is", "test"))))) {
+            ClassWriter writer = new ClassWriter(0);
+            new ClassReader(cw.toByteArray()).accept(new RedirectingClassVisitor(writer, rules), 0);
+            List<String> handles = new ArrayList<>();
+            new ClassReader(writer.toByteArray()).accept(new ClassVisitor(Opcodes.ASM9) {
+                @Override
+                public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
+                    return new MethodVisitor(Opcodes.ASM9) {
+                        @Override
+                        public void visitInvokeDynamicInsn(String n, String d, org.objectweb.asm.Handle bsm, Object... args) {
+                            org.objectweb.asm.Handle h = (org.objectweb.asm.Handle) args[1];
+                            handles.add(h.getTag() + " " + h.getOwner() + "." + h.getName() + h.getDesc());
+                        }
+                    };
+                }
+            }, 0);
+            String constructor = rules == RULES ? Opcodes.H_INVOKESTATIC + " shim/ModifierShim.create(Ljava/lang/String;D)Lgame/Modifier;"
+                    : Opcodes.H_NEWINVOKESPECIAL + " game/Modifier.<init>(Ljava/lang/String;D)V";
+            assertEquals(List.of(Opcodes.H_INVOKESTATIC + " shim/StackShim.is(Lgame/Stack;Lgame/Item;)Z", constructor), handles);
+        }
+    }
+
     @Test
     void typeTestsOfGoneClassesGoToShims() {
         String symbol = "game/Pickaxe." + RedirectRules.INSTANCEOF;

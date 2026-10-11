@@ -32,10 +32,11 @@ public final class ClassIndex {
      * @param access          the class's access flags
      * @param abstractMethods the subset of {@code methods} without a body
      * @param hidden          methods ({@code name+desc}) and fields ({@code name:desc}) that are private or package-private
+     * @param finalFields     fields ({@code name:desc}) that are final
      */
     public record Info(String name, String superName, List<String> interfaces, Set<String> methods, Set<String> fields,
                 Set<String> methodNames, Set<String> staticMethods, Map<String, String> signatures,
-                int access, Set<String> abstractMethods, Set<String> hidden) {
+                int access, Set<String> abstractMethods, Set<String> hidden, Set<String> finalFields) {
         public boolean isInterface() {
             return (access & Opcodes.ACC_INTERFACE) != 0;
         }
@@ -132,6 +133,7 @@ public final class ClassIndex {
         Map<String, String> signatures = new HashMap<>();
         Set<String> abstractMethods = new HashSet<>();
         Set<String> hidden = new HashSet<>();
+        Set<String> finalFields = new HashSet<>();
         int[] classAccess = new int[1];
         String[] header = new String[2];
         List<String> interfaces = new ArrayList<>();
@@ -160,10 +162,11 @@ public final class ClassIndex {
                 fields.add(name + ":" + desc);
                 fields.add(name);
                 if ((access & (Opcodes.ACC_PUBLIC | Opcodes.ACC_PROTECTED)) == 0) hidden.add(name + ":" + desc);
+                if ((access & Opcodes.ACC_FINAL) != 0) finalFields.add(name + ":" + desc);
                 return null;
             }
         }, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
         return new Info(header[0], header[1], List.copyOf(interfaces), methods, fields, methodNames, staticMethods, signatures,
-                classAccess[0], abstractMethods, hidden);
+                classAccess[0], abstractMethods, hidden, finalFields);
     }
 }

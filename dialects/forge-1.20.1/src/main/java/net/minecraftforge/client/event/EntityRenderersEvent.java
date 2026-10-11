@@ -1,5 +1,9 @@
 package net.minecraftforge.client.event;
 
+import java.util.function.Supplier;
+import net.minecraft.client.model.geom.ModelLayerLocation;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
+import rose.era.v1_20_1.client.LegacyModelLayers;
 import rose.era.v1_20_1.client.render.LegacyBlockEntityRendererAdapter;
 import rose.era.v1_20_1.client.render.LegacyBlockEntityRendererProvider;
 
@@ -15,6 +19,13 @@ import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.fml.event.IModBusEvent;
 
 public abstract class EntityRenderersEvent extends Event implements IModBusEvent {
+    /** Register model layers (mod bus, client); they are baked with vanilla's at every resource reload. */
+    public static class RegisterLayerDefinitions extends EntityRenderersEvent {
+        public void registerLayerDefinition(ModelLayerLocation layerLocation, Supplier<LayerDefinition> supplier) {
+            LegacyModelLayers.register(layerLocation, supplier);
+        }
+    }
+
     /** Register entity and block entity renderers (mod bus, client). */
     public static class RegisterRenderers extends EntityRenderersEvent {
         public <T extends Entity> void registerEntityRenderer(EntityType<? extends T> entityType, EntityRendererProvider<T> provider) {

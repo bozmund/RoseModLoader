@@ -20,6 +20,24 @@ public final class GuiShim {
         g.blit(RenderPipelines.GUI_TEXTURED, texture, x, y, u, v, width, height, 256, 256);
     }
 
+    /** 1.20.1 {@code blit(texture, x, y, u, v, width, height, textureWidth, textureHeight)}. */
+    public static void blit(GuiGraphicsExtractor g, Identifier texture, int x, int y, float u, float v, int width, int height,
+                            int textureWidth, int textureHeight) {
+        g.blit(RenderPipelines.GUI_TEXTURED, texture, x, y, u, v, width, height, textureWidth, textureHeight);
+    }
+
+    /** 1.20.1 {@code blit(texture, x, y, blitOffset, u, v, width, height, textureWidth, textureHeight)}: 26.3 GUI has no z offset. */
+    public static void blit(GuiGraphicsExtractor g, Identifier texture, int x, int y, int blitOffset, float u, float v, int width, int height,
+                            int textureWidth, int textureHeight) {
+        blit(g, texture, x, y, u, v, width, height, textureWidth, textureHeight);
+    }
+
+    /** 1.20.1 {@code blit(texture, x, y, width, height, u, v, uWidth, vHeight, textureWidth, textureHeight)}: a scaled region. */
+    public static void blit(GuiGraphicsExtractor g, Identifier texture, int x, int y, int width, int height, float u, float v,
+                            int uWidth, int vHeight, int textureWidth, int textureHeight) {
+        g.blit(RenderPipelines.GUI_TEXTURED, texture, x, y, u, v, width, height, uWidth, vHeight, textureWidth, textureHeight);
+    }
+
     /**
      * 1.20.1 {@code drawString(font, text, x, y, color, shadow)} returned the end x. Colors without alpha were
      * opaque then; 1.21.6 text needs ARGB (alpha 0 is invisible).
@@ -35,6 +53,19 @@ public final class GuiShim {
 
     /** 1.20.1 {@code RenderSystem.setShaderColor}: a global tint for later draws; 26.3 passes colors per draw. */
     public static void setShaderColor(float r, float g, float b, float a) {
+    }
+
+    /** 1.20.1 {@code RenderSystem.setShader(supplier)}: 26.3 GUI draws pick their pipeline per call (GUI_TEXTURED for blit). */
+    public static void setShader(java.util.function.Supplier<?> shader) {
+    }
+
+    /** 1.20.1 {@code RenderSystem.setShaderTexture(unit, texture)}: 26.3 blit takes the texture itself. */
+    public static void setShaderTexture(int unit, Identifier texture) {
+    }
+
+    /** 1.20.1 {@code GameRenderer.getPositionTexShader()}, passed to setShader (which ignores it). */
+    public static com.mojang.renderpearl.backend.opengl.GlProgram positionTexShader() {
+        return null;
     }
 
     /** 1.20.1 {@code new ImageButton(x, y, w, h, u, v, yDiffTex, texture, onPress)}: a button cut from a texture. */

@@ -25,6 +25,7 @@
   "client": [
     "client.ClientRecipeBookMixin",
     "client.ItemModelsMixin",
+    "client.EntityModelSetMixin",
     "client.ScreenInputMixin",
     "client.RangeSelectItemModelPropertiesMixin"
   ]
