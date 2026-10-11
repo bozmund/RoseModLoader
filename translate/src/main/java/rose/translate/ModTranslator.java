@@ -80,6 +80,13 @@ public final class ModTranslator {
     }
 
     private java.util.Set<String> mixinDrops = java.util.Set.of();
+    private List<FinalOverrideRenamer.Rule> finalOverrides = List.of();
+
+    /** Methods 26.3 made final that old mods override ({@code final-overrides.tsv}); see {@link FinalOverrideRenamer}. */
+    public ModTranslator withFinalOverrides(List<FinalOverrideRenamer.Rule> rules) {
+        this.finalOverrides = List.copyOf(rules);
+        return this;
+    }
 
     /** Mixins disabled on purpose ({@code mixin-drops.tsv}: {@code fully.qualified.Mixin<TAB>evidence}). */
     public ModTranslator withMixinDrops(java.util.Set<String> drops) {
@@ -128,6 +135,7 @@ public final class ModTranslator {
             ClassIndex mod = ClassIndex.of(List.of(renamed), false);
             CallAdapter adapter = new CallAdapter(mod, game, conversions);
             List<ExtraTransform> all = new ArrayList<>(extras);
+            all.add(new FinalOverrideRenamer(finalOverrides, mod, game));
             all.add(new InheritanceBridger(bridges, mod, game));
             JarTranslator full = new JarTranslator(remapper, redirects, adapter, all).withModClasses(ClassIndex.of(List.of(input), false));
             Path tmp = output.resolveSibling(output.getFileName() + ".part");

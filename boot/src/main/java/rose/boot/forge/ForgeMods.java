@@ -55,6 +55,7 @@ public final class ForgeMods {
     private final Path staticMoves;
     private final Path samRetargets;
     private final Path mixinDrops;
+    private final Path finalOverrides;
     private final List<Path> gameJars;
     private final Path cacheDir;
 
@@ -72,6 +73,7 @@ public final class ForgeMods {
         this.staticMoves = rulesDir.resolve("static-moves.tsv");
         this.samRetargets = rulesDir.resolve("sam-retargets.tsv");
         this.mixinDrops = rulesDir.resolve("mixin-drops.tsv");
+        this.finalOverrides = rulesDir.resolve("final-overrides.tsv");
         this.gameJars = List.copyOf(gameJars);
         this.cacheDir = cacheDir;
     }
@@ -99,7 +101,7 @@ public final class ForgeMods {
         }
         long start = System.nanoTime();
         byte[] rules = Files.readAllBytes(nameLayer);
-        for (Path file : List.of(redirects, bridges, superclasses, conversions, accessors, mixinRetargets, staticMoves, samRetargets, mixinDrops)) {
+        for (Path file : List.of(redirects, bridges, superclasses, conversions, accessors, mixinRetargets, staticMoves, samRetargets, mixinDrops, finalOverrides)) {
             rules = concat(rules, readOrEmpty(file));
         }
         String inputsHash = ModTranslator.sha256(rules);
@@ -122,7 +124,8 @@ public final class ForgeMods {
                         new rose.translate.StaticMemberMover(rose.translate.StaticMemberMover.read(staticMoves), game),
                         new rose.translate.SamRetargeter(rose.translate.SamRetargeter.read(samRetargets))))
                 .withMixinRetargets(rose.rosetta.MixinRetargetRules.read(mixinRetargets))
-                .withMixinDrops(ModTranslator.readMixinDrops(mixinDrops));
+                .withMixinDrops(ModTranslator.readMixinDrops(mixinDrops))
+                .withFinalOverrides(rose.translate.FinalOverrideRenamer.read(finalOverrides));
 
         AccessTransformerConverter atConverter = new AccessTransformerConverter(new RosettaRemapper(layer), game);
 

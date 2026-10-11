@@ -1,0 +1,3 @@
+# Methods 26.3 made final that Forge 1.20.1 mods override (26.3 names): target<TAB>method(desc)<TAB>legacyName<TAB>legacyInterface<TAB>evidence
+# The mod's override is renamed to legacyName and its class implements legacyInterface (eras/era-1.20.1), which a hook in the final method calls.
+net/minecraft/client/gui/components/AbstractWidget	extractRenderState(Lnet/minecraft/client/gui/GuiGraphicsExtractor;IIF)V	legacy$render	rose/era/v1_20_1/client/LegacyWidgetRender	1.20.1 AbstractWidget.render(GuiGraphics, int, int, float) was overridable (Nature's Compass 1.12.0 TransparentTextField, BiomeSearchList; SpectreLib 0.13.15 EditConfigScreen.ConfigList); 26.3 AbstractWidget.extractRenderState is final and draws through extractWidgetRenderState

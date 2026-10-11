@@ -5,4 +5,5 @@ dependencies {
     compileOnly(rootProject.extra["minecraft"] as FileCollection)
     compileOnly(project(":api"))
     compileOnly(project(":loader"))
+    compileOnly(libs.asm) // provided by the launcher's class loader
 }

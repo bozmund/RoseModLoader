@@ -1,0 +1,16 @@
+# Translated classes known not to link on 26.3: class<TAB>why (each is a tracked follow-up, not an accepted state).
+# translated_mod_classes_link fails for any other class that doesn't link, and for an entry here whose class now links.
+vectorwing.farmersdelight.data.loot.FDBlockLoot	data generation only; 1.20.1 NumberProvider is gone (26.3 splits loot number providers into ints/floats)
+vectorwing.farmersdelight.data.loot.FDChestLoot	data generation only; 1.20.1 NumberProvider is gone
+com.progwml6.ironchest.common.data.loot.IronChestsBlockLoot	data generation only; 1.20.1 NumberProvider is gone
+cn.mcmod_mmf.mmlib.data.loot.AbstartctBlockLoot	data generation only; 1.20.1 NumberProvider is gone
+software.bernie.example.item.GeckoArmorItem	GeckoLib examples (registered in its dev environment only); 1.20.1 ArmorItem is gone (armor became item components in 1.21.2)
+software.bernie.example.item.WolfArmorItem	GeckoLib examples; 1.20.1 ArmorItem is gone
+software.bernie.example.registry.ItemRegistry	GeckoLib examples; 1.20.1 ArmorMaterials enum became an interface of ArmorMaterial constants
+com.illusivesoulworks.spectrelib.config.SpectreTestConfig$Test	SpectreLib's own test config; 1.20.1 ArmorMaterials enum became an interface
+software.bernie.geckolib.cache.texture.AnimatableTexture	GeckoLib glowmask textures; 1.20.1 MetadataSectionSerializer is gone (resource metadata uses codecs)
+software.bernie.geckolib.cache.texture.AutoGlowingTexture	GeckoLib glowmask textures; MetadataSectionSerializer is gone
+software.bernie.geckolib.resource.GeoGlowingTextureMeta	GeckoLib glowmask textures; MetadataSectionSerializer is gone
+software.bernie.geckolib.resource.GeoGlowingTextureMeta$1	GeckoLib glowmask textures; MetadataSectionSerializer is gone
+cn.mcmod_mmf.mmlib.client.model.DynamicItemBakedModel	mmlib dynamic item models; ItemOverrides is gone (1.21.4 item model definitions)
+cn.mcmod_mmf.mmlib.client.model.DynamicItemBakedModel$2	mmlib dynamic item models; ItemOverrides is gone
