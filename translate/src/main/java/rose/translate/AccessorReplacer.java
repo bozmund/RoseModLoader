@@ -19,7 +19,8 @@ import org.objectweb.asm.tree.MethodNode;
  * Mixin accessors ({@code @Accessor}/{@code @Invoker} interface methods) whose vanilla target no longer exists
  * would fail the whole accessor mixin. For targets with a rule ({@code accessors.tsv}: {@code owner.member<TAB>helper
  * <TAB>evidence}, 26.3 names) the abstract method becomes a default method calling the era helper with
- * {@code (Owner) this}; the mixin then only adds the interface, and callers keep working.
+ * {@code (Owner) this}; the mixin then only adds the interface, and callers keep working. A static invoker (its body
+ * only throws) becomes a static method calling the helper with its arguments.
  */
 public final class AccessorReplacer implements ModTranslator.ExtraTransform {
     private static final String MIXIN = "Lorg/spongepowered/asm/mixin/Mixin;";
@@ -81,7 +82,8 @@ public final class AccessorReplacer implements ModTranslator.ExtraTransform {
 
             @Override
             public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
-                if (!isInterface || (access & Opcodes.ACC_ABSTRACT) == 0 || targets.isEmpty()) {
+                boolean isStatic = (access & Opcodes.ACC_STATIC) != 0;
+                if (!isInterface || ((access & Opcodes.ACC_ABSTRACT) == 0 && !isStatic) || targets.isEmpty()) {
                     return super.visitMethod(access, name, desc, signature, exceptions);
                 }
                 // Buffer the method to see its annotation before writing it.
@@ -97,7 +99,8 @@ public final class AccessorReplacer implements ModTranslator.ExtraTransform {
                         // Synthetic: Mixin still classes the interface as an accessor mixin (those may be loaded
                         // directly); any other non-accessor method makes it an interface mixin, which may not.
                         MethodVisitor mv = cv.visitMethod((access & ~Opcodes.ACC_ABSTRACT) | Opcodes.ACC_SYNTHETIC, name, desc, signature, thrown);
-                        writeDefault(mv, targets.getFirst(), desc, helper);
+                        if (isStatic) writeStatic(mv, desc, helper);
+                        else writeDefault(mv, targets.getFirst(), desc, helper);
                     }
                 };
             }
@@ -116,6 +119,21 @@ public final class AccessorReplacer implements ModTranslator.ExtraTransform {
                 return null;
             }
         };
+    }
+
+    /** {@code static R m(args) { return Helper.name(args); }} */
+    private static void writeStatic(MethodVisitor mv, String desc, String helper) {
+        int dot = helper.lastIndexOf('.');
+        mv.visitCode();
+        int slot = 0;
+        for (Type arg : Type.getArgumentTypes(desc)) {
+            mv.visitVarInsn(arg.getOpcode(Opcodes.ILOAD), slot);
+            slot += arg.getSize();
+        }
+        mv.visitMethodInsn(Opcodes.INVOKESTATIC, helper.substring(0, dot), helper.substring(dot + 1), desc, false);
+        mv.visitInsn(Type.getReturnType(desc).getOpcode(Opcodes.IRETURN));
+        mv.visitMaxs(0, 0);
+        mv.visitEnd();
     }
 
     /** {@code default R m(args) { return Helper.name((Target) this, args); }} */

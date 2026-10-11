@@ -33,6 +33,7 @@ final class CornDelightChecks {
         test("cd_cutting_board_cuts_corn", CornDelightChecks::cuttingBoardCutsCorn);
         test("cd_cooking_pot_boils_corn", CornDelightChecks::cookingPotBoilsCorn);
         test("cd_corn_seeds_smelt_into_popcorn", CornDelightChecks::seedsSmeltIntoPopcorn);
+        test("cd_mmlib_villagers_share_corn", CornDelightChecks::villagersShareCorn);
     }
 
     private static Item cd(String path) {
@@ -90,5 +91,24 @@ final class CornDelightChecks {
                 .map(r -> r.value().assemble(input)).orElse(null);
         helper.assertTrue(result != null && result.is(cd("popcorn")), "corn seeds smelt into " + result);
         helper.succeed();
+    }
+
+    /**
+     * mmlib's TradeWithVillager mixin makes villagers throw half of the food it registered (Corn Delight's corn) to
+     * farmers, through a static @Invoker of 1.20.1 throwHalfStack(Villager, Set, LivingEntity).
+     */
+    private static void villagersShareCorn(GameTestHelper helper) {
+        if (skip(helper, CD, "mysterious_mountain_lib")) return;
+        var owner = helper.spawn(net.minecraft.world.entity.EntityTypes.VILLAGER, POS.above());
+        var farmer = helper.spawn(net.minecraft.world.entity.EntityTypes.VILLAGER, POS.above().east(3));
+        owner.setNoAi(true);
+        farmer.setNoAi(true);
+        owner.getInventory().addItem(new ItemStack(cd("corn"), 40));
+        Class<?> invoker = AddonCheck.modClass("cn.mcmod_mmf.mmlib.mixin.TradeWithVillagerInvoker");
+        AddonCheck.callStatic(invoker, "throwHalfStackInvoker", new Class<?>[] {
+                net.minecraft.world.entity.npc.villager.Villager.class, java.util.Set.class, net.minecraft.world.entity.LivingEntity.class},
+                owner, java.util.Set.of(cd("corn")), farmer);
+        helper.assertTrue(owner.getInventory().countItem(cd("corn")) == 20, "the villager kept " + owner.getInventory().countItem(cd("corn")) + " corn");
+        helper.succeedWhen(() -> helper.assertItemEntityPresent(cd("corn"), POS.above(), 6.0));
     }
 }

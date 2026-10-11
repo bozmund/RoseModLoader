@@ -16,6 +16,15 @@ public final class VillagerShim {
         return BuiltInRegistries.VILLAGER_PROFESSION.getValueOrThrow(VillagerProfession.FARMER);
     }
 
+    /**
+     * 1.20.1 {@code TradeWithVillager.throwHalfStack(villager, items, target)} (reached through Mixin invokers): 26.3
+     * picks the stack to throw with a predicate instead of an item set.
+     */
+    public static void throwHalfStack(net.minecraft.world.entity.npc.villager.Villager villager, java.util.Set<net.minecraft.world.item.Item> items,
+                                      net.minecraft.world.entity.LivingEntity target) {
+        net.minecraft.world.entity.ai.behavior.TradeWithVillager.throwHalfStack(villager, stack -> items.contains(stack.getItem()), target);
+    }
+
     private VillagerShim() {}
 
     /** 1.20.1 {@code VillagerProfession.name()}: the profession's id path ("farmer"); 26.3's name() is its display name. */

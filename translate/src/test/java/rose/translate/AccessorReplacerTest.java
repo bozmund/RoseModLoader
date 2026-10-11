@@ -56,4 +56,37 @@ class AccessorReplacerTest {
         MethodNode kept = out.methods.stream().filter(m -> m.name.equals("kept")).findFirst().orElseThrow();
         assertTrue((kept.access & Opcodes.ACC_ABSTRACT) != 0, "accessors without a rule are left to Mixin");
     }
+
+    /** mmlib's {@code @Invoker("throwHalfStack") static void throwHalfStackInvoker(...) { throw new AssertionError(); }} */
+    @Test
+    void staticInvokerWithARuleCallsTheHelperWithItsArguments() {
+        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        cw.visit(Opcodes.V17, Opcodes.ACC_PUBLIC | Opcodes.ACC_INTERFACE | Opcodes.ACC_ABSTRACT, "mod/TradeInvoker", null, "java/lang/Object", null);
+        AnnotationVisitor mixin = cw.visitAnnotation("Lorg/spongepowered/asm/mixin/Mixin;", false);
+        AnnotationVisitor targets = mixin.visitArray("value");
+        targets.visit(null, Type.getObjectType("game/Trade"));
+        targets.visitEnd();
+        mixin.visitEnd();
+        MethodVisitor mv = cw.visitMethod(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "throwInvoker", "(Lgame/Villager;Ljava/util/Set;)V", null, null);
+        AnnotationVisitor invoker = mv.visitAnnotation("Lorg/spongepowered/asm/mixin/gen/Invoker;", true);
+        invoker.visit("value", "throwHalfStack");
+        invoker.visitEnd();
+        mv.visitCode();
+        mv.visitTypeInsn(Opcodes.NEW, "java/lang/AssertionError");
+        mv.visitInsn(Opcodes.DUP);
+        mv.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/lang/AssertionError", "<init>", "()V", false);
+        mv.visitInsn(Opcodes.ATHROW);
+        mv.visitMaxs(0, 0);
+        mv.visitEnd();
+        cw.visitEnd();
+
+        ClassNode out = new ClassNode();
+        new ClassReader(cw.toByteArray()).accept(new AccessorReplacer(Map.of("game/Trade.throwHalfStack", "era/Shim.throwHalfStack")).wrap(out), 0);
+        MethodNode replaced = out.methods.getFirst();
+        assertTrue((replaced.access & Opcodes.ACC_STATIC) != 0 && (replaced.access & Opcodes.ACC_SYNTHETIC) != 0);
+        assertEquals(null, replaced.visibleAnnotations, "no longer an @Invoker for Mixin to resolve");
+        MethodInsnNode call = (MethodInsnNode) java.util.Arrays.stream(replaced.instructions.toArray())
+                .filter(i -> i instanceof MethodInsnNode).findFirst().orElseThrow();
+        assertEquals("era/Shim.throwHalfStack(Lgame/Villager;Ljava/util/Set;)V", call.owner + "." + call.name + call.desc);
+    }
 }

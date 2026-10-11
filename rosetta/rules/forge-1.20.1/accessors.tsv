@@ -1,3 +1,4 @@
 # Mixin accessors (@Accessor/@Invoker) whose vanilla target is gone in 26.3 (26.3 names): owner.member<TAB>helper<TAB>evidence
 # The translator turns the accessor into a default method calling the helper with (Owner) this.
 net/minecraft/world/item/crafting/RecipeManager.byType	rose/era/v1_20_1/shim/RecipeShim.byType	1.20.1 RecipeManager.byType(type) returned Map<ResourceLocation, Recipe>; 26.3 RecipeManager keeps a RecipeMap (byType gives RecipeHolders)
+net/minecraft/world/entity/ai/behavior/TradeWithVillager.throwHalfStack	rose/era/v1_20_1/shim/VillagerShim.throwHalfStack	1.20.1 TradeWithVillager.throwHalfStack(Villager, Set<Item>, LivingEntity); 26.3 throwHalfStack(Villager, Predicate<ItemStack>, LivingEntity)
