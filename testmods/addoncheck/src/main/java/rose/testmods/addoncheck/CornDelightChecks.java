@@ -35,6 +35,7 @@ final class CornDelightChecks {
         test("cd_corn_seeds_smelt_into_popcorn", CornDelightChecks::seedsSmeltIntoPopcorn);
         test("cd_mmlib_villagers_share_corn", CornDelightChecks::villagersShareCorn);
         test("cd_recipes_are_in_the_recipe_registry", CornDelightChecks::recipesAreInTheRegistry);
+        test("cd_villager_trades_make_offers", CornDelightChecks::villagerTradesMakeOffers);
     }
 
     private static Item cd(String path) {
@@ -124,6 +125,38 @@ final class CornDelightChecks {
             var key = net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.RECIPE, net.minecraft.resources.Identifier.parse(id));
             helper.assertTrue(recipes.get(key).isPresent(), "the recipe registry has no " + id);
         }
+        helper.succeed();
+    }
+
+    /**
+     * Corn Delight's VillagerTradesEvent listings build 1.20.1 MerchantOffers (ItemStack costs): each gives an offer
+     * trading its food for emeralds, or emeralds for it.
+     */
+    @SuppressWarnings("unchecked")
+    private static void villagerTradesMakeOffers(GameTestHelper helper) {
+        if (skip(helper, CD)) return;
+        var byTradeSet = (java.util.Map<?, java.util.List<Object>>) AddonCheck.staticField(
+                AddonCheck.modClass("rose.dialect.forge.v1_20_1.ForgeTrades"), "byTradeSet");
+        var villager = helper.spawn(net.minecraft.world.entity.EntityTypes.VILLAGER, POS.above());
+        int offers = 0;
+        for (var listings : byTradeSet.values()) {
+            for (Object listing : listings) {
+                if (!listing.getClass().getName().startsWith("cn.mcmod.corn_delight")) continue;
+                try {
+                    var getOffer = listing.getClass().getMethod("getOffer", net.minecraft.world.entity.Entity.class, net.minecraft.util.RandomSource.class);
+                    var offer = (net.minecraft.world.item.trading.MerchantOffer) getOffer.invoke(listing, villager, helper.getLevel().getRandom());
+                    boolean buys = offer.getItemCostA().item().value() == net.minecraft.world.item.Items.EMERALD;
+                    var food = buys ? offer.getResult().getItem() : offer.getItemCostA().item().value();
+                    var other = buys ? offer.getItemCostA().item().value() : offer.getResult().getItem();
+                    helper.assertTrue(food.getDescriptionId().contains("corn_delight") && other == net.minecraft.world.item.Items.EMERALD,
+                            listing + " trades " + offer.getItemCostA() + " for " + offer.getResult());
+                    offers++;
+                } catch (ReflectiveOperationException e) {
+                    throw new IllegalStateException(e);
+                }
+            }
+        }
+        helper.assertTrue(offers > 0, "Corn Delight added no villager trades");
         helper.succeed();
     }
 }

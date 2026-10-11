@@ -25,6 +25,32 @@ public final class VillagerShim {
         net.minecraft.world.entity.ai.behavior.TradeWithVillager.throwHalfStack(villager, stack -> items.contains(stack.getItem()), target);
     }
 
+    // 1.20.1 new MerchantOffer(costA, [costB,] result, [uses,] maxUses, xp, priceMultiplier[, demand]) took ItemStack
+    // costs; 1.20.5 made them ItemCosts (item and count; an empty second cost is none).
+
+    public static net.minecraft.world.item.trading.MerchantOffer merchantOffer(net.minecraft.world.item.ItemStack costA, net.minecraft.world.item.ItemStack result,
+                                                                              int maxUses, int xp, float priceMultiplier) {
+        return merchantOffer(costA, net.minecraft.world.item.ItemStack.EMPTY, result, 0, maxUses, xp, priceMultiplier, 0);
+    }
+
+    public static net.minecraft.world.item.trading.MerchantOffer merchantOffer(net.minecraft.world.item.ItemStack costA, net.minecraft.world.item.ItemStack costB,
+                                                                              net.minecraft.world.item.ItemStack result, int maxUses, int xp, float priceMultiplier) {
+        return merchantOffer(costA, costB, result, 0, maxUses, xp, priceMultiplier, 0);
+    }
+
+    public static net.minecraft.world.item.trading.MerchantOffer merchantOffer(net.minecraft.world.item.ItemStack costA, net.minecraft.world.item.ItemStack costB,
+                                                                              net.minecraft.world.item.ItemStack result, int uses, int maxUses, int xp, float priceMultiplier) {
+        return merchantOffer(costA, costB, result, uses, maxUses, xp, priceMultiplier, 0);
+    }
+
+    public static net.minecraft.world.item.trading.MerchantOffer merchantOffer(net.minecraft.world.item.ItemStack costA, net.minecraft.world.item.ItemStack costB,
+                                                                              net.minecraft.world.item.ItemStack result, int uses, int maxUses, int xp, float priceMultiplier, int demand) {
+        var second = costB.isEmpty() ? java.util.Optional.<net.minecraft.world.item.trading.ItemCost>empty()
+                : java.util.Optional.of(new net.minecraft.world.item.trading.ItemCost(costB.getItem(), costB.getCount()));
+        return new net.minecraft.world.item.trading.MerchantOffer(new net.minecraft.world.item.trading.ItemCost(costA.getItem(), costA.getCount()),
+                second, result, uses, maxUses, xp, priceMultiplier, demand);
+    }
+
     private VillagerShim() {}
 
     /** 1.20.1 {@code VillagerProfession.name()}: the profession's id path ("farmer"); 26.3's name() is its display name. */
