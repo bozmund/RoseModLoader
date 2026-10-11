@@ -57,13 +57,18 @@ public final class LegacyData {
      */
     public static void dropSkippedPlaceholders(Registry<?> registry) {
         if (!(registry instanceof MappedRegistryAccess access)) return;
+        // 1.20.1 advancements could name recipes that don't exist (a typo, a missing namespace); that only logged.
+        // 26.3 decodes recipe_unlocked's recipes as holders, so with translated mods present such names are dropped too.
+        boolean danglingRecipes = registry.key().equals(net.minecraft.core.registries.Registries.RECIPE)
+                && RoseLoader.get().mods().stream().anyMatch(m -> !m.isNative());
         access.rose$byKey().entrySet().removeIf(e -> {
-            boolean drop = !e.getValue().isBound() && SKIPPED.contains(e.getKey());
-            if (drop) {
-                access.rose$byLocation().remove(e.getKey().identifier());
-                com.mojang.logging.LogUtils.getLogger().warn("[rose] {} was skipped; references to it now point at nothing", e.getKey());
-            }
-            return drop;
+            if (e.getValue().isBound()) return false;
+            boolean skipped = SKIPPED.contains(e.getKey());
+            if (!skipped && !danglingRecipes) return false;
+            access.rose$byLocation().remove(e.getKey().identifier());
+            com.mojang.logging.LogUtils.getLogger().warn(skipped ? "[rose] {} was skipped; references to it now point at nothing"
+                    : "[rose] {} is named by mod data but doesn't exist; references to it now point at nothing", e.getKey());
+            return true;
         });
     }
 

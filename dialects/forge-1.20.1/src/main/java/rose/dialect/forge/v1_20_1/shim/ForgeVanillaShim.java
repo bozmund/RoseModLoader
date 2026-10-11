@@ -139,6 +139,18 @@ public final class ForgeVanillaShim {
     /** As above, from a mod block item. */
     public static void initializeClient(net.minecraft.world.item.BlockItem self, java.util.function.Consumer<?> consumer) {}
 
+    /**
+     * Forge {@code ArgumentTypeInfos.registerByClass}: maps a command argument class to its (registered) info, so
+     * commands using it can be sent to clients.
+     */
+    public static net.minecraft.commands.synchronization.ArgumentTypeInfo<?, ?> registerByClass(Class<?> type,
+            net.minecraft.commands.synchronization.ArgumentTypeInfo<?, ?> info) {
+        synchronized (net.minecraft.commands.synchronization.ArgumentTypeInfos.class) {
+            net.minecraft.commands.synchronization.ArgumentTypeInfos.BY_CLASS.put(type, info);
+        }
+        return info;
+    }
+
     /** Past vanilla's tabs, so positions stay unique (vanilla validates that). */
     private static final java.util.concurrent.atomic.AtomicInteger NEXT_COLUMN = new java.util.concurrent.atomic.AtomicInteger(100);
 

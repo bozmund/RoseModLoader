@@ -47,4 +47,7 @@ public interface IForgeRegistry<V> extends Iterable<V> {
     Optional<Holder<V>> getHolder(Identifier location);
 
     Optional<Holder<V>> getHolder(V value);
+
+    /** The registry's tags. */
+    net.minecraftforge.registries.tags.ITagManager<V> tags();
 }

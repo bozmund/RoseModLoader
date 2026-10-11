@@ -27,7 +27,8 @@ import rose.era.v1_20_1.shim.Holders;
  *   <li>{@code getUseAnimation} = DRINK: a drink {@code consumable} (drink animation and sound, no particles), as
  *       1.20.1's LivingEntity played the drinking sound for that animation;</li>
  *   <li>{@code getDefaultAttributeModifiers(slot)}: {@code attribute_modifiers};</li>
- *   <li>{@code getEnchantmentValue()}: {@code enchantable}.</li>
+ *   <li>{@code getEnchantmentValue()}: {@code enchantable};</li>
+ *   <li>implementing {@code Equipable}: {@code equippable} with its slot and sound (1.21.2 replaced the interface).</li>
  * </ul>
  * Items are asked once, with an empty stack, while components are built: components are fixed per item, and item
  * stacks of the item can't exist before then.
@@ -40,7 +41,8 @@ public final class LegacyItemComponents {
         Method attributes = legacyMethod(item, "getDefaultAttributeModifiers", EquipmentSlot.class);
         Method enchantmentValue = legacyMethod(item, "getEnchantmentValue");
         boolean useAnimation = overrides(item, "getUseAnimation", ItemStack.class);
-        if (attributes == null && enchantmentValue == null && !useAnimation) return;
+        net.minecraft.world.item.Equipable equipable = item instanceof net.minecraft.world.item.Equipable e ? e : null;
+        if (attributes == null && enchantmentValue == null && !useAnimation && equipable == null) return;
         BuiltInRegistries.DATA_COMPONENT_INITIALIZERS.add(key, (components, context, k) -> {
             if (useAnimation && ask(() -> item.getUseAnimation(ItemStack.EMPTY)) == ItemUseAnimation.DRINK) {
                 components.set(DataComponents.CONSUMABLE, drink(item, (Consumable) map(components).get(DataComponents.CONSUMABLE)));
@@ -52,6 +54,15 @@ public final class LegacyItemComponents {
             if (enchantmentValue != null) {
                 Integer value = ask(() -> (Integer) enchantmentValue.invoke(item));
                 if (value != null && value > 0) components.set(DataComponents.ENCHANTABLE, new Enchantable(value));
+            }
+            if (equipable != null && !map(components).containsKey(DataComponents.EQUIPPABLE)) {
+                EquipmentSlot slot = ask(equipable::getEquipmentSlot);
+                net.minecraft.sounds.SoundEvent sound = ask(equipable::getEquipSound);
+                if (slot != null) {
+                    var equippable = net.minecraft.world.item.equipment.Equippable.builder(slot);
+                    if (sound != null) equippable.setEquipSound(BuiltInRegistries.SOUND_EVENT.wrapAsHolder(sound));
+                    components.set(DataComponents.EQUIPPABLE, equippable.build());
+                }
             }
         });
     }

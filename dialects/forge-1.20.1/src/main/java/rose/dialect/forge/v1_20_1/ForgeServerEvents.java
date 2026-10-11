@@ -23,6 +23,11 @@ public final class ForgeServerEvents {
         });
     }
 
+    public static void stopped(MinecraftServer server) {
+        if (ForgeDialect.mods().isEmpty()) return;
+        MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.server.ServerStoppedEvent(server));
+    }
+
     public static void aboutToStart(MinecraftServer server) {
         RegistryAccessHolder.setServer(server);
         if (ForgeDialect.mods().isEmpty()) return;

@@ -26,6 +26,11 @@ public class ForgeRegistry<V> implements IForgeRegistry<V> {
         this.detached = detached;
     }
 
+    @Override
+    public net.minecraftforge.registries.tags.ITagManager<V> tags() {
+        return new rose.dialect.forge.v1_20_1.RegistryTags<>(vanilla);
+    }
+
     public Registry<V> vanilla() {
         return vanilla;
     }

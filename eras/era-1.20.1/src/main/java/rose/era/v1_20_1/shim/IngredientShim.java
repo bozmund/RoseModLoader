@@ -75,5 +75,15 @@ public final class IngredientShim {
         throw new JsonParseException("Unsupported 1.20.1 ingredient type " + o);
     }
 
+    /**
+     * 1.20.1 {@code Ingredient.of(TagKey)}: 26.3 takes the tag's HolderSet. The registry's set when it has one; else an
+     * unbound set that still names the tag (as AnimalFoodShim does for tags it can't see yet).
+     */
+    public static Ingredient ofTag(net.minecraft.tags.TagKey<net.minecraft.world.item.Item> tag) {
+        var items = net.minecraft.core.registries.BuiltInRegistries.ITEM;
+        return Ingredient.of(items.get(tag).<net.minecraft.core.HolderSet<net.minecraft.world.item.Item>>map(set -> set)
+                .orElseGet(() -> net.minecraft.core.HolderSet.emptyNamed(items, tag)));
+    }
+
     private IngredientShim() {}
 }

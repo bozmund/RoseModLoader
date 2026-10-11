@@ -1,0 +1,4 @@
+# Static members moved to a holder class (26.3 names): old owner<TAB>new owner<TAB>evidence. Only members the old
+# owner no longer declares and the new one does are moved (StaticMemberMover).
+net/minecraft/world/entity/EntityType	net/minecraft/world/entity/EntityTypes	1.21.11 EntityType declares its 157 constants (PIG, PLAYER, ...); 26.3 EntityType has none and EntityTypes declares them with the same names
+net/minecraft/world/level/block/entity/BlockEntityType	net/minecraft/world/level/block/entity/BlockEntityTypes	1.21.11 BlockEntityType declares its constants (FURNACE, CHEST, ...); 26.3 moved them to BlockEntityTypes with the same names

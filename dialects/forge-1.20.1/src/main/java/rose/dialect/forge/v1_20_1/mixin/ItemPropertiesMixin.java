@@ -10,7 +10,10 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import rose.dialect.forge.v1_20_1.RegistrationKeys;
 
-/** Fills in an item's id from the entry being registered when an old mod didn't set one (see RegistrationKeys). */
+/**
+ * Fills in an item's id from the entry being registered when an old mod didn't set one (see RegistrationKeys), or a
+ * provisional one when the item is built before it is named (ProvisionalItemIds).
+ */
 @Mixin(Item.Properties.class)
 public abstract class ItemPropertiesMixin {
     @Shadow
@@ -19,5 +22,6 @@ public abstract class ItemPropertiesMixin {
     @Inject(method = "itemIdOrThrow", at = @At("HEAD"))
     private void rose$defaultId(CallbackInfoReturnable<ResourceKey<Item>> cir) {
         if (id == null) id = RegistrationKeys.current(Registries.ITEM);
+        if (id == null) id = rose.dialect.forge.v1_20_1.ProvisionalItemIds.provisional((Item.Properties) (Object) this);
     }
 }

@@ -44,17 +44,23 @@ public class RegisterEvent extends Event implements IModBusEvent {
     @SuppressWarnings({"unchecked", "rawtypes"})
     public <T> void register(ResourceKey<? extends Registry<T>> key, Consumer<RegisterHelper<T>> consumer) {
         if (!registryKey.equals(key)) return;
-        consumer.accept(new RegisterHelper<T>() {
-            @Override
-            public void register(Identifier name, T value) {
-                rose.dialect.forge.v1_20_1.VanillaRegistration.register(registry.vanilla(), name, value);
-            }
+        rose.dialect.forge.v1_20_1.ProvisionalItemIds.open();
+        try {
+            consumer.accept(new RegisterHelper<T>() {
+                @Override
+                public void register(Identifier name, T value) {
+                    register(ResourceKey.create((ResourceKey) key, name), value);
+                }
 
-            @Override
-            public void register(ResourceKey<T> entryKey, T value) {
-                rose.dialect.forge.v1_20_1.VanillaRegistration.register(registry.vanilla(), entryKey, value);
-            }
-        });
+                @Override
+                public void register(ResourceKey<T> entryKey, T value) {
+                    rose.dialect.forge.v1_20_1.ProvisionalItemIds.named(value, entryKey);
+                    rose.dialect.forge.v1_20_1.VanillaRegistration.register(registry.vanilla(), entryKey, value);
+                }
+            });
+        } finally {
+            rose.dialect.forge.v1_20_1.ProvisionalItemIds.close();
+        }
     }
 
     @FunctionalInterface

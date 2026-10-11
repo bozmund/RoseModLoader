@@ -69,6 +69,7 @@ public final class ForgeDialect implements ModInitializer {
         LOG.info("[rose/forge] loading {} Forge 1.20.1 mod(s): {}", MODS.size(), MODS.stream().map(ForgeModContainer::modId).toList());
         for (ForgeModContainer mod : MODS) construct(mod);
         postToMods(new net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent(), "RegisterCapabilitiesEvent");
+        postToMods(new net.minecraftforge.registries.NewRegistryEvent(), "NewRegistryEvent");
         for (ResourceKey<? extends Registry<?>> key : registrationOrder()) {
             RegisterEvent event = new RegisterEvent(key, ForgeRegistryLookup.get(key.identifier()));
             for (ForgeModContainer mod : MODS) postToMod(mod, event, "RegisterEvent(" + key.identifier() + ")");
@@ -81,8 +82,15 @@ public final class ForgeDialect implements ModInitializer {
         dispatchLifecycle(FMLCommonSetupEvent::new);
         if (FMLEnvironment.dist.isDedicatedServer()) {
             dispatchLifecycle(FMLDedicatedServerSetupEvent::new);
+            interModComms();
             dispatchLifecycle(FMLLoadCompleteEvent::new);
         }
+    }
+
+    /** After sided setup, before load complete (Forge's ENQUEUE_IMC and PROCESS_IMC stages). */
+    static void interModComms() {
+        dispatchLifecycle(net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent::new);
+        dispatchLifecycle(net.minecraftforge.fml.event.lifecycle.InterModProcessEvent::new);
     }
 
     /** Sends one lifecycle event to each mod, then runs the work they queued, one mod at a time. */
