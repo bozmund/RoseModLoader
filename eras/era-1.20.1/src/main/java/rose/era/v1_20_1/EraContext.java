@@ -17,6 +17,7 @@ public final class EraContext implements ModInitializer {
     public void onInitialize() {
         RoseEvents.SERVER_STARTED.register(s -> server = s);
         RoseEvents.SERVER_STOPPING.register(s -> server = null);
+        rose.era.v1_20_1.crafting.LegacyRecipeDisplay.register();
     }
 
     /** Called from the server's first tick setup too (before SERVER_STARTED), see ServerMixin. */

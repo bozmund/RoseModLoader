@@ -51,6 +51,7 @@ public final class FdCheck implements ModInitializer {
         RoseGameTests.register(id("renamed_ids_still_load"), FdCheck::renamedIdsStillLoad);
         RoseGameTests.register(id("cabinets_burn_in_furnaces"), FdCheck::cabinetsBurnInFurnaces);
         RoseGameTests.register(id("cooking_recipes_have_ingredients"), FdCheck::cookingRecipesHaveIngredients);
+        RoseGameTests.register(id("cooking_recipes_show_in_the_recipe_book"), FdCheck::cookingRecipesShowInTheRecipeBook);
         RoseGameTests.register(id("ingredient_lists_keep_all_alternatives"), FdCheck::ingredientListsKeepAllAlternatives);
         RoseGameTests.register(id("foods_keep_their_own_effects"), FdCheck::foodsKeepTheirOwnEffects);
         RoseGameTests.register(id("drinks_can_be_drunk"), FdCheck::drinksCanBeDrunk);
@@ -307,6 +308,45 @@ public final class FdCheck implements ModInitializer {
      * FD's cooking pot recipes expose their inputs (1.20.1 getIngredients) as 26.3 placement info; without them 26.3
      * ignores the recipe in its recipe sets ("can't be placed due to empty ingredients").
      */
+    /**
+     * FD's cooking pot recipe book: the server sends each cooking recipe as a recipe book display (its inputs in
+     * order, its result) under the legacy book category, which clients sort into FD's tabs.
+     */
+    private static void cookingRecipesShowInTheRecipeBook(GameTestHelper helper) {
+        if (skip(helper)) return;
+        var key = net.minecraft.resources.ResourceKey.create(Registries.RECIPE, Identifier.fromNamespaceAndPath("farmersdelight", "cooking/beef_stew"));
+        var recipe = helper.getLevel().getServer().getRecipeManager().byKey(key).orElseThrow().value();
+        helper.assertTrue(BuiltInRegistries.RECIPE_BOOK_CATEGORY.getKey(recipe.recipeBookCategory()).toString().equals("rose:legacy"),
+                "beef stew's book category is " + BuiltInRegistries.RECIPE_BOOK_CATEGORY.getKey(recipe.recipeBookCategory()));
+        var displays = recipe.display();
+        helper.assertTrue(displays.size() == 1, "beef stew has " + displays.size() + " recipe book displays");
+        var display = displays.getFirst();
+        helper.assertTrue(BuiltInRegistries.RECIPE_DISPLAY.getKey(display.type()).toString().equals("rose:legacy"),
+                "beef stew's display is a " + BuiltInRegistries.RECIPE_DISPLAY.getKey(display.type()));
+        var resolved = display.result().resolveForFirstStack(net.minecraft.world.item.crafting.display.SlotDisplayContext.fromLevel(helper.getLevel()));
+        helper.assertTrue(resolved.is(item("beef_stew")), "beef stew's display shows " + resolved);
+        var entries = new java.util.ArrayList<net.minecraft.world.item.crafting.display.RecipeDisplayEntry>();
+        helper.getLevel().getServer().getRecipeManager().listDisplaysForRecipe(key, entries::add);
+        helper.assertTrue(entries.size() == 1 && entries.getFirst().craftingRequirements().map(List::size).orElse(0) == 3,
+                "beef stew is sent to recipe books as " + entries);
+        var manager = helper.getLevel().getServer().getRecipeManager();
+        var missing = manager.getRecipes().stream()
+                .filter(h -> h.id().identifier().getNamespace().equals("farmersdelight") && h.id().identifier().getPath().startsWith("cooking/"))
+                .filter(h -> { var out = new java.util.ArrayList<Object>(); manager.listDisplaysForRecipe(h.id(), out::add); return out.isEmpty(); })
+                .map(h -> h.id().identifier().toString()).toList();
+        helper.assertTrue(missing.isEmpty(), "cooking recipes without a recipe book display: " + missing);
+        @SuppressWarnings("removal")
+        var player = helper.makeMockServerPlayerInLevel();
+        player.awardRecipes(manager.getLearnableRecipes()); // what /recipe give * unlocks
+        var notKnown = manager.getRecipes().stream()
+                .filter(h -> h.id().identifier().getNamespace().equals("farmersdelight") && h.id().identifier().getPath().startsWith("cooking/"))
+                .filter(h -> !player.getRecipeBook().contains(h.id()))
+                .map(h -> h.id().identifier().getPath() + (h.value().isSpecial() ? "(special)" : "")).toList();
+        player.discard();
+        helper.assertTrue(notKnown.isEmpty(), "unlocking every recipe leaves out " + notKnown);
+        helper.succeed();
+    }
+
     private static void cookingRecipesHaveIngredients(GameTestHelper helper) {
         if (skip(helper)) return;
         var key = net.minecraft.resources.ResourceKey.create(Registries.RECIPE, Identifier.fromNamespaceAndPath("farmersdelight", "cooking/beef_stew"));

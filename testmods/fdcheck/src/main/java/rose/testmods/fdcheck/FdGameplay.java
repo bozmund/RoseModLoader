@@ -61,6 +61,7 @@ final class FdGameplay {
         test("safety_net_breaks_falls", FdGameplay::safetyNetBreaksFalls);
         test("tomatoes_are_picked_by_hand", FdGameplay::tomatoesArePickedByHand);
         test("cabinets_open", FdGameplay::cabinetsOpen);
+        test("recipe_book_places_into_the_cooking_pot", FdGameplay::recipeBookPlacesIntoTheCookingPot);
         test("rotten_tomatoes_can_be_thrown", FdGameplay::rottenTomatoesCanBeThrown);
         test("rice_can_be_used", FdGameplay::riceCanBeUsed);
         test("bone_meal_on_fd_plants", FdGameplay::boneMealOnFdPlants);
@@ -168,6 +169,32 @@ final class FdGameplay {
         helper.setBlock(POS, vine);
         helper.useBlock(POS, player(helper));
         helper.succeedWhen(() -> helper.assertItemEntityPresent(item("tomato"), POS, 3.0));
+    }
+
+    /**
+     * The cooking pot's recipe book places a recipe from the player's inventory into the pot's grid: FD's
+     * CookingPotMenu is a 1.20.1 RecipeBookMenu, placed through 26.3's ServerPlaceRecipe (RecipeBookBridges).
+     */
+    private static void recipeBookPlacesIntoTheCookingPot(GameTestHelper helper) {
+        if (skip(helper)) return;
+        helper.setBlock(POS, block("cooking_pot"));
+        var player = helper.makeMockServerPlayerInLevel();
+        player.getInventory().add(new ItemStack(net.minecraft.world.item.Items.APPLE, 4));
+        player.getInventory().add(new ItemStack(net.minecraft.world.item.Items.SUGAR, 2));
+        helper.useBlock(POS, player);
+        helper.assertTrue(player.containerMenu instanceof net.minecraft.world.inventory.RecipeBookMenu, "the cooking pot's menu should be a recipe book menu: " + player.containerMenu);
+        var menu = (net.minecraft.world.inventory.RecipeBookMenu) player.containerMenu;
+        var key = net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.RECIPE,
+                Identifier.fromNamespaceAndPath("farmersdelight", "cooking/apple_cider"));
+        var recipe = helper.getLevel().getServer().getRecipeManager().byKey(key).orElseThrow();
+        var action = menu.handlePlacement(false, false, recipe, helper.getLevel(), player.getInventory());
+        helper.assertTrue(action == net.minecraft.world.inventory.RecipeBookMenu.PostPlaceAction.NOTHING, "placing apple cider: " + action);
+        helper.assertTrue(menu.getSlot(0).getItem().is(net.minecraft.world.item.Items.APPLE) && menu.getSlot(1).getItem().is(net.minecraft.world.item.Items.APPLE)
+                && menu.getSlot(2).getItem().is(net.minecraft.world.item.Items.SUGAR), "the pot's grid holds " + menu.getSlot(0).getItem() + ", "
+                + menu.getSlot(1).getItem() + ", " + menu.getSlot(2).getItem());
+        helper.assertTrue(player.getInventory().countItem(net.minecraft.world.item.Items.APPLE) == 2, "two apples should be left");
+        player.discard();
+        helper.succeed();
     }
 
     /** Using a cabinet opens its menu (FD CabinetBlock / CabinetBlockEntity). */

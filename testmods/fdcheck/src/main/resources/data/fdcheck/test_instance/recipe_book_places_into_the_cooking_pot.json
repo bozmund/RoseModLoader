@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "fdcheck:recipe_book_places_into_the_cooking_pot",
+  "structure": "minecraft:empty",
+  "max_ticks": 20,
+  "padding": 2
+}

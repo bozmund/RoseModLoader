@@ -256,17 +256,33 @@ recipes farmersdelight:cooking/* /codec/*	the port rewrote FD's cooking recipe J
 recipes farmersdelight:cutting/* /book_category	recipe book categories are a 1.21.2 registry; the port registers farmersdelight:cutting, FD 1.20.1 has none for cutting (Rose reports crafting_misc)
 recipes farmersdelight:salvaging/* /book_category	as cutting/*
 recipes farmersdelight:cooking/* /book_category	recipe book categories are a 1.21.2 registry; the port registers farmersdelight:cooking_*, FD 1.20.1 picks a tab with Forge's client-side RecipeBookRegistry (Rose reports crafting_misc)
-recipes farmersdelight:cooking/* /display	recipe displays are 1.21.2+ API; the port registers a farmersdelight:cooking display, FD 1.20.1 has none
+recipes farmersdelight:cooking/* /display/*/type	the port's cooking display is its own farmersdelight:cooking type (FD Refabricated CookingPotRecipe.display() returns a CookingPotRecipeDisplay: ingredients, container, result, crafting_station, duration, experience); FD 1.20.1 had none, and Rose shows it as a rose:legacy display (ingredients, result and station match the port's)
+recipes farmersdelight:cooking/* /display/*/duration	the port's cooking display is its own farmersdelight:cooking type (FD Refabricated CookingPotRecipe.display() returns a CookingPotRecipeDisplay: ingredients, container, result, crafting_station, duration, experience); Rose's legacy display has no cooking time
+recipes farmersdelight:cooking/* /display/*/experience	the port's cooking display is its own farmersdelight:cooking type (FD Refabricated CookingPotRecipe.display() returns a CookingPotRecipeDisplay: ingredients, container, result, crafting_station, duration, experience); Rose's legacy display has no experience
+recipes farmersdelight:cooking/* /display/*/container	the port's cooking display is its own farmersdelight:cooking type (FD Refabricated CookingPotRecipe.display() returns a CookingPotRecipeDisplay: ingredients, container, result, crafting_station, duration, experience); Rose's legacy display has no container slot
+recipes farmersdelight:cooking/* /display/*/json	Rose's rose:legacy display carries the FD 1.20.1 recipe source so clients sort it into FD's tabs with FD's own category finder, as 1.20.1 clients sorted recipes the server sent; the port's display type (see /type) has no such field
+recipes farmersdelight:cooking/* /display/*/recipe	as /display/*/json
+recipes farmersdelight:cooking/* /display/*/serializer	as /display/*/json
+recipes farmersdelight:cutting/* /display	the port gives cutting recipes no recipe book display (FD Refabricated CuttingBoardRecipe has no display()); Rose sends every 1.20.1 recipe of a mod type as a rose:legacy display, and FD 1.20.1 registers no category finder for cutting, so they show in no tab
+recipes farmersdelight:salvaging/* /display	as cutting/*
 recipes farmersdelight:cutting/* /ingredients	FD 1.20.1 CuttingBoardRecipe.getIngredients lists the input, which Rose's placement info reports; the port's cutting recipes aren't placeable
 recipes farmersdelight:salvaging/* /ingredients	as cutting/*
 recipes farmersdelight:cooking/cabbage_rolls /ingredients/*	FD 1.20.1's #farmersdelight:cabbage_roll_ingredients is built from Forge tags (forge:vegetables has no golden carrot, forge:mushrooms is brown and red, + Rose's shelf mushroom); the port's from c: tags
+recipes farmersdelight:cooking/cabbage_rolls /display/*/ingredients/*	as /ingredients/*: the recipe book display shows the same ingredients
 recipes farmersdelight:cooking/*_stew /ingredients/*	FD 1.20.1's stews list brown and red mushrooms as items (recipes/cooking/mushroom_stew.json, rabbit_stew.json) and fish via #forge:raw_fishes; the port uses c: tags (adds shelf mushroom, drops tropical fish)
+recipes farmersdelight:cooking/*_stew /display/*/ingredients/*	as /ingredients/*: the recipe book display shows the same ingredients
 recipes farmersdelight:cooking/mushroom_rice /ingredients/*	FD 1.20.1's mushroom rice lists brown and red mushrooms as items; the port uses #c:mushrooms
+recipes farmersdelight:cooking/mushroom_rice /display/*/ingredients/*	as /ingredients/*: the recipe book display shows the same ingredients
 recipes farmersdelight:cooking/squid_ink_pasta /ingredients/*	FD 1.20.1 uses #forge:raw_fishes (with tropical fish); the port's c: tag doesn't have it
+recipes farmersdelight:cooking/squid_ink_pasta /display/*/ingredients/*	as /ingredients/*: the recipe book display shows the same ingredients
 recipes farmersdelight:cooking/chicken_soup /ingredients/*	FD 1.20.1 uses #forge:vegetables (carrot, potato, beetroot + FD's onion and tomato; recipes/cooking/chicken_soup.json); the port's #c:foods/vegetable also has golden carrot
+recipes farmersdelight:cooking/chicken_soup /display/*/ingredients/*	as /ingredients/*: the recipe book display shows the same ingredients
 recipes farmersdelight:cooking/ratatouille /ingredients/*	FD 1.20.1 uses #forge:vegetables (carrot, potato, beetroot + FD's onion and tomato; recipes/cooking/ratatouille.json); the port's #c:foods/vegetable also has golden carrot
+recipes farmersdelight:cooking/ratatouille /display/*/ingredients/*	as /ingredients/*: the recipe book display shows the same ingredients
 recipes farmersdelight:cooking/stuffed_pumpkin_block /ingredients/*	FD 1.20.1 uses #forge:vegetables (carrot, potato, beetroot + FD's onion and tomato; recipes/cooking/stuffed_pumpkin_block.json); the port's #c:foods/vegetable also has golden carrot
+recipes farmersdelight:cooking/stuffed_pumpkin_block /display/*/ingredients/*	as /ingredients/*: the recipe book display shows the same ingredients
 recipes farmersdelight:cooking/vegetable_noodles /ingredients/*	FD 1.20.1 uses #forge:vegetables (carrot, potato, beetroot + FD's onion and tomato; recipes/cooking/vegetable_noodles.json); the port's #c:foods/vegetable also has golden carrot
+recipes farmersdelight:cooking/vegetable_noodles /display/*/ingredients/*	as /ingredients/*: the recipe book display shows the same ingredients
 recipes farmersdelight:kelp_roll *	FD 1.20.1 uses #forge:vegetables (recipes/kelp_roll.json); the port's #c:foods/vegetable adds golden carrot
 recipes farmersdelight:barbecue_stick *	FD 1.20.1 accepts #forge:cooked_fishes (recipes/barbecue_stick.json); the port's recipe dropped fish
 recipes farmersdelight:fried_egg* *	FD 1.20.1 smelts minecraft:egg (recipes/fried_egg.json); the port takes #c:eggs (with 26.x blue and brown eggs)

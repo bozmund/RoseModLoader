@@ -80,6 +80,7 @@ Call `rose.methods` for the live list. Each method lists its parameters and a de
 | `client.status` | | screen, in world?, fps, window minimized/focused, position |
 | `client.screen` | | open screen and its widgets (index, type, text, active, bounds) |
 | `client.click` | `index` or `text` | clicks a widget (a real left click) |
+| `client.clickAt` | `x y button?` | clicks the open screen at GUI coordinates (for things that aren't widgets: recipe book entries, tabs, slots) |
 | `client.setText` | `index`/`text`, `value` | fills a text field |
 | `client.screenshot` | | PNG path |
 | `client.createTestWorld` | | new creative flat test world, enters it |

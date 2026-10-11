@@ -40,6 +40,37 @@ public final class LegacyRecipes {
         return ADAPTED.get(legacy);
     }
 
+    /** The JSON a 1.20.1 recipe was read from, or {@code null}. */
+    public static JsonObject sourceOf(Recipe<?> recipe) {
+        return SOURCES.get(recipe);
+    }
+
+    /**
+     * Rebuilds a 1.20.1 recipe from its source, as the server did ({@code serializer} is the registered 26.3 serializer's
+     * id); {@code null} if that fails. Clients use it for what 1.20.1 did with the recipes the server sent.
+     */
+    public static Recipe<?> parse(Identifier serializer, Identifier id, JsonObject json, net.minecraft.core.HolderLookup.Provider registries) {
+        RecipeSerializer<?> adapted = net.minecraft.core.registries.BuiltInRegistries.RECIPE_SERIALIZER.getValue(serializer);
+        LegacyRecipeSerializer<?> legacy = null;
+        synchronized (ADAPTED) {
+            for (var e : ADAPTED.entrySet()) if (e.getValue() == adapted) legacy = e.getKey();
+        }
+        if (legacy == null) return null;
+        CURRENT_ID.set(id);
+        CURRENT_OPS.set(registries.createSerializationContext(JsonOps.INSTANCE));
+        try {
+            Recipe<?> recipe = legacy.fromJson(id, json);
+            SOURCES.put(recipe, json);
+            return recipe;
+        } catch (RuntimeException | LinkageError e) {
+            com.mojang.logging.LogUtils.getLogger().warn("[rose] couldn't rebuild 1.20.1 recipe {}: {}", id, e.toString());
+            return null;
+        } finally {
+            CURRENT_ID.remove();
+            CURRENT_OPS.remove();
+        }
+    }
+
     /** Set by RecipeIdMixin while a recipe file is decoded: old serializers want the recipe's id. */
     public static void setCurrentId(Identifier id) {
         if (id == null) CURRENT_ID.remove();

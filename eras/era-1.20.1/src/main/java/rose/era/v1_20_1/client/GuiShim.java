@@ -5,6 +5,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.recipebook.RecipeBookComponent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -38,11 +39,9 @@ public final class GuiShim {
 
     /** 1.20.1 {@code new ImageButton(x, y, w, h, u, v, yDiffTex, texture, onPress)}: a button cut from a texture. */
     public static ImageButton imageButton(int x, int y, int width, int height, int u, int v, int yDiffTex, Identifier texture, Button.OnPress onPress) {
-        LegacyImageButton button = new LegacyImageButton(x, y, width, height, u, v, yDiffTex, texture, onPress);
-        // The vanilla recipe book button opens a mod's recipe book, which is a hidden LegacyRecipeBookComponent on
-        // 26.3; a button that does nothing would only confuse players.
-        if (texture.equals(RECIPE_BUTTON)) button.visible = false;
-        return button;
+        // vanilla's recipe book toggle: 26.3 draws it from sprites
+        if (texture.equals(RECIPE_BUTTON)) return new ImageButton(x, y, width, height, RecipeBookComponent.RECIPE_BUTTON_SPRITES, onPress);
+        return new LegacyImageButton(x, y, width, height, u, v, yDiffTex, texture, onPress);
     }
 
     /** 1.20.1 vanilla texture of the recipe book toggle (26.3 draws it from the recipe_book/button sprites). */

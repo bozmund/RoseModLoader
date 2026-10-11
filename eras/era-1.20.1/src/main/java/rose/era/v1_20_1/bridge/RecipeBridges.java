@@ -65,8 +65,42 @@ public final class RecipeBridges {
         return present.isEmpty() ? PlacementInfo.NOT_PLACEABLE : PlacementInfo.create(present);
     }
 
+    /** Mod recipe types go to the legacy book category (sorted into the mod's tabs on the client), others to crafting. */
     public static RecipeBookCategory recipeBookCategory(Recipe<?> self) {
-        return RecipeBookCategories.CRAFTING_MISC;
+        return isModType(self) ? rose.era.v1_20_1.crafting.LegacyRecipeDisplay.CATEGORY : RecipeBookCategories.CRAFTING_MISC;
+    }
+
+    /**
+     * The recipe book display of a recipe of a mod recipe type: its inputs and result, and its source for the client
+     * (see LegacyRecipeDisplay). Recipes of vanilla types have none: they'd appear in vanilla's books, which can't
+     * place them.
+     */
+    @SuppressWarnings("unchecked")
+    public static List<net.minecraft.world.item.crafting.display.RecipeDisplay> display(Recipe<?> self) {
+        var json = LegacyRecipes.sourceOf(self);
+        if (json == null || !isModType(self)) return List.of();
+        List<net.minecraft.world.item.crafting.display.SlotDisplay> inputs = Legacy.find(self, "getIngredients", MethodType.methodType(NonNullList.class))
+                .map(m -> (List<Ingredient>) Legacy.invoke(m, self)).orElse(List.of())
+                .stream().filter(i -> !i.isEmpty()).map(Ingredient::display).toList();
+        ItemStack result = Legacy.find(self, "getResultItem", MethodType.methodType(ItemStack.class, RegistryAccess.class))
+                .map(m -> (ItemStack) Legacy.invoke(m, self, EraContext.registryAccess())).orElse(ItemStack.EMPTY);
+        // 1.20.1 getToastSymbol(): the recipe's workstation icon (a crafting table unless the mod says otherwise)
+        ItemStack station = Legacy.find(self, "getToastSymbol", MethodType.methodType(ItemStack.class))
+                .map(m -> (ItemStack) Legacy.invoke(m, self)).orElse(ItemStack.EMPTY);
+        var serializer = net.minecraft.core.registries.BuiltInRegistries.RECIPE_SERIALIZER.getKey(self.getSerializer());
+        var id = rose.era.v1_20_1.shim.RecipeShim.getId(self);
+        if (serializer == null || id == null) return List.of();
+        return List.of(new rose.era.v1_20_1.crafting.LegacyRecipeDisplay(inputs,
+                result.isEmpty() ? net.minecraft.world.item.crafting.display.SlotDisplay.Empty.INSTANCE
+                        : new net.minecraft.world.item.crafting.display.SlotDisplay.ItemStackSlotDisplay(net.minecraft.world.item.ItemStackTemplate.fromNonEmptyStack(result)),
+                station.isEmpty() ? net.minecraft.world.item.crafting.display.SlotDisplay.Empty.INSTANCE
+                        : new net.minecraft.world.item.crafting.display.SlotDisplay.ItemSlotDisplay(station.typeHolder()),
+                serializer, id, json.toString()));
+    }
+
+    private static boolean isModType(Recipe<?> self) {
+        var type = net.minecraft.core.registries.BuiltInRegistries.RECIPE_TYPE.getKey(self.getType());
+        return type != null && !type.getNamespace().equals("minecraft");
     }
 
     private RecipeBridges() {}

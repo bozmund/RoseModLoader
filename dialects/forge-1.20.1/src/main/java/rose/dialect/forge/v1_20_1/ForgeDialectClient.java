@@ -11,6 +11,8 @@ public final class ForgeDialectClient implements ClientModInitializer {
     public void onInitializeClient() {
         if (ForgeDialect.mods().isEmpty()) return;
         RoseClientNetworking.receiveOnClient(MenuData.TYPE, (payload, client) -> MenuData.received(payload.data()));
+        rose.era.v1_20_1.client.LegacyRecipeBooks.setRegistration(() -> ForgeDialect.postToMods(
+                new net.minecraftforge.client.event.RegisterRecipeBookCategoriesEvent(), "RegisterRecipeBookCategories"));
         // Forge asked items for these as they were constructed, so before any client event
         rose.dialect.forge.v1_20_1.client.ClientItemExtensions.collect();
         // Forge fired this before renderers are built (the first resource reload builds them from the registrations).

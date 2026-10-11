@@ -83,6 +83,19 @@ public final class ClientMethods {
                     return out;
                 }));
 
+        bridge.register("client.clickAt", "x:number, y:number (GUI coordinates, as widgets report them), button?:int (0 left, 1 right)",
+                "Clicks the open screen at a position, the way a mouse click would (for things that aren't widgets, "
+                        + "such as recipe book entries or slots).", p -> onClient(() -> {
+                    Screen screen = requireScreen();
+                    MouseButtonEvent event = new MouseButtonEvent(p.number("x"), p.number("y"),
+                            new MouseButtonInfo(p.has("button") && p.integer("button") == 1 ? InputConstants.MOUSE_BUTTON_RIGHT : InputConstants.MOUSE_BUTTON_LEFT, 0));
+                    boolean handled = screen.mouseClicked(event, false);
+                    screen.mouseReleased(event);
+                    JsonObject out = new JsonObject();
+                    out.addProperty("handled", handled);
+                    return out;
+                }));
+
         bridge.register("client.setText", "index?:int | text?:string (current text or label), value:string",
                 "Sets the text of a text field on the open screen.", p -> onClient(() -> {
                     AbstractWidget widget = findWidget(requireScreen(), p);

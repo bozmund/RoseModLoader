@@ -43,6 +43,12 @@ public class AnyOfIngredient extends Ingredient {
         return parts.stream().flatMap(Ingredient::items).distinct();
     }
 
+    /** Every part, in order (the recipe book cycles through them), not just the first part's set. */
+    @Override
+    public net.minecraft.world.item.crafting.display.SlotDisplay display() {
+        return new net.minecraft.world.item.crafting.display.SlotDisplay.Composite(parts.stream().map(Ingredient::display).toList());
+    }
+
     @Override
     public boolean isEmpty() {
         return parts.stream().allMatch(Ingredient::isEmpty);

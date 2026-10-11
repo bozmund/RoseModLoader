@@ -21,8 +21,14 @@ public final class ScreenBridges {
         Legacy.invoke(Legacy.require(self, "renderBg", RENDER_BG), self, g, a, mouseX, mouseY);
     }
 
-    /** 1.21.2 {@code RecipeUpdateListener.fillGhostRecipe}: old screens' recipe books stay hidden. */
+    /**
+     * 1.21.2 {@code RecipeUpdateListener.fillGhostRecipe}: the server's ghost recipe goes to the screen's recipe book
+     * (1.20.1 {@code getRecipeBookComponent()}).
+     */
     public static void fillGhostRecipe(RecipeUpdateListener self, RecipeDisplay display) {
+        Legacy.find(self, "getRecipeBookComponent", MethodType.methodType(LegacyRecipeBookComponent.class))
+                .map(m -> (LegacyRecipeBookComponent) Legacy.invoke(m, self))
+                .ifPresent(book -> book.fillGhostRecipe(display));
     }
 
     private ScreenBridges() {}

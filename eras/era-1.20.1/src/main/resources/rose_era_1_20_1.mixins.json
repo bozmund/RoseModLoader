@@ -22,7 +22,9 @@
     "defaultRequire": 1
   },
   "client": [
+    "client.ClientRecipeBookMixin",
     "client.ItemModelsMixin",
+    "client.ScreenInputMixin",
     "client.RangeSelectItemModelPropertiesMixin"
   ]
 }
