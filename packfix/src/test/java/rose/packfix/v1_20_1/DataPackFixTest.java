@@ -32,6 +32,31 @@ class DataPackFixTest {
     }
 
     @Test
+    void recipeTypesWithoutNamespaceAreVanillas() {
+        // evidence: 1.20.1 RecipeManager.fromJson reads "type" as a ResourceLocation (default namespace minecraft)
+        JsonObject recipe = upgrade("data/nc/recipes/compass.json", """
+                {"type":"crafting_shaped","pattern":["S"],"key":{"S":{"tag":"saplings"}},"result":{"item":"nc:compass"}}""");
+        assertEquals("minecraft:crafting_shaped", recipe.get("type").getAsString());
+        assertEquals("#saplings", recipe.getAsJsonObject("key").get("S").getAsString());
+        assertEquals("nc:compass", recipe.getAsJsonObject("result").get("id").getAsString());
+    }
+
+    @Test
+    void unknownBookCategoriesBecomeMisc() {
+        // evidence: 1.20.1 ShapelessRecipe.Serializer: CraftingBookCategory.CODEC.byName(category, MISC);
+        // SimpleCookingSerializer: CookingBookCategory.CODEC.byName(category, MISC)
+        JsonObject crafting = upgrade("data/cd/recipes/dog.json", """
+                {"type":"minecraft:crafting_shapeless","category":"food","ingredients":[{"item":"a:b"}],"result":{"item":"a:c"}}""");
+        assertEquals("misc", crafting.get("category").getAsString());
+        JsonObject cooking = upgrade("data/cd/recipes/cook.json", """
+                {"type":"minecraft:smelting","category":"food","ingredient":{"item":"a:b"},"result":"a:c","experience":0.1}""");
+        assertEquals("food", cooking.get("category").getAsString());
+        JsonObject building = upgrade("data/cd/recipes/wall.json", """
+                {"type":"minecraft:crafting_shapeless","category":"building","ingredients":[{"item":"a:b"}],"result":{"item":"a:c"}}""");
+        assertEquals("building", building.get("category").getAsString());
+    }
+
+    @Test
     void tagEntriesNamingRenamedVanillaTagsFollowTheRename() {
         JsonObject tag = upgrade("data/fd/tags/blocks/soils.json", "{\"values\":[\"#minecraft:mushroom_grow_block\",\"fd:rich_soil\"]}");
         assertEquals("#minecraft:overrides_mushroom_light_requirement",

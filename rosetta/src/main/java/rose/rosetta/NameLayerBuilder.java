@@ -63,7 +63,10 @@ public final class NameLayerBuilder {
         // Intermediary name -> Mojang name in 1.21.11, for classes, methods and fields.
         Map<String, String> classByInt = join(intNew.classes, mojNew.classes);
         Map<String, String> methodByInt = join(intNew.methods, mojNew.methods);
-        Map<String, String> fieldByInt = join(intNew.fields, mojNew.fields);
+        // Fields by intermediary owner and name: intermediary field names aren't unique on their own (1.21.11 has
+        // field_28859 in two classes: ServerLevel.sleepStatus and a Blocks constant).
+        Map<String, String> fieldByInt = joinQualified(intNew, mojNew.fields);
+        Map<String, String> fieldByUniqueInt = joinUnique(intNew.fields, mojNew.fields);
 
         Set<String> newMojangClasses = new HashSet<>(mojNew.classes.values());
         Map<String, List<String>> appearedBySimpleName = appearedClassesBySimpleName(targetClasses, newMojangClasses);
@@ -114,8 +117,10 @@ public final class NameLayerBuilder {
             String srgName = e.getValue();
             if (!srgName.startsWith("f_")) continue;
             String readable = mojOld.fields.getOrDefault(e.getKey(), srgName);
-            String intName = intOld.fields.get(e.getKey());
-            String newName = renamed26.apply(e.getKey(), intName != null ? fieldByInt.get(intName) : null);
+            String qualified = qualifiedIntermediary(intOld, e.getKey());
+            String newName = qualified != null ? fieldByInt.get(qualified) : null;
+            if (newName == null && intOld.fields.get(e.getKey()) != null) newName = fieldByUniqueInt.get(intOld.fields.get(e.getKey()));
+            newName = renamed26.apply(e.getKey(), newName);
             MemberEntry entry = member(srgName, readable, newName);
             String fieldDesc = intOld.fieldDescs.get(e.getKey());
             if (!entry.exists() && fieldDesc != null
@@ -275,6 +280,33 @@ public final class NameLayerBuilder {
     }
 
     /** For keys present in both maps: a's value -> b's value (e.g. intermediary name -> Mojang name). */
+    /** Intermediary {@code class_N.field_M} -> Mojang name, from fields keyed {@code obfOwner.obfName}. */
+    static Map<String, String> joinQualified(Mappings intermediary, Map<String, String> mojang) {
+        Map<String, String> out = new HashMap<>();
+        for (var e : intermediary.fields.entrySet()) {
+            String other = mojang.get(e.getKey());
+            String key = qualifiedIntermediary(intermediary, e.getKey());
+            if (other != null && key != null) out.putIfAbsent(key, other);
+        }
+        return out;
+    }
+
+    /** Like {@link #join}, leaving out intermediary names that more than one member has. */
+    static Map<String, String> joinUnique(Map<String, String> a, Map<String, String> b) {
+        Map<String, Integer> counts = new HashMap<>();
+        for (String name : a.values()) counts.merge(name, 1, Integer::sum);
+        Map<String, String> out = join(a, b);
+        out.keySet().removeIf(name -> counts.get(name) > 1);
+        return out;
+    }
+
+    /** {@code class_N.field_M} for a field keyed {@code obfOwner.obfName}, or {@code null}. */
+    static String qualifiedIntermediary(Mappings intermediary, String fieldKey) {
+        String field = intermediary.fields.get(fieldKey);
+        String owner = intermediary.classes.get(fieldKey.substring(0, fieldKey.lastIndexOf('.')));
+        return field == null || owner == null ? null : owner + "." + field;
+    }
+
     private static Map<String, String> join(Map<String, String> a, Map<String, String> b) {
         Map<String, String> out = new HashMap<>();
         for (var e : a.entrySet()) {

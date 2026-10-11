@@ -335,6 +335,11 @@ public final class DataPackFix {
             report.add("dropped " + path + " (no conditional branch applies)");
             return null;
         }
+        if (!type.isEmpty() && !type.contains(":")) {
+            type = "minecraft:" + type; // 1.20.1 read recipe types as ResourceLocations (default namespace)
+            recipe.addProperty("type", type);
+        }
+        fixCategory(recipe, type);
         if (recipe.has("conditions")) {
             if (!conditionsMet(recipe.getAsJsonArray("conditions"), path)) {
                 report.add("dropped " + path + " (conditions: needs another mod)");
@@ -376,6 +381,20 @@ public final class DataPackFix {
             }
         }
         return recipe;
+    }
+
+    private static final Set<String> CRAFTING_CATEGORIES = Set.of("building", "redstone", "equipment", "misc");
+    private static final Set<String> COOKING_CATEGORIES = Set.of("food", "blocks", "misc");
+
+    /**
+     * 1.20.1 read a recipe's book category with {@code CODEC.byName(name, MISC)}: an unknown one was MISC. 26.3 rejects
+     * it, so it becomes "misc" (crafting: building/redstone/equipment/misc, cooking: food/blocks/misc).
+     */
+    static void fixCategory(JsonObject recipe, String type) {
+        if (!(recipe.get("category") instanceof JsonPrimitive category)) return;
+        Set<String> known = COOKING.contains(type) ? COOKING_CATEGORIES
+                : type.startsWith("minecraft:crafting_") ? CRAFTING_CATEGORIES : null;
+        if (known != null && !known.contains(category.getAsString())) recipe.addProperty("category", "misc");
     }
 
     /** {@code {"item": x, "count": n}} or {@code "x"} becomes {@code {"id": x, "count": n}}. */

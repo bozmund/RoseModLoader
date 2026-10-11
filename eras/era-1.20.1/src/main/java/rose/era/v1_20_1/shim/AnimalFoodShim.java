@@ -35,6 +35,22 @@ public final class AnimalFoodShim {
     public static Ingredient catFood() { return tagIngredient(ItemTags.CAT_FOOD); }
     public static void setCatFood(Ingredient value) { addIngredient(ItemTags.CAT_FOOD, value); }
 
+    public static Ingredient turtleFood() { return tagIngredient(ItemTags.TURTLE_FOOD); }
+    public static void setTurtleFood(Ingredient value) { addIngredient(ItemTags.TURTLE_FOOD, value); }
+    public static Ingredient camelFood() { return tagIngredient(ItemTags.CAMEL_FOOD); }
+    public static void setCamelFood(Ingredient value) { addIngredient(ItemTags.CAMEL_FOOD, value); }
+    public static Ingredient frogFood() { return tagIngredient(ItemTags.FROG_FOOD); }
+    public static void setFrogFood(Ingredient value) { addIngredient(ItemTags.FROG_FOOD, value); }
+    public static Ingredient horseFood() { return tagIngredient(ItemTags.HORSE_FOOD); }
+    public static void setHorseFood(Ingredient value) { addIngredient(ItemTags.HORSE_FOOD, value); }
+    public static Ingredient llamaFood() { return tagIngredient(ItemTags.LLAMA_FOOD); }
+    public static void setLlamaFood(Ingredient value) { addIngredient(ItemTags.LLAMA_FOOD, value); }
+    public static Ingredient ocelotFood() { return tagIngredient(ItemTags.OCELOT_FOOD); }
+    public static void setOcelotFood(Ingredient value) { addIngredient(ItemTags.OCELOT_FOOD, value); }
+    public static Ingredient striderFood() { return tagIngredient(ItemTags.STRIDER_FOOD); }
+    public static void setStriderFood(Ingredient value) { addIngredient(ItemTags.STRIDER_FOOD, value); }
+    public static Ingredient striderTemptItems() { return tagIngredient(ItemTags.STRIDER_TEMPT_ITEMS); }
+    public static void setStriderTemptItems(Ingredient value) { addIngredient(ItemTags.STRIDER_TEMPT_ITEMS, value); }
     public static Set<Item> parrotFood() { return new TagSet(ItemTags.PARROT_FOOD); }
     public static void setParrotFood(Set<Item> value) { new TagSet(ItemTags.PARROT_FOOD).addAll(value); }
     public static Set<Item> villagerWantedItems() { return new TagSet(ItemTags.VILLAGER_PICKS_UP); }
