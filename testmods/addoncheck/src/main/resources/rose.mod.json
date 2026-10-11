@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "id": "addoncheck",
+  "name": "Add-on mod checks",
+  "version": "0.0.1",
+  "entrypoints": {
+    "main": ["rose.testmods.addoncheck.AddonCheck"]
+  }
+}

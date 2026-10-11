@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "addoncheck:od_cooking_pot_braises_sea_pickles",
+  "structure": "minecraft:empty",
+  "max_ticks": 400,
+  "padding": 2
+}

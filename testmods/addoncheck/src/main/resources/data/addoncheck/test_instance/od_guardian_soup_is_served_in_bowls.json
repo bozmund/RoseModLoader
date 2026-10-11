@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "addoncheck:od_guardian_soup_is_served_in_bowls",
+  "structure": "minecraft:empty",
+  "max_ticks": 20,
+  "padding": 2
+}

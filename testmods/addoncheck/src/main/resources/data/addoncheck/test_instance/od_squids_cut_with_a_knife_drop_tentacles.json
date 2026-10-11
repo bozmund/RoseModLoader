@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "addoncheck:od_squids_cut_with_a_knife_drop_tentacles",
+  "structure": "minecraft:empty",
+  "max_ticks": 60,
+  "padding": 2
+}

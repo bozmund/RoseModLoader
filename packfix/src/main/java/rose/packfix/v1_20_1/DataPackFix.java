@@ -76,7 +76,7 @@ public final class DataPackFix {
     private final Set<String> knownMods;
     private final List<String> report = new ArrayList<>();
 
-    /** @param knownMods mod ids whose integration data should be kept (the mod itself, "forge", "minecraft") */
+    /** @param knownMods mod ids whose integration data should be kept (every installed mod, "forge", "minecraft") */
     public DataPackFix(Set<String> knownMods) {
         this.knownMods = Set.copyOf(knownMods);
     }

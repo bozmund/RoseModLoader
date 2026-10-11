@@ -95,6 +95,10 @@ public final class ForgeMods {
         // translator, rule readers, packfix and this class: their code shapes the output as much as the rules do
         String codeHash = ModTranslator.codeHash(ModTranslator.class, NameLayer.class, DataPackFix.class, ForgeMods.class);
         inputsHash = ModTranslator.sha256(concat(inputsHash.getBytes(StandardCharsets.UTF_8), codeHash.getBytes(StandardCharsets.UTF_8)));
+        // forge:mod_loaded conditions in one mod's data depend on which other mods are installed
+        java.util.Set<String> knownMods = new java.util.TreeSet<>(List.of("forge", "minecraft"));
+        for (Path jar : jars) knownMods.add(modIdOf(jar));
+        inputsHash = ModTranslator.sha256(concat(inputsHash.getBytes(StandardCharsets.UTF_8), String.join(",", knownMods).getBytes(StandardCharsets.UTF_8)));
         NameLayer layer = NameLayer.read(nameLayer);
         ClassIndex game = ClassIndex.of(gameJars, true);
         ModTranslator translator = new ModTranslator(layer, RedirectRules.read(redirects), BridgeRules.read(bridges),
@@ -107,8 +111,7 @@ public final class ForgeMods {
 
         List<ModMetadata> mods = new ArrayList<>();
         for (Path jar : jars) {
-            String modId = modIdOf(jar);
-            DataPackFix packFix = new DataPackFix(java.util.Set.of(modId, "forge", "minecraft"));
+            DataPackFix packFix = new DataPackFix(knownMods);
             List<String> report = new ArrayList<>();
             List<ModTranslator.Resource> widener = new ArrayList<>();
             Path translated = translator.translate(jar, cacheDir, new ModTranslator.ResourceTransform() {
