@@ -37,6 +37,7 @@ final class CornDelightChecks {
         test("cd_recipes_are_in_the_recipe_registry", CornDelightChecks::recipesAreInTheRegistry);
         test("cd_villager_trades_make_offers", CornDelightChecks::villagerTradesMakeOffers);
         test("cd_client_setup_links", CornDelightChecks::clientSetupLinks);
+        test("cd_bone_meal_grows_corn_two_blocks_tall", CornDelightChecks::boneMealGrowsCorn);
     }
 
     private static Item cd(String path) {
@@ -176,6 +177,23 @@ final class CornDelightChecks {
         } catch (ReflectiveOperationException | LinkageError e) {
             throw new IllegalStateException("Corn Delight's ClientSetupEvents doesn't link", e);
         }
+        helper.succeed();
+    }
+
+    /**
+     * Corn is mmlib's two-block HighCropBlock: bone meal grows the bottom to full age, then grows the top half
+     * through the 1.20.1 BonemealableBlock methods (isValidBonemealTarget with an isClient flag).
+     */
+    private static void boneMealGrowsCorn(GameTestHelper helper) {
+        if (skip(helper, CD)) return;
+        helper.setBlock(POS, net.minecraft.world.level.block.Blocks.FARMLAND);
+        helper.setBlock(POS.above(), block(CD, "corn_crop"));
+        var level = helper.getLevel();
+        var pos = helper.absolutePos(POS.above());
+        for (int i = 0; i < 30; i++) {
+            net.minecraft.world.item.BoneMealItem.growCrop(new ItemStack(net.minecraft.world.item.Items.BONE_MEAL), level, pos);
+        }
+        helper.assertBlockPresent(block(CD, "corn_crop"), POS.above(2));
         helper.succeed();
     }
 }

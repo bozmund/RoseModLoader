@@ -69,12 +69,16 @@ public final class RedirectRules {
     private final Map<String, Redirect> bySrgMember = new java.util.HashMap<>();
     private final boolean hasConstructorRules;
 
+    /**
+     * @param bySymbol rules in file order: when rules for several owners share an SRG member, the first is the one
+     *                 calls on other owners fall back to (the others match their owner exactly)
+     */
     public RedirectRules(Map<String, Redirect> bySymbol) {
-        this.bySymbol = Map.copyOf(bySymbol);
+        this.bySymbol = java.util.Collections.unmodifiableMap(new java.util.LinkedHashMap<>(bySymbol));
         this.hasConstructorRules = bySymbol.values().stream().anyMatch(Redirect::isConstructor);
         for (Redirect r : bySymbol.values()) {
             String member = r.symbol().substring(r.owner().length() + 1);
-            if (member.matches("[mf]_\\d+_[(:=].*")) bySrgMember.put(member, r);
+            if (member.matches("[mf]_\\d+_[(:=].*")) bySrgMember.putIfAbsent(member, r);
         }
     }
 

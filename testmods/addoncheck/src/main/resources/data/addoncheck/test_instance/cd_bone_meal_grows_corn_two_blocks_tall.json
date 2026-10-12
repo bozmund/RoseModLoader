@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "addoncheck:cd_bone_meal_grows_corn_two_blocks_tall",
+  "structure": "minecraft:empty",
+  "max_ticks": 100,
+  "padding": 2
+}
