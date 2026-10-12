@@ -86,5 +86,29 @@ public final class ItemBridges {
         return (Integer) Legacy.invoke(old, self, stack);
     }
 
+    /**
+     * 1.20.1 {@code inventoryTick(stack, level, entity, slot, selected)} with the inventory slot index and whether it
+     * is the selected hotbar slot; 26.3 ticks with a ServerLevel and the main hand for the selected slot. The index is
+     * the stack's place in the player's inventory (-1 elsewhere), unless a 1.20.1-shaped caller passed its own.
+     */
+    public static void inventoryTick(Item self, ItemStack stack, net.minecraft.server.level.ServerLevel level, net.minecraft.world.entity.Entity owner,
+                                     net.minecraft.world.entity.EquipmentSlot slot) {
+        var old = Legacy.require(self, "inventoryTick", MethodType.methodType(void.class, ItemStack.class, Level.class,
+                net.minecraft.world.entity.Entity.class, int.class, boolean.class));
+        var legacy = rose.era.v1_20_1.shim.ItemStackShim.legacyTick(stack);
+        int index = legacy != null ? legacy.slot() : inventoryIndex(owner, stack);
+        boolean selected = legacy != null ? legacy.selected() : slot == net.minecraft.world.entity.EquipmentSlot.MAINHAND;
+        Legacy.invoke(old, self, stack, level, owner, index, selected);
+    }
+
+    private static int inventoryIndex(net.minecraft.world.entity.Entity owner, ItemStack stack) {
+        if (!(owner instanceof Player player)) return -1;
+        var items = player.getInventory().getNonEquipmentItems();
+        for (int i = 0; i < items.size(); i++) {
+            if (items.get(i) == stack) return i;
+        }
+        return -1;
+    }
+
     private ItemBridges() {}
 }

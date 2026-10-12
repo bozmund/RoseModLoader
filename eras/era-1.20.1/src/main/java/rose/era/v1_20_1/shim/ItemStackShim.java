@@ -5,6 +5,45 @@ import net.minecraft.world.item.ItemStack;
 
 /** Redirect targets for 1.20.1 {@code ItemStack} methods that changed in 26.3. */
 public final class ItemStackShim {
+    /** A 1.20.1-shaped inventory tick in progress: the slot index and selection its caller passed. */
+    public record LegacyTick(ItemStack stack, int slot, boolean selected) {}
+
+    private static final ThreadLocal<LegacyTick> LEGACY_TICK = new ThreadLocal<>();
+
+    /** The 1.20.1-shaped inventory tick of {@code stack} in progress, if any (ItemBridges.inventoryTick). */
+    public static LegacyTick legacyTick(ItemStack stack) {
+        LegacyTick tick = LEGACY_TICK.get();
+        return tick != null && tick.stack() == stack ? tick : null;
+    }
+
+    /**
+     * 1.20.1 {@code stack.inventoryTick(level, entity, slot, selected)} (Curios ticks worn curios with it); 26.3
+     * takes the equipment slot instead (the main hand for the selected slot). The 1.20.1 slot and selection reach
+     * old item overrides unchanged.
+     */
+    public static void inventoryTick(ItemStack self, net.minecraft.world.level.Level level, net.minecraft.world.entity.Entity entity,
+                                     int slot, boolean selected) {
+        LegacyTick previous = LEGACY_TICK.get();
+        LEGACY_TICK.set(new LegacyTick(self, slot, selected));
+        try {
+            self.inventoryTick(level, entity, selected ? net.minecraft.world.entity.EquipmentSlot.MAINHAND : null);
+        } finally {
+            LEGACY_TICK.set(previous);
+        }
+    }
+
+    /**
+     * 1.20.1 {@code Item.inventoryTick(stack, level, entity, slot, selected)} as an old item's {@code super} call:
+     * the game's own 26.3 inventoryTick (a no-op for most items), which only runs on the server.
+     */
+    public static void itemInventoryTick(Item self, ItemStack stack, net.minecraft.world.level.Level level,
+                                         net.minecraft.world.entity.Entity entity, int slot, boolean selected) {
+        if (!(level instanceof net.minecraft.server.level.ServerLevel serverLevel)) return;
+        var game = rose.era.v1_20_1.bridge.Legacy.superMethod(self, "inventoryTick", java.lang.invoke.MethodType.methodType(void.class,
+                ItemStack.class, net.minecraft.server.level.ServerLevel.class, net.minecraft.world.entity.Entity.class, net.minecraft.world.entity.EquipmentSlot.class));
+        rose.era.v1_20_1.bridge.Legacy.invoke(game, self, stack, serverLevel, entity, selected ? net.minecraft.world.entity.EquipmentSlot.MAINHAND : null);
+    }
+
     /** The entity holding the stack whose 1.20.1 item property is being read (LegacyItemProperty), if any. */
     private static final ThreadLocal<net.minecraft.world.entity.Entity> PROPERTY_OWNER = new ThreadLocal<>();
 

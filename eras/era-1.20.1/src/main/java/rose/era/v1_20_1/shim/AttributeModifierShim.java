@@ -48,6 +48,48 @@ public final class AttributeModifierShim {
         return self.id();
     }
 
+    /**
+     * 1.20.1 {@code getId()}: the UUID a modifier was created with ({@link #idFor} in reverse); a modifier made with
+     * a 26.3 id gets a UUID derived from it.
+     */
+    public static UUID getId(AttributeModifier self) {
+        for (Map.Entry<UUID, Identifier> known : KNOWN.entrySet()) {
+            if (known.getValue().equals(self.id())) return known.getKey();
+        }
+        String path = self.id().getPath();
+        if (self.id().getNamespace().equals("rose") && path.startsWith("legacy/")) {
+            try {
+                return UUID.fromString(path.substring("legacy/".length()));
+            } catch (IllegalArgumentException e) {
+                // not one Rose made from a UUID
+            }
+        }
+        return UUID.nameUUIDFromBytes(self.id().toString().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+    }
+
+    /** 1.20.1 {@code save()}: {Name, Amount, Operation (0-2), UUID (4 ints)}; 26.3 modifiers save through a codec. */
+    public static net.minecraft.nbt.CompoundTag save(AttributeModifier self) {
+        net.minecraft.nbt.CompoundTag tag = new net.minecraft.nbt.CompoundTag();
+        tag.putString("Name", getName(self));
+        tag.putDouble("Amount", self.amount());
+        tag.putInt("Operation", self.operation().id());
+        tag.putIntArray("UUID", net.minecraft.core.UUIDUtil.uuidToIntArray(getId(self)));
+        return tag;
+    }
+
+    /** 1.20.1 {@code AttributeModifier.load(tag)}, what {@link #save} wrote; null (as in 1.20.1) when it isn't one. */
+    public static AttributeModifier load(net.minecraft.nbt.CompoundTag tag) {
+        int[] uuid = tag.getIntArray("UUID").filter(a -> a.length == 4).orElse(null);
+        if (uuid == null) return null;
+        return create(net.minecraft.core.UUIDUtil.uuidFromIntArray(uuid), tag.getStringOr("Name", ""), tag.getDoubleOr("Amount", 0.0),
+                fromValue(tag.getIntOr("Operation", 0)));
+    }
+
+    /** 1.20.1 {@code Operation.fromValue(int)}: same numbers as 26.3's operation ids. */
+    public static AttributeModifier.Operation fromValue(int value) {
+        return AttributeModifier.Operation.BY_ID.apply(value);
+    }
+
     public static Identifier idFor(UUID id) {
         Identifier known = KNOWN.get(id);
         return known != null ? known : Identifier.fromNamespaceAndPath("rose", "legacy/" + id.toString().toLowerCase(java.util.Locale.ROOT));

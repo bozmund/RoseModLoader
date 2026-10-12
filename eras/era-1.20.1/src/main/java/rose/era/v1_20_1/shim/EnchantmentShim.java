@@ -17,6 +17,18 @@ import rose.era.v1_20_1.enchantment.LegacyEnchantment;
  * view, and the shims look it up in the running server's registry.
  */
 public final class EnchantmentShim {
+    /** 1.20.1 {@code EnchantmentHelper.hasVanishingCurse(stack)}: 26.3 curses are effect components (Player drops). */
+    public static boolean hasVanishingCurse(net.minecraft.world.item.ItemStack stack) {
+        return net.minecraft.world.item.enchantment.EnchantmentHelper.has(stack,
+                net.minecraft.world.item.enchantment.EnchantmentEffectComponents.PREVENT_EQUIPMENT_DROP);
+    }
+
+    /** 1.20.1 {@code EnchantmentHelper.hasBindingCurse(stack)}. */
+    public static boolean hasBindingCurse(net.minecraft.world.item.ItemStack stack) {
+        return net.minecraft.world.item.enchantment.EnchantmentHelper.has(stack,
+                net.minecraft.world.item.enchantment.EnchantmentEffectComponents.PREVENT_ARMOR_CHANGE);
+    }
+
     public static LegacyEnchantment sharpness() { return LegacyEnchantment.of(Enchantments.SHARPNESS); }
     public static LegacyEnchantment smite() { return LegacyEnchantment.of(Enchantments.SMITE); }
     public static LegacyEnchantment baneOfArthropods() { return LegacyEnchantment.of(Enchantments.BANE_OF_ARTHROPODS); }

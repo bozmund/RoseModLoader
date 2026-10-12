@@ -55,3 +55,6 @@ accessible field net/minecraft/world/entity/LivingEntity swingState Lnet/minecra
 accessible field net/minecraft/world/entity/LivingEntity$SwingState animation F
 accessible field net/minecraft/world/entity/LivingEntity$SwingState oldAnimation F
 accessible field net/minecraft/world/level/block/DropExperienceBlock xpRange Lnet/minecraft/util/valueproviders/IntProvider;
+
+# 1.20.1 ExperienceOrb.value was a public field mods changed (Curios curio mending); 26.3 keeps setValue private
+accessible method net/minecraft/world/entity/ExperienceOrb setValue (I)V

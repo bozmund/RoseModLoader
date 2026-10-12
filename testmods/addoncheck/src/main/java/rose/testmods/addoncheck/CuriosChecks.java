@@ -28,6 +28,8 @@ final class CuriosChecks {
         test("cu_break_event_experience_drops", CuriosChecks::breakEventExperienceDrops);
         test("cu_fortune_mixin_applies", CuriosChecks::fortuneMixinApplies);
         test("cu_drop_rules_keep_their_overrides", CuriosChecks::dropRulesKeepTheirOverrides);
+        test("cu_worn_curios_tick_and_drop", CuriosChecks::wornCuriosTickAndDrop);
+        test("cu_curse_and_orb_shims", CuriosChecks::curseAndOrbShims);
     }
 
     /** Positions whose BreakEvent experience the listener below sets to 42. */
@@ -198,6 +200,62 @@ final class CuriosChecks {
         } catch (ReflectiveOperationException ex) {
             throw new IllegalStateException(ex);
         }
+        helper.succeed();
+    }
+
+    /**
+     * A worn curio (Corn Delight's cob pipe, a head curio through Curios' item capability) is ticked with the wearer
+     * (Curios calls 1.20.1 ItemStack.inventoryTick on it) and dropped when the wearer dies (Curios checks the 1.20.1
+     * vanishing curse).
+     */
+    private static void wornCuriosTickAndDrop(GameTestHelper helper) {
+        if (skip(helper, CU, "corn_delight")) return;
+        // a player with a connection, as one that dies needs (placed at the world spawn, then moved here)
+        var player = helper.makeMockServerPlayerInLevel();
+        player.snapTo(helper.absoluteVec(net.minecraft.world.phys.Vec3.atBottomCenterOf(net.minecraft.core.BlockPos.ZERO.above())));
+        Object handler = ((Optional<?>) call(callStatic(api(), "getCuriosInventory", new Class<?>[] {LivingEntity.class}, player), "resolve")).orElseThrow();
+        Object head = ((Optional<?>) AddonCheck.call2(handler, "getStacksHandler", String.class, "head")).orElseThrow(() -> new IllegalStateException("no head slot"));
+        var pipe = new net.minecraft.world.item.ItemStack(AddonCheck.item("corn_delight", "cob_pipe"));
+        AddonCheck.setSlot(call(head, "getStacks"), 0, pipe);
+        // the LivingTickEvent Rose fires as a living entity ticks (a mock player has no connection to tick with)
+        for (int i = 0; i < 3; i++) {
+            net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.entity.living.LivingEvent.LivingTickEvent(player));
+        }
+        helper.assertTrue(AddonCheck.slot(call(head, "getStacks"), 0).is(pipe.getItem()), "the worn pipe is gone after ticking");
+        var where = player.getBoundingBox().inflate(4);
+        player.die(helper.getLevel().damageSources().generic());
+        helper.succeedWhen(() -> helper.assertTrue(!helper.getLevel().getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,
+                where, e -> e.getItem().is(pipe.getItem())).isEmpty(), "the worn pipe wasn't dropped"));
+    }
+
+    /**
+     * Curios' drops and curio mending use 1.20.1 EnchantmentHelper.hasVanishingCurse/hasBindingCurse and the public
+     * ExperienceOrb.value field: the curses are 26.3 enchantment effects, the value a private field with accessors.
+     * Its slot modifiers are saved as 1.20.1 AttributeModifier tags.
+     */
+    private static void curseAndOrbShims(GameTestHelper helper) {
+        if (skip(helper, CU)) return;
+        var lookup = helper.getLevel().registryAccess().lookupOrThrow(net.minecraft.core.registries.Registries.ENCHANTMENT);
+        var cursed = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.DIAMOND_HELMET);
+        cursed.enchant(lookup.getOrThrow(net.minecraft.world.item.enchantment.Enchantments.VANISHING_CURSE), 1);
+        var bound = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.DIAMOND_HELMET);
+        bound.enchant(lookup.getOrThrow(net.minecraft.world.item.enchantment.Enchantments.BINDING_CURSE), 1);
+        helper.assertTrue(rose.era.v1_20_1.shim.EnchantmentShim.hasVanishingCurse(cursed) && !rose.era.v1_20_1.shim.EnchantmentShim.hasVanishingCurse(bound),
+                "the vanishing curse isn't recognized");
+        helper.assertTrue(rose.era.v1_20_1.shim.EnchantmentShim.hasBindingCurse(bound) && !rose.era.v1_20_1.shim.EnchantmentShim.hasBindingCurse(cursed),
+                "the binding curse isn't recognized");
+        var orb = new net.minecraft.world.entity.ExperienceOrb(helper.getLevel(), 0, 0, 0, 7);
+        helper.assertTrue(rose.era.v1_20_1.shim.EntityShim.orbValue(orb) == 7, "the orb is worth " + rose.era.v1_20_1.shim.EntityShim.orbValue(orb));
+        rose.era.v1_20_1.shim.EntityShim.setOrbValue(orb, 3);
+        helper.assertTrue(orb.getValue() == 3, "the orb is worth " + orb.getValue() + " after setting 3");
+        // curio slot modifiers are saved and loaded in 1.20.1's form, keeping their UUID
+        var uuid = java.util.UUID.fromString("1f0ab2d2-3c43-4d5e-8f60-718293a4b5c6");
+        var modifier = rose.era.v1_20_1.shim.AttributeModifierShim.create(uuid, "ring", 2.0,
+                rose.era.v1_20_1.shim.AttributeModifierShim.fromValue(1));
+        var loaded = rose.era.v1_20_1.shim.AttributeModifierShim.load(rose.era.v1_20_1.shim.AttributeModifierShim.save(modifier));
+        helper.assertTrue(loaded != null && loaded.equals(modifier) && rose.era.v1_20_1.shim.AttributeModifierShim.getId(loaded).equals(uuid)
+                && loaded.operation() == net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADD_MULTIPLIED_BASE,
+                "the modifier came back as " + loaded);
         helper.succeed();
     }
 }

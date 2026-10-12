@@ -20,6 +20,16 @@ import net.minecraft.world.level.Level;
 
 /** Redirect targets for 1.20.1 entity and item-durability calls that 26.3 removed or reshaped. */
 public final class EntityShim {
+    /** 1.20.1 public field {@code orb.value}; 26.3 {@code getValue()}. */
+    public static int orbValue(net.minecraft.world.entity.ExperienceOrb self) {
+        return self.getValue();
+    }
+
+    /** Writes 1.20.1 {@code orb.value}; 26.3 sets it through the (widened) {@code setValue}. */
+    public static void setOrbValue(net.minecraft.world.entity.ExperienceOrb self, int value) {
+        self.setValue(value);
+    }
+
     /** 1.20.1 {@code displayClientMessage(message, actionBar)}; 26.3 split it into overlay and system messages. */
     public static void displayClientMessage(Player player, Component message, boolean actionBar) {
         if (actionBar) player.sendOverlayMessage(message);

@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "addoncheck:cu_worn_curios_tick_and_drop",
+  "structure": "minecraft:empty",
+  "max_ticks": 100,
+  "padding": 2
+}
