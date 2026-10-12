@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "addoncheck:cu_equipped_curios_and_invalid_stacks",
+  "structure": "minecraft:empty",
+  "max_ticks": 100,
+  "padding": 2
+}

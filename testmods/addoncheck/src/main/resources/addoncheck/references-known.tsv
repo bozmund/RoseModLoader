@@ -1,0 +1,282 @@
+# Translated references known not to resolve on 26.3: member (owner.name desc)<TAB>why (each a tracked follow-up).
+# translated_mod_references_resolve fails for any other reference that does not resolve, and for an entry here that now does.
+cn/mcmod_mmf/mmlib/client/model/BedrockEntityModel.copyPropertiesTo(Lnet/minecraft/client/model/EntityModel;)V	method missing on 26.3; needs a rule or shim (in BedrockHumanoidModel)
+cn/mcmod_mmf/mmlib/client/model/BedrockEntityModel.prepareMobModel(Lnet/minecraft/world/entity/Entity;FFF)V	method missing on 26.3; needs a rule or shim (in BedrockHumanoidModel)
+cn/mcmod_mmf/mmlib/client/model/BedrockHumanoidModel.attackTimeF	field missing on 26.3; needs a rule or shim (in BedrockHumanoidModel)
+cn/mcmod_mmf/mmlib/client/model/BedrockHumanoidModel.ridingZ	field missing on 26.3; needs a rule or shim (in BedrockHumanoidModel)
+cn/mcmod_mmf/mmlib/entity/EntityBullet.doEnchantDamageEffects(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/entity/Entity;)V	method missing on 26.3; needs a rule or shim (in EntityBullet)
+cn/mcmod_mmf/mmlib/item/ItemFoodBase.getCraftingRemainingItem(Lnet/minecraft/world/item/ItemStack;)Lnet/minecraft/world/item/ItemStack;	method missing on 26.3; needs a rule or shim (in ItemFoodBase)
+com/illusivesoulworks/spectrelib/config/client/screen/EditConfigScreen.setTooltipForNextRenderPass(Ljava/util/List;)V	method missing on 26.3; needs a rule or shim (in EditConfigScreen$ConfigList)
+com/mojang/blaze3d/platform/InputConstants.getKey(II)Lcom/mojang/blaze3d/platform/InputConstants$Key;	method missing on 26.3; needs a rule or shim (in CuriosScreen, CuriosScreenV2)
+com/mojang/blaze3d/platform/Lighting.setupFor3DItems()V	method missing on 26.3; needs a rule or shim (in GeoItemRenderer)
+com/mojang/blaze3d/platform/Lighting.setupForEntityInInventory()V	method missing on 26.3; needs a rule or shim (in GeoItemRenderer)
+com/mojang/blaze3d/platform/Lighting.setupForFlatItems()V	method missing on 26.3; needs a rule or shim (in GeoItemRenderer)
+com/mojang/blaze3d/platform/NativeImage.upload(IIIIIIIZZ)V	method missing on 26.3; needs a rule or shim (in AnimatableTexture$AnimationContents$Texture)
+com/mojang/blaze3d/platform/TextureUtil.prepareImage(IIII)V	method missing on 26.3; needs a rule or shim (in AnimatableTexture$AnimationContents$Texture)
+com/mojang/blaze3d/vertex/VertexConsumer.addVertex(FFFFFFFFFIIFFF)V	method missing on 26.3; needs a rule or shim (in BedrockCube, DynamicGeoEntityRenderer, GeoRenderer)
+com/mojang/blaze3d/vertex/VertexConsumer.endVertex()V	method missing on 26.3; needs a rule or shim (in GeoEntityRenderer, GeoReplacedEntityRenderer)
+com/mojang/blaze3d/vertex/VertexConsumer.uv2(I)Lcom/mojang/blaze3d/vertex/VertexConsumer;	method missing on 26.3; needs a rule or shim (in GeoEntityRenderer, GeoReplacedEntityRenderer)
+com/mojang/blaze3d/vertex/VertexMultiConsumer.create(Lcom/mojang/blaze3d/vertex/VertexConsumer;Lcom/mojang/blaze3d/vertex/VertexConsumer;)Lcom/mojang/blaze3d/vertex/VertexConsumer;	class missing on 26.3; needs a rule or shim (in ICurioRenderer)
+net/minecraft/WorldVersion.getPackVersion(Lnet/minecraft/server/packs/PackType;)I	never runs in game (data generation, examples or an optional integration); method missing on 26.3
+net/minecraft/advancements/Advancement$Builder.addCriterion(Ljava/lang/String;Lnet/minecraft/advancements/CriterionTriggerInstance;)Lnet/minecraft/advancements/Advancement$Builder;	never runs in game (data generation, examples or an optional integration); method missing on 26.3
+net/minecraft/advancements/Advancement$Builder.getCriteria()Ljava/util/Map;	never runs in game (data generation, examples or an optional integration); method missing on 26.3
+net/minecraft/advancements/Advancement$Builder.requirements(Lnet/minecraft/advancements/RequirementsStrategy;)Lnet/minecraft/advancements/Advancement$Builder;	never runs in game (data generation, examples or an optional integration); class missing on 26.3
+net/minecraft/advancements/AdvancementRewards$Builder.recipe(Lnet/minecraft/resources/Identifier;)Lnet/minecraft/advancements/AdvancementRewards$Builder;	never runs in game (data generation, examples or an optional integration); method missing on 26.3
+net/minecraft/advancements/RequirementsStrategy.ORLnet/minecraft/advancements/RequirementsStrategy;	never runs in game (data generation, examples or an optional integration); class missing on 26.3
+net/minecraft/advancements/predicates/ItemPredicate$Builder.of([Lnet/minecraft/world/level/ItemLike;)Lnet/minecraft/advancements/predicates/ItemPredicate$Builder;	never runs in game (data generation, examples or an optional integration); method missing on 26.3
+net/minecraft/advancements/predicates/ItemPredicate.fromJson(Lcom/google/gson/JsonElement;)Lnet/minecraft/advancements/predicates/ItemPredicate;	method missing on 26.3; needs a rule or shim (in EquipCurioTrigger)
+net/minecraft/advancements/predicates/LocationPredicate.fromJson(Lcom/google/gson/JsonElement;)Lnet/minecraft/advancements/predicates/LocationPredicate;	method missing on 26.3; needs a rule or shim (in EquipCurioTrigger)
+net/minecraft/advancements/predicates/MinMaxBounds$Ints.fromJson(Lcom/google/gson/JsonElement;)Lnet/minecraft/advancements/predicates/MinMaxBounds$Ints;	method missing on 26.3; needs a rule or shim (in SlotPredicate)
+net/minecraft/advancements/predicates/MinMaxBounds$Ints.serializeToJson()Lcom/google/gson/JsonElement;	method missing on 26.3; needs a rule or shim (in SlotPredicate)
+net/minecraft/advancements/triggers/InventoryChangeTrigger$TriggerInstance.hasItems([Lnet/minecraft/advancements/predicates/ItemPredicate;)Lnet/minecraft/advancements/triggers/InventoryChangeTrigger$TriggerInstance;	never runs in game (data generation, examples or an optional integration); method missing on 26.3
+net/minecraft/advancements/triggers/InventoryChangeTrigger$TriggerInstance.hasItems([Lnet/minecraft/world/level/ItemLike;)Lnet/minecraft/advancements/triggers/InventoryChangeTrigger$TriggerInstance;	never runs in game (data generation, examples or an optional integration); method missing on 26.3
+net/minecraft/advancements/triggers/RecipeUnlockedTrigger.unlocked(Lnet/minecraft/resources/Identifier;)Lnet/minecraft/advancements/triggers/RecipeUnlockedTrigger$TriggerInstance;	never runs in game (data generation, examples or an optional integration); method missing on 26.3
+net/minecraft/client/KeyMapping.getKey()Lcom/mojang/blaze3d/platform/InputConstants$Key;	method missing on 26.3; needs a rule or shim (in ClientEventHandler)
+net/minecraft/client/KeyMapping.isActiveAndMatches(Lcom/mojang/blaze3d/platform/InputConstants$Key;)Z	method missing on 26.3; needs a rule or shim (in CuriosScreen, CuriosScreenV2)
+net/minecraft/client/Minecraft.ON_OSXZ	field missing on 26.3; needs a rule or shim (in KeyHelper)
+net/minecraft/client/Minecraft.renderNames()Z	method missing on 26.3; needs a rule or shim (in GeoEntityRenderer, GeoReplacedEntityRenderer)
+net/minecraft/client/gui/Font.drawInBatch(Lnet/minecraft/util/FormattedCharSequence;FFIZLorg/joml/Matrix4f;Lnet/minecraft/client/renderer/MultiBufferSource;Lnet/minecraft/client/gui/Font$DisplayMode;II)I	method missing on 26.3; needs a rule or shim (in CanvasSignRenderer)
+net/minecraft/client/gui/Font.drawInBatch8xOutline(Lnet/minecraft/util/FormattedCharSequence;FFIILorg/joml/Matrix4f;Lnet/minecraft/client/renderer/MultiBufferSource;I)V	method missing on 26.3; needs a rule or shim (in CanvasSignRenderer)
+net/minecraft/client/gui/GuiGraphicsExtractor.bufferSource()Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;	class missing on 26.3; needs a rule or shim (in CanvasSignEditScreen)
+net/minecraft/client/gui/GuiGraphicsExtractor.pose()Lcom/mojang/blaze3d/vertex/PoseStack;	method missing on 26.3; needs a rule or shim (in CanvasSignEditScreen, HangingCanvasSignEditScreen, TooltipOverlayHandler$FoodTooltipRenderer)
+net/minecraft/client/gui/components/Button.keyPressed(III)Z	method missing on 26.3; needs a rule or shim (in ModConfigSelectScreen$ModConfigSelectionList$Entry)
+net/minecraft/client/gui/components/Button.mouseClicked(DDI)Z	method missing on 26.3; needs a rule or shim (in ModConfigSelectScreen$ModConfigSelectionList$Entry)
+net/minecraft/client/gui/components/CycleButton$Builder.withInitialValue(Ljava/lang/Object;)Lnet/minecraft/client/gui/components/CycleButton$Builder;	method missing on 26.3; needs a rule or shim (in EditConfigScreen$EnumConfigEntry)
+net/minecraft/client/gui/components/CycleButton.builder(Ljava/util/function/Function;)Lnet/minecraft/client/gui/components/CycleButton$Builder;	method missing on 26.3; needs a rule or shim (in EditConfigScreen$EnumConfigEntry)
+net/minecraft/client/gui/components/StateSwitchingButton.initTextureValues(IIIILnet/minecraft/resources/Identifier;)V	class missing on 26.3; needs a rule or shim (in CookingPotRecipeBookComponent)
+net/minecraft/client/gui/screens/Screen.charTyped(CI)Z	method missing on 26.3; needs a rule or shim (in NaturesCompassScreen)
+net/minecraft/client/gui/screens/Screen.keyPressed(III)Z	method missing on 26.3; needs a rule or shim (in NaturesCompassScreen)
+net/minecraft/client/gui/screens/inventory/AbstractContainerScreen.getGuiLeft()I	method missing on 26.3; needs a rule or shim (in CuriosButton, GuiEventHandler)
+net/minecraft/client/gui/screens/inventory/AbstractContainerScreen.getGuiTop()I	method missing on 26.3; needs a rule or shim (in CuriosButton, GuiEventHandler)
+net/minecraft/client/gui/screens/inventory/AbstractContainerScreen.keyPressed(III)Z	method missing on 26.3; needs a rule or shim (in CuriosScreen, CuriosScreenV2)
+net/minecraft/client/gui/screens/inventory/AbstractContainerScreen.mouseClicked(DDI)Z	method missing on 26.3; needs a rule or shim (in CookingPotScreen, CuriosScreen, CuriosScreenV2)
+net/minecraft/client/gui/screens/inventory/AbstractContainerScreen.mouseDragged(DDIDD)Z	method missing on 26.3; needs a rule or shim (in CuriosScreen)
+net/minecraft/client/gui/screens/inventory/AbstractContainerScreen.mouseReleased(DDI)Z	method missing on 26.3; needs a rule or shim (in CuriosScreen, CuriosScreenV2)
+net/minecraft/client/gui/screens/inventory/AbstractContainerScreen.mouseScrolled(DDD)Z	method missing on 26.3; needs a rule or shim (in CuriosScreenV2)
+net/minecraft/client/gui/screens/inventory/AbstractSignEditScreen.<init>(Lnet/minecraft/world/level/block/entity/SignBlockEntity;ZZLnet/minecraft/network/chat/Component;)V	method missing on 26.3; needs a rule or shim (in HangingCanvasSignEditScreen)
+net/minecraft/client/gui/screens/inventory/CreativeModeInventoryScreen.findSlot(DD)Lnet/minecraft/world/inventory/Slot;	method missing on 26.3; needs a rule or shim (in GuiEventHandler)
+net/minecraft/client/gui/screens/inventory/SignEditScreen.<init>(Lnet/minecraft/world/level/block/entity/SignBlockEntity;ZZ)V	method missing on 26.3; needs a rule or shim (in CanvasSignEditScreen)
+net/minecraft/client/gui/screens/recipebook/GhostRecipe.addIngredient(Lnet/minecraft/world/item/crafting/Ingredient;II)V	class missing on 26.3; needs a rule or shim (in CookingPotRecipeBookComponent)
+net/minecraft/client/gui/screens/recipebook/GhostRecipe.setRecipe(Lnet/minecraft/world/item/crafting/Recipe;)V	class missing on 26.3; needs a rule or shim (in CookingPotRecipeBookComponent)
+net/minecraft/client/model/EntityModel.<init>(Ljava/util/function/Function;)V	method missing on 26.3; needs a rule or shim (in BedrockEntityModel)
+net/minecraft/client/model/EntityModel.copyPropertiesTo(Lnet/minecraft/client/model/EntityModel;)V	method missing on 26.3; needs a rule or shim (in ICurioRenderer$HumanoidRender)
+net/minecraft/client/model/HumanoidModel$ArmPose.THROW_SPEARLnet/minecraft/client/model/HumanoidModel$ArmPose;	field missing on 26.3; needs a rule or shim (in BedrockHumanoidModel$1)
+net/minecraft/client/model/HumanoidModel.babyBodyScaleF	field missing on 26.3; needs a rule or shim (in GeoArmorRenderer)
+net/minecraft/client/model/HumanoidModel.babyHeadScaleF	field missing on 26.3; needs a rule or shim (in GeoArmorRenderer)
+net/minecraft/client/model/HumanoidModel.babyYHeadOffsetF	field missing on 26.3; needs a rule or shim (in GeoArmorRenderer)
+net/minecraft/client/model/HumanoidModel.babyZHeadOffsetF	field missing on 26.3; needs a rule or shim (in GeoArmorRenderer)
+net/minecraft/client/model/HumanoidModel.bodyYOffsetF	field missing on 26.3; needs a rule or shim (in GeoArmorRenderer)
+net/minecraft/client/model/HumanoidModel.copyPropertiesTo(Lnet/minecraft/client/model/HumanoidModel;)V	method missing on 26.3; needs a rule or shim (in ICurioRenderer, ICurioRenderer$HumanoidRender)
+net/minecraft/client/model/HumanoidModel.crouchingZ	field missing on 26.3; needs a rule or shim (in GeoArmorRenderer)
+net/minecraft/client/model/HumanoidModel.leftArmPoseLnet/minecraft/client/model/HumanoidModel$ArmPose;	field missing on 26.3; needs a rule or shim (in GeoArmorRenderer)
+net/minecraft/client/model/HumanoidModel.prepareMobModel(Lnet/minecraft/world/entity/LivingEntity;FFF)V	method missing on 26.3; needs a rule or shim (in ICurioRenderer$HumanoidRender)
+net/minecraft/client/model/HumanoidModel.ridingZ	field missing on 26.3; needs a rule or shim (in GeoArmorRenderer)
+net/minecraft/client/model/HumanoidModel.rightArmPoseLnet/minecraft/client/model/HumanoidModel$ArmPose;	field missing on 26.3; needs a rule or shim (in GeoArmorRenderer)
+net/minecraft/client/model/HumanoidModel.scaleHeadZ	field missing on 26.3; needs a rule or shim (in GeoArmorRenderer)
+net/minecraft/client/model/HumanoidModel.setAllVisible(Z)V	method missing on 26.3; needs a rule or shim (in GeoArmorRenderer)
+net/minecraft/client/model/HumanoidModel.setupAnim(Lnet/minecraft/world/entity/LivingEntity;FFFFF)V	method missing on 26.3; needs a rule or shim (in ICurioRenderer$HumanoidRender, StandardArmorModel)
+net/minecraft/client/model/HumanoidModel.youngZ	field missing on 26.3; needs a rule or shim (in GeoArmorRenderer)
+net/minecraft/client/model/Model.<init>(Ljava/util/function/Function;)V	method missing on 26.3; needs a rule or shim (in SimpleBedrockModel)
+net/minecraft/client/model/Model.renderToBuffer(Lcom/mojang/blaze3d/vertex/PoseStack;Lcom/mojang/blaze3d/vertex/VertexConsumer;IIFFFF)V	method missing on 26.3; needs a rule or shim (in ICurioRenderer)
+net/minecraft/client/model/geom/ModelLayers.PLAYER_INNER_ARMORLnet/minecraft/client/model/geom/ModelLayerLocation;	field missing on 26.3; needs a rule or shim (in GeoArmorRenderer, ItemArmorGeoLayer)
+net/minecraft/client/model/geom/ModelLayers.PLAYER_OUTER_ARMORLnet/minecraft/client/model/geom/ModelLayerLocation;	field missing on 26.3; needs a rule or shim (in ItemArmorGeoLayer)
+net/minecraft/client/model/geom/ModelLayers.createHangingSignModelName(Lnet/minecraft/world/level/block/state/properties/WoodType;)Lnet/minecraft/client/model/geom/ModelLayerLocation;	method missing on 26.3; needs a rule or shim (in HangingCanvasSignRenderer)
+net/minecraft/client/model/geom/ModelLayers.createSignModelName(Lnet/minecraft/world/level/block/state/properties/WoodType;)Lnet/minecraft/client/model/geom/ModelLayerLocation;	method missing on 26.3; needs a rule or shim (in CanvasSignRenderer)
+net/minecraft/client/model/geom/ModelPart.copyFrom(Lnet/minecraft/client/model/geom/ModelPart;)V	method missing on 26.3; needs a rule or shim (in ICurioRenderer, StandardArmorModel)
+net/minecraft/client/model/geom/ModelPart.render(Lcom/mojang/blaze3d/vertex/PoseStack;Lcom/mojang/blaze3d/vertex/VertexConsumer;IIFFFF)V	method missing on 26.3; needs a rule or shim (in ItemArmorGeoLayer)
+net/minecraft/client/renderer/GameRenderer.getMainCamera()Lnet/minecraft/client/Camera;	method missing on 26.3; needs a rule or shim (in GeoModel)
+net/minecraft/client/renderer/LevelRenderer.blockChanged(Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/state/BlockState;I)V	method missing on 26.3; needs a rule or shim (in InventoryTopStacksSyncPacket$HandleClient)
+net/minecraft/client/renderer/LevelRenderer.shouldShowEntityOutlines()Z	method missing on 26.3; needs a rule or shim (in GeoArmorRenderer)
+net/minecraft/client/renderer/LightTexture.pack(II)I	class missing on 26.3; needs a rule or shim (in GeoEntityRenderer, GeoReplacedEntityRenderer)
+net/minecraft/client/renderer/MultiBufferSource$BufferSource.endBatch()V	class missing on 26.3; needs a rule or shim (in GeoItemRenderer)
+net/minecraft/client/renderer/RenderBuffers.bufferSource()Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;	class missing on 26.3; needs a rule or shim (in GeoArmorRenderer, GeoItemRenderer, GeoObjectRenderer)
+net/minecraft/client/renderer/RenderBuffers.outlineBufferSource()Lnet/minecraft/client/renderer/OutlineBufferSource;	class missing on 26.3; needs a rule or shim (in GeoArmorRenderer)
+net/minecraft/client/renderer/Sheets.SIGN_SHEETLnet/minecraft/resources/Identifier;	field missing on 26.3; needs a rule or shim (in ModAtlases)
+net/minecraft/client/renderer/blockentity/BlockEntityRenderDispatcher.getRenderer(Lnet/minecraft/world/level/block/entity/BlockEntity;)Lrose/era/v1_20_1/client/render/LegacyBlockEntityRenderer;	method missing on 26.3; needs a rule or shim (in RenderUtils)
+net/minecraft/client/renderer/blockentity/BlockEntityRendererProvider$Context.getFont()Lnet/minecraft/client/gui/Font;	method missing on 26.3; needs a rule or shim (in CanvasSignRenderer)
+net/minecraft/client/renderer/blockentity/HangingSignRenderer$HangingSignModel.rootLnet/minecraft/client/model/geom/ModelPart;	not accessible on 26.3; needs a rule or shim (in HangingCanvasSignRenderer)
+net/minecraft/client/renderer/blockentity/SignRenderer$SignModel.rootLnet/minecraft/client/model/geom/ModelPart;	not accessible on 26.3; needs a rule or shim (in CanvasSignEditScreen, CanvasSignRenderer)
+net/minecraft/client/renderer/blockentity/SignRenderer.createSignModel(Lnet/minecraft/client/model/geom/EntityModelSet;Lnet/minecraft/world/level/block/state/properties/WoodType;)Lnet/minecraft/client/renderer/blockentity/SignRenderer$SignModel;	method missing on 26.3; needs a rule or shim (in CanvasSignEditScreen)
+net/minecraft/client/renderer/blockentity/SkullBlockRenderer.createModel(Lnet/minecraft/client/model/geom/EntityModelSet;)Ljava/util/Map;	method missing on 26.3; needs a rule or shim (in ItemArmorGeoLayer)
+net/minecraft/client/renderer/blockentity/SkullBlockRenderer.getSkullRenderType(Lnet/minecraft/world/level/block/SkullBlock$Type;Lcom/mojang/authlib/GameProfile;)Lnet/minecraft/client/renderer/rendertype/RenderType;	method missing on 26.3; needs a rule or shim (in ItemArmorGeoLayer)
+net/minecraft/client/renderer/blockentity/SkullBlockRenderer.resolveSkullRenderType(Lnet/minecraft/core/Direction;FFLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;ILnet/minecraft/client/model/object/skull/SkullModelBase;Lnet/minecraft/client/renderer/rendertype/RenderType;)V	method missing on 26.3; needs a rule or shim (in ItemArmorGeoLayer)
+net/minecraft/client/renderer/entity/EntityRenderer.shouldShowName(Lnet/minecraft/world/entity/Entity;)Z	method missing on 26.3; needs a rule or shim (in GeoEntityRenderer, GeoReplacedEntityRenderer)
+net/minecraft/client/renderer/entity/EntityRenderer.submit(Lnet/minecraft/world/entity/Entity;FFLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V	method missing on 26.3; needs a rule or shim (in GeoEntityRenderer, GeoReplacedEntityRenderer)
+net/minecraft/client/renderer/entity/ItemRenderer.getArmorFoilBuffer(Lnet/minecraft/client/renderer/MultiBufferSource;Lnet/minecraft/client/renderer/rendertype/RenderType;ZZ)Lcom/mojang/blaze3d/vertex/VertexConsumer;	method missing on 26.3; needs a rule or shim (in GeoArmorRenderer, ItemArmorGeoLayer)
+net/minecraft/client/renderer/entity/ItemRenderer.getFoilBufferDirect(Lnet/minecraft/client/renderer/MultiBufferSource;Lnet/minecraft/client/renderer/rendertype/RenderType;ZZ)Lcom/mojang/blaze3d/vertex/VertexConsumer;	method missing on 26.3; needs a rule or shim (in GeoItemRenderer)
+net/minecraft/client/renderer/entity/LivingEntityRenderer.getOverlayCoords(Lnet/minecraft/world/entity/LivingEntity;F)I	method missing on 26.3; needs a rule or shim (in CobpipeRenderer)
+net/minecraft/client/renderer/rendertype/RenderType.armorEntityGlint()Lnet/minecraft/client/renderer/rendertype/RenderType;	method missing on 26.3; needs a rule or shim (in ICurioRenderer$HumanoidRender)
+net/minecraft/client/renderer/rendertype/RenderType.entityCutoutNoCull(Lnet/minecraft/resources/Identifier;)Lnet/minecraft/client/renderer/rendertype/RenderType;	method missing on 26.3; needs a rule or shim (in GeoModel)
+net/minecraft/client/renderer/rendertype/RenderType.entityGlint()Lnet/minecraft/client/renderer/rendertype/RenderType;	method missing on 26.3; needs a rule or shim (in ICurioRenderer$ModelRender)
+net/minecraft/client/resources/language/I18n.exists(Ljava/lang/String;)Z	method missing on 26.3; needs a rule or shim (in CurioSlot, EditConfigScreen$ConfigList)
+net/minecraft/client/resources/metadata/animation/AnimationMetadataSection.forEachFrame(Lnet/minecraft/client/resources/metadata/animation/AnimationMetadataSection$FrameOutput;)V	class missing on 26.3; needs a rule or shim (in AnimatableTexture$AnimationContents)
+net/minecraft/client/resources/metadata/animation/AnimationMetadataSection.getDefaultFrameTime()I	method missing on 26.3; needs a rule or shim (in AnimatableTexture$AnimationContents)
+net/minecraft/client/resources/metadata/animation/AnimationMetadataSection.isInterpolatedFrames()Z	method missing on 26.3; needs a rule or shim (in AnimatableTexture$AnimationContents)
+net/minecraft/commands/arguments/IdentifierArgument.getItemModifier(Lcom/mojang/brigadier/context/CommandContext;Ljava/lang/String;)Lnet/minecraft/world/level/storage/loot/functions/LootItemFunction;	method missing on 26.3; needs a rule or shim (in CuriosCommand)
+net/minecraft/commands/arguments/item/ItemInput.createItemStack(IZ)Lnet/minecraft/world/item/ItemStack;	method missing on 26.3; needs a rule or shim (in CuriosCommand)
+net/minecraft/core/DefaultedRegistry.asLookup()Lnet/minecraft/core/HolderLookup$RegistryLookup;	never runs in game (data generation, examples or an optional integration); method missing on 26.3
+net/minecraft/core/RegistrySetBuilder.add(Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/core/RegistrySetBuilder$RegistryBootstrap;)Lnet/minecraft/core/RegistrySetBuilder;	never runs in game (data generation, examples or an optional integration); class missing on 26.3
+net/minecraft/core/RegistrySetBuilder.buildPatch(Lnet/minecraft/core/RegistryAccess;Lnet/minecraft/core/HolderLookup$Provider;)Lnet/minecraft/core/HolderLookup$Provider;	never runs in game (data generation, examples or an optional integration); method missing on 26.3
+net/minecraft/core/RegistrySetBuilder.getEntryKeys()Ljava/util/List;	never runs in game (data generation, examples or an optional integration); method missing on 26.3
+net/minecraft/core/Rotations.getX()F	method missing on 26.3; needs a rule or shim (in BedrockArmorModel, StandardArmorModel)
+net/minecraft/core/Rotations.getY()F	method missing on 26.3; needs a rule or shim (in BedrockArmorModel, StandardArmorModel)
+net/minecraft/core/Rotations.getZ()F	method missing on 26.3; needs a rule or shim (in BedrockArmorModel, StandardArmorModel)
+net/minecraft/nbt/NbtUtils.readGameProfile(Lnet/minecraft/nbt/CompoundTag;)Lcom/mojang/authlib/GameProfile;	method missing on 26.3; needs a rule or shim (in ItemArmorGeoLayer)
+net/minecraft/nbt/NbtUtils.writeGameProfile(Lnet/minecraft/nbt/CompoundTag;Lcom/mojang/authlib/GameProfile;)Lnet/minecraft/nbt/CompoundTag;	method missing on 26.3; needs a rule or shim (in ItemArmorGeoLayer)
+net/minecraft/nbt/TagParser.<init>(Lcom/mojang/brigadier/StringReader;)V	method missing on 26.3; needs a rule or shim (in CuriosSelectorOptions)
+net/minecraft/nbt/TagParser.readStruct()Lnet/minecraft/nbt/CompoundTag;	method missing on 26.3; needs a rule or shim (in CuriosSelectorOptions)
+net/minecraft/resources/ResourceLocation$Serializer.<init>()V	class missing on 26.3; needs a rule or shim (in DataGenUtil)
+net/minecraft/server/MinecraftServer.getLootData()Lnet/minecraft/world/level/storage/loot/LootDataManager;	class missing on 26.3; needs a rule or shim (in CuriosCommand)
+net/minecraft/server/level/ServerPlayer.drop(Lnet/minecraft/world/item/ItemStack;ZZ)Lnet/minecraft/world/entity/item/ItemEntity;	method missing on 26.3; needs a rule or shim (in CuriosCommand)
+net/minecraft/server/packs/metadata/pack/PackMetadataSection.<init>(Lnet/minecraft/network/chat/Component;ILjava/util/Map;)V	never runs in game (data generation, examples or an optional integration); method missing on 26.3
+net/minecraft/server/packs/metadata/pack/PackMetadataSection.TYPELnet/minecraft/server/packs/metadata/MetadataSectionType;	never runs in game (data generation, examples or an optional integration); field missing on 26.3
+net/minecraft/tags/BlockTags.MUSHROOM_GROW_BLOCKLnet/minecraft/tags/TagKey;	field missing on 26.3; needs a rule or shim (in MushroomColonyBlock)
+net/minecraft/tags/FluidTags.create(Lnet/minecraft/resources/Identifier;)Lnet/minecraft/tags/TagKey;	method missing on 26.3; needs a rule or shim (in TagUtils)
+net/minecraft/util/FastColor$ARGB32.blue(I)I	class missing on 26.3; needs a rule or shim (in CanvasSignRenderer)
+net/minecraft/util/FastColor$ARGB32.color(IIII)I	class missing on 26.3; needs a rule or shim (in CanvasSignRenderer)
+net/minecraft/util/FastColor$ARGB32.green(I)I	class missing on 26.3; needs a rule or shim (in CanvasSignRenderer)
+net/minecraft/util/FastColor$ARGB32.red(I)I	class missing on 26.3; needs a rule or shim (in CanvasSignRenderer)
+net/minecraft/world/entity/Entity.shouldRiderSit()Z	method missing on 26.3; needs a rule or shim (in GeoEntityRenderer, GeoReplacedEntityRenderer)
+net/minecraft/world/entity/EquipmentSlot$Type.ARMORLnet/minecraft/world/entity/EquipmentSlot$Type;	field missing on 26.3; needs a rule or shim (in CuriosContainer, CuriosContainerV2, ItemArmorGeoLayer)
+net/minecraft/world/entity/LivingEntity.getEquipmentSlotForItem(Lnet/minecraft/world/item/ItemStack;)Lnet/minecraft/world/entity/EquipmentSlot;	never runs in game (data generation, examples or an optional integration); not accessible on 26.3
+net/minecraft/world/entity/LivingEntity.spawnAtLocation(Lnet/minecraft/world/item/ItemStack;F)Lnet/minecraft/world/entity/item/ItemEntity;	method missing on 26.3; needs a rule or shim (in CurioInventoryCapability$CurioInventoryWrapper)
+net/minecraft/world/entity/LivingEntity.swingingArmLnet/minecraft/world/InteractionHand;	field missing on 26.3; needs a rule or shim (in BedrockHumanoidModel)
+net/minecraft/world/entity/LivingEntity.swingingZ	field missing on 26.3; needs a rule or shim (in DefaultAnimations)
+net/minecraft/world/entity/Mob.getEquipmentSlotForItem(Lnet/minecraft/world/item/ItemStack;)Lnet/minecraft/world/entity/EquipmentSlot;	not accessible on 26.3; needs a rule or shim (in CuriosContainer, CuriosContainerV2)
+net/minecraft/world/entity/MobType.UNDEFINEDLnet/minecraft/world/entity/MobType;	class missing on 26.3; needs a rule or shim (in ClientEventHandler)
+net/minecraft/world/entity/PathfinderMob.interactAt(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/InteractionHand;)Lnet/minecraft/world/InteractionResult;	never runs in game (data generation, examples or an optional integration); method missing on 26.3
+net/minecraft/world/entity/SlotAccess.NULLLnet/minecraft/world/entity/SlotAccess;	field missing on 26.3; needs a rule or shim (in CuriosCommand)
+net/minecraft/world/entity/player/Player.revive()V	method missing on 26.3; needs a rule or shim (in CuriosEventHandler)
+net/minecraft/world/entity/player/StackedContents.accountSimpleStack(Lnet/minecraft/world/item/ItemStack;)V	method missing on 26.3; needs a rule or shim (in CookingPotMenu)
+net/minecraft/world/entity/projectile/hurtingprojectile/AbstractHurtingProjectile.<init>(Lnet/minecraft/world/entity/EntityType;DDDDDDLnet/minecraft/world/level/Level;)V	method missing on 26.3; needs a rule or shim (in EntityBullet)
+net/minecraft/world/entity/projectile/hurtingprojectile/AbstractHurtingProjectile.<init>(Lnet/minecraft/world/entity/EntityType;Lnet/minecraft/world/entity/LivingEntity;DDDLnet/minecraft/world/level/Level;)V	method missing on 26.3; needs a rule or shim (in EntityBullet)
+net/minecraft/world/entity/projectile/hurtingprojectile/AbstractHurtingProjectile.addAdditionalSaveData(Lnet/minecraft/nbt/CompoundTag;)V	method missing on 26.3; needs a rule or shim (in EntityBullet)
+net/minecraft/world/entity/projectile/hurtingprojectile/AbstractHurtingProjectile.readAdditionalSaveData(Lnet/minecraft/nbt/CompoundTag;)V	method missing on 26.3; needs a rule or shim (in EntityBullet)
+net/minecraft/world/inventory/CraftingContainer.fillStackedContents(Lnet/minecraft/world/entity/player/StackedContents;)V	method missing on 26.3; needs a rule or shim (in CuriosContainer, CuriosContainerV2)
+net/minecraft/world/inventory/RecipeBookMenu.getGridHeight()I	method missing on 26.3; needs a rule or shim (in CookingPotRecipeBookComponent)
+net/minecraft/world/inventory/RecipeBookMenu.getGridWidth()I	method missing on 26.3; needs a rule or shim (in CookingPotRecipeBookComponent)
+net/minecraft/world/inventory/RecipeBookMenu.getResultSlotIndex()I	method missing on 26.3; needs a rule or shim (in CookingPotRecipeBookComponent)
+net/minecraft/world/inventory/ResultContainer.setRecipeUsed(Lnet/minecraft/world/level/Level;Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/world/item/crafting/Recipe;)Z	method missing on 26.3; needs a rule or shim (in CuriosContainer, CuriosContainerV2)
+net/minecraft/world/item/ArmorItem.getMaterial()Lnet/minecraft/world/item/equipment/ArmorMaterial;	class missing on 26.3; needs a rule or shim (in ItemArmorGeoLayer)
+net/minecraft/world/item/CrossbowItem.getChargeDuration(Lnet/minecraft/world/item/ItemStack;)I	method missing on 26.3; needs a rule or shim (in BedrockAnimationUtils)
+net/minecraft/world/item/DyeableArmorItem.getColor(Lnet/minecraft/world/item/ItemStack;)I	class missing on 26.3; needs a rule or shim (in ItemArmorGeoLayer)
+net/minecraft/world/item/Item.appendHoverText(Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/level/Level;Ljava/util/List;Lnet/minecraft/world/item/TooltipFlag;)V	method missing on 26.3; needs a rule or shim (in ItemFoodBase)
+net/minecraft/world/item/Item.getDrinkingSound()Lnet/minecraft/sounds/SoundEvent;	method missing on 26.3; needs a rule or shim (in ItemFoodBase)
+net/minecraft/world/item/Item.getEatingSound()Lnet/minecraft/sounds/SoundEvent;	method missing on 26.3; needs a rule or shim (in ItemFoodBase)
+net/minecraft/world/item/Item.getUseDuration(Lnet/minecraft/world/item/ItemStack;)I	method missing on 26.3; needs a rule or shim (in ItemFoodBase)
+net/minecraft/world/item/Item.initCapabilities(Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/nbt/CompoundTag;)Lnet/minecraftforge/common/capabilities/ICapabilityProvider;	method missing on 26.3; needs a rule or shim (in CobPipeItem)
+net/minecraft/world/item/Item.shouldCauseReequipAnimation(Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemStack;Z)Z	method missing on 26.3; needs a rule or shim (in NaturesCompassItem)
+net/minecraft/world/item/Item.use(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/InteractionHand;)Lnet/minecraft/world/InteractionResultHolder;	never runs in game (data generation, examples or an optional integration); method missing on 26.3
+net/minecraft/world/item/ItemNameBlockItem.appendHoverText(Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/level/Level;Ljava/util/List;Lnet/minecraft/world/item/TooltipFlag;)V	method missing on 26.3; needs a rule or shim (in ItemFoodSeeds)
+net/minecraft/world/item/ItemNameBlockItem.removeFromBlockToItemMap(Ljava/util/Map;Lnet/minecraft/world/item/Item;)V	method missing on 26.3; needs a rule or shim (in ModItems$1)
+net/minecraft/world/item/ItemStack.canEquip(Lnet/minecraft/world/entity/EquipmentSlot;Lnet/minecraft/world/entity/Entity;)Z	method missing on 26.3; needs a rule or shim (in CuriosContainer$1, CuriosContainerV2$1)
+net/minecraft/world/item/ItemStack.canWalkOnPowderedSnow(Lnet/minecraft/world/entity/LivingEntity;)Z	method missing on 26.3; needs a rule or shim (in ICurio, ICurioItem)
+net/minecraft/world/item/ItemStack.getTags()Ljava/util/stream/Stream;	method missing on 26.3; needs a rule or shim (in CuriosImplMixinHooks)
+net/minecraft/world/item/ItemStack.isEnderMask(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/entity/monster/Enderman;)Z	method missing on 26.3; needs a rule or shim (in ICurio, ICurioItem)
+net/minecraft/world/item/ItemStack.makesPiglinsNeutral(Lnet/minecraft/world/entity/LivingEntity;)Z	method missing on 26.3; needs a rule or shim (in ICurio, ICurioItem)
+net/minecraft/world/item/crafting/Ingredient.EMPTYLnet/minecraft/world/item/crafting/Ingredient;	field missing on 26.3; needs a rule or shim (in CookingPotRecipe$Serializer, FDRecipes)
+net/minecraft/world/item/crafting/Ingredient.fromNetwork(Lnet/minecraft/network/FriendlyByteBuf;)Lnet/minecraft/world/item/crafting/Ingredient;	method missing on 26.3; needs a rule or shim (in CookingPotRecipe$Serializer, CuttingBoardRecipe$Serializer)
+net/minecraft/world/item/crafting/Ingredient.fromValues(Ljava/util/stream/Stream;)Lnet/minecraft/world/item/crafting/Ingredient;	never runs in game (data generation, examples or an optional integration); method missing on 26.3
+net/minecraft/world/item/crafting/Ingredient.items()[Lnet/minecraft/world/item/ItemStack;	never runs in game (data generation, examples or an optional integration); method missing on 26.3
+net/minecraft/world/item/crafting/Ingredient.toJson()Lcom/google/gson/JsonElement;	method missing on 26.3; needs a rule or shim (in AbstractSerializer$IngredientSerializer, DataGenUtil)
+net/minecraft/world/item/crafting/Ingredient.toNetwork(Lnet/minecraft/network/FriendlyByteBuf;)V	method missing on 26.3; needs a rule or shim (in CookingPotRecipe$Serializer, CuttingBoardRecipe$Serializer)
+net/minecraft/world/item/crafting/Recipe.getIngredients()Lnet/minecraft/core/NonNullList;	method missing on 26.3; needs a rule or shim (in CookingPotRecipeBookComponent)
+net/minecraft/world/item/crafting/ShapelessRecipe.<init>(Lnet/minecraft/resources/Identifier;Ljava/lang/String;Lnet/minecraft/world/item/crafting/CraftingBookCategory;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/core/NonNullList;)V	never runs in game (data generation, examples or an optional integration); method missing on 26.3
+net/minecraft/world/item/crafting/SmokingRecipe.getIngredients()Lnet/minecraft/core/NonNullList;	method missing on 26.3; needs a rule or shim (in SmokerCookFunction)
+net/minecraft/world/item/enchantment/EnchantmentHelper.getDamageBonus(Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/entity/MobType;)F	class missing on 26.3; needs a rule or shim (in ClientEventHandler)
+net/minecraft/world/item/equipment/ArmorMaterial.getName()Ljava/lang/String;	method missing on 26.3; needs a rule or shim (in ItemArmorGeoLayer)
+net/minecraft/world/level/biome/Biome$ClimateSettings.downfall()F	not accessible on 26.3; needs a rule or shim (in RainfallSorting)
+net/minecraft/world/level/biome/Biome.getModifiedClimateSettings()Lnet/minecraft/world/level/biome/Biome$ClimateSettings;	method missing on 26.3; needs a rule or shim (in RainfallSorting)
+net/minecraft/world/level/block/CropBlock.playerDestroy(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/entity/BlockEntity;Lnet/minecraft/world/item/ItemStack;)V	method missing on 26.3; needs a rule or shim (in TomatoBlock)
+net/minecraft/world/level/block/CropBlock.use(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/InteractionHand;Lnet/minecraft/world/phys/BlockHitResult;)Lnet/minecraft/world/InteractionResult;	method missing on 26.3; needs a rule or shim (in TomatoBlock)
+net/minecraft/world/level/block/DirectionalBlock.appendHoverText(Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/level/BlockGetter;Ljava/util/List;Lnet/minecraft/world/item/TooltipFlag;)V	never runs in game (data generation, examples or an optional integration); method missing on 26.3
+net/minecraft/world/level/block/VegetationBlock.entityInside(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/Entity;)V	method missing on 26.3; needs a rule or shim (in BuddingBushBlock)
+net/minecraft/world/level/block/entity/BlockEntityType.BEDLnet/minecraft/world/level/block/entity/BlockEntityType;	field missing on 26.3; needs a rule or shim (in BaseComfortsBlockEntityRenderer)
+net/minecraft/world/level/block/entity/SignBlockEntity.getBackText()Lnet/minecraft/world/level/block/entity/SignText;	method missing on 26.3; needs a rule or shim (in CanvasSignRenderer)
+net/minecraft/world/level/block/entity/SignBlockEntity.getFrontText()Lnet/minecraft/world/level/block/entity/SignText;	method missing on 26.3; needs a rule or shim (in CanvasSignRenderer)
+net/minecraft/world/level/block/entity/SkullBlockEntity.updateGameprofile(Lcom/mojang/authlib/GameProfile;Ljava/util/function/Consumer;)V	method missing on 26.3; needs a rule or shim (in ItemArmorGeoLayer)
+net/minecraft/world/level/block/state/BlockState.isSolidRender(Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;)Z	method missing on 26.3; needs a rule or shim (in MushroomColonyBlock)
+net/minecraft/world/level/levelgen/blockpredicates/BlockPredicate.matchesBlocks(Lnet/minecraft/core/Vec3i;[Lnet/minecraft/world/level/block/Block;)Lnet/minecraft/world/level/levelgen/blockpredicates/BlockPredicate;	method missing on 26.3; needs a rule or shim (in WildCropGeneration)
+net/minecraft/world/level/levelgen/blockpredicates/BlockPredicate.replaceable(Lnet/minecraft/core/Vec3i;)Lnet/minecraft/world/level/levelgen/blockpredicates/BlockPredicate;	method missing on 26.3; needs a rule or shim (in WildCropGeneration)
+net/minecraft/world/level/levelgen/feature/Feature.<init>(Lnet/minecraft/world/level/levelgen/feature/Feature;Lnet/minecraft/world/level/levelgen/feature/configurations/FeatureConfiguration;)V	method missing on 26.3; needs a rule or shim (in WildCropGeneration)
+net/minecraft/world/level/levelgen/feature/Feature.RANDOM_PATCHLnet/minecraft/world/level/levelgen/feature/Feature;	field missing on 26.3; needs a rule or shim (in WildCropGeneration)
+net/minecraft/world/level/levelgen/feature/Feature.SIMPLE_BLOCKLnet/minecraft/world/level/levelgen/feature/Feature;	field missing on 26.3; needs a rule or shim (in WildCropGeneration)
+net/minecraft/world/level/levelgen/feature/configurations/SimpleBlockConfiguration.<init>(Lnet/minecraft/world/level/levelgen/feature/stateproviders/BlockStateProvider;)V	class missing on 26.3; needs a rule or shim (in WildCropGeneration)
+net/minecraft/world/level/levelgen/feature/stateproviders/BlockStateProvider.simple(Lnet/minecraft/world/level/block/Block;)Lnet/minecraft/world/level/levelgen/feature/stateproviders/SimpleStateProvider;	method missing on 26.3; needs a rule or shim (in WildCropGeneration)
+net/minecraft/world/level/levelgen/feature/stateproviders/SimpleStateProvider.simple(Lnet/minecraft/world/level/block/Block;)Lnet/minecraft/world/level/levelgen/feature/stateproviders/SimpleStateProvider;	method missing on 26.3; needs a rule or shim (in WildCropGeneration)
+net/minecraft/world/level/pathfinder/PathType.DAMAGE_FIRELnet/minecraft/world/level/pathfinder/PathType;	field missing on 26.3; needs a rule or shim (in AbstractStoveBlock)
+net/minecraft/world/level/storage/SavedDataStorage.computeIfAbsent(Ljava/util/function/Function;Ljava/util/function/Supplier;Ljava/lang/String;)Lnet/minecraft/world/level/saveddata/SavedData;	method missing on 26.3; needs a rule or shim (in AnimatableIdCache)
+net/minecraft/world/level/storage/SavedDataStorage.get(Ljava/util/function/Function;Ljava/lang/String;)Lnet/minecraft/world/level/saveddata/SavedData;	method missing on 26.3; needs a rule or shim (in AnimatableIdCache)
+net/minecraft/world/level/storage/loot/LootContext$Builder.<init>(Lnet/minecraft/world/level/storage/loot/LootContext;)V	never runs in game (data generation, examples or an optional integration); method missing on 26.3
+net/minecraft/world/level/storage/loot/LootContext$Builder.create(Lnet/minecraft/resources/Identifier;)Lnet/minecraft/world/level/storage/loot/LootContext;	method missing on 26.3; needs a rule or shim (in AddLootTableModifier, CuriosCommand)
+net/minecraft/world/level/storage/loot/LootContext$Builder.withQueriedLootTableId(Lnet/minecraft/resources/Identifier;)Lnet/minecraft/world/level/storage/loot/LootContext$Builder;	never runs in game (data generation, examples or an optional integration); method missing on 26.3
+net/minecraft/world/level/storage/loot/LootDataManager.getKeys(Lnet/minecraft/world/level/storage/loot/LootDataType;)Ljava/util/Collection;	class missing on 26.3; needs a rule or shim (in CuriosCommand)
+net/minecraft/world/level/storage/loot/providers/number/NumberProvider.getFloat(Lnet/minecraft/world/level/storage/loot/LootContext;)F	class missing on 26.3; needs a rule or shim (in SetCurioAttributesFunction)
+net/minecraft/world/level/storage/loot/providers/number/NumberProvider.getReferencedContextParams()Ljava/util/Set;	class missing on 26.3; needs a rule or shim (in SetCurioAttributesFunction)
+net/minecraftforge/client/extensions/common/IClientItemExtensions.getHumanoidArmorModel(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/entity/EquipmentSlot;Lnet/minecraft/client/model/HumanoidModel;)Lnet/minecraft/client/model/HumanoidModel;	method missing on 26.3; needs a rule or shim (in ItemArmorGeoLayer, RenderUtils)
+net/minecraftforge/client/extensions/common/IClientItemExtensions.of(Lnet/minecraft/world/item/Item;)Lnet/minecraftforge/client/extensions/common/IClientItemExtensions;	method missing on 26.3; needs a rule or shim (in RenderUtils)
+net/minecraftforge/client/extensions/common/IClientItemExtensions.of(Lnet/minecraft/world/item/ItemStack;)Lnet/minecraftforge/client/extensions/common/IClientItemExtensions;	method missing on 26.3; needs a rule or shim (in ItemArmorGeoLayer, RenderUtils)
+net/minecraftforge/common/ForgeHooks.prefixNamespace(Lnet/minecraft/resources/Identifier;)Ljava/lang/String;	never runs in game (data generation, examples or an optional integration); method missing on 26.3
+net/minecraftforge/common/Tags$Items.BONESLnet/minecraft/tags/TagKey;	never runs in game (data generation, examples or an optional integration); field missing on 26.3
+net/minecraftforge/common/Tags$Items.CROPS_BEETROOTLnet/minecraft/tags/TagKey;	never runs in game (data generation, examples or an optional integration); field missing on 26.3
+net/minecraftforge/common/Tags$Items.CROPS_CARROTLnet/minecraft/tags/TagKey;	never runs in game (data generation, examples or an optional integration); field missing on 26.3
+net/minecraftforge/common/Tags$Items.CROPS_POTATOLnet/minecraft/tags/TagKey;	never runs in game (data generation, examples or an optional integration); field missing on 26.3
+net/minecraftforge/common/Tags$Items.CROPS_WHEATLnet/minecraft/tags/TagKey;	never runs in game (data generation, examples or an optional integration); field missing on 26.3
+net/minecraftforge/common/Tags$Items.DYES_BLACKLnet/minecraft/tags/TagKey;	never runs in game (data generation, examples or an optional integration); field missing on 26.3
+net/minecraftforge/common/Tags$Items.DYES_BLUELnet/minecraft/tags/TagKey;	never runs in game (data generation, examples or an optional integration); field missing on 26.3
+net/minecraftforge/common/Tags$Items.DYES_BROWNLnet/minecraft/tags/TagKey;	never runs in game (data generation, examples or an optional integration); field missing on 26.3
+net/minecraftforge/common/Tags$Items.DYES_CYANLnet/minecraft/tags/TagKey;	never runs in game (data generation, examples or an optional integration); field missing on 26.3
+net/minecraftforge/common/Tags$Items.DYES_GRAYLnet/minecraft/tags/TagKey;	never runs in game (data generation, examples or an optional integration); field missing on 26.3
+net/minecraftforge/common/Tags$Items.DYES_GREENLnet/minecraft/tags/TagKey;	never runs in game (data generation, examples or an optional integration); field missing on 26.3
+net/minecraftforge/common/Tags$Items.DYES_LIGHT_BLUELnet/minecraft/tags/TagKey;	never runs in game (data generation, examples or an optional integration); field missing on 26.3
+net/minecraftforge/common/Tags$Items.DYES_LIGHT_GRAYLnet/minecraft/tags/TagKey;	never runs in game (data generation, examples or an optional integration); field missing on 26.3
+net/minecraftforge/common/Tags$Items.DYES_LIMELnet/minecraft/tags/TagKey;	never runs in game (data generation, examples or an optional integration); field missing on 26.3
+net/minecraftforge/common/Tags$Items.DYES_MAGENTALnet/minecraft/tags/TagKey;	never runs in game (data generation, examples or an optional integration); field missing on 26.3
+net/minecraftforge/common/Tags$Items.DYES_ORANGELnet/minecraft/tags/TagKey;	never runs in game (data generation, examples or an optional integration); field missing on 26.3
+net/minecraftforge/common/Tags$Items.DYES_PINKLnet/minecraft/tags/TagKey;	never runs in game (data generation, examples or an optional integration); field missing on 26.3
+net/minecraftforge/common/Tags$Items.DYES_PURPLELnet/minecraft/tags/TagKey;	never runs in game (data generation, examples or an optional integration); field missing on 26.3
+net/minecraftforge/common/Tags$Items.DYES_REDLnet/minecraft/tags/TagKey;	never runs in game (data generation, examples or an optional integration); field missing on 26.3
+net/minecraftforge/common/Tags$Items.DYES_WHITELnet/minecraft/tags/TagKey;	never runs in game (data generation, examples or an optional integration); field missing on 26.3
+net/minecraftforge/common/Tags$Items.DYES_YELLOWLnet/minecraft/tags/TagKey;	never runs in game (data generation, examples or an optional integration); field missing on 26.3
+net/minecraftforge/common/Tags$Items.INGOTS_IRONLnet/minecraft/tags/TagKey;	never runs in game (data generation, examples or an optional integration); field missing on 26.3
+net/minecraftforge/common/crafting/CraftingHelper.serialize(Lnet/minecraftforge/common/crafting/conditions/ICondition;)Lcom/google/gson/JsonObject;	never runs in game (data generation, examples or an optional integration); method missing on 26.3
+net/minecraftforge/common/crafting/CraftingHelper.serialize([Lnet/minecraftforge/common/crafting/conditions/ICondition;)Lcom/google/gson/JsonArray;	never runs in game (data generation, examples or an optional integration); method missing on 26.3
+rose/era/v1_20_1/item/LegacyBlockItem.getDefaultAttributeModifiers(Lnet/minecraft/world/entity/EquipmentSlot;)Lcom/google/common/collect/Multimap;	method missing on 26.3; needs a rule or shim (in SkilletItem)
+software/bernie/example/entity/BikeEntity.noCullingZ	never runs in game (data generation, examples or an optional integration); field missing on 26.3
+software/bernie/example/entity/DynamicExampleEntity.getHandSlots()Ljava/lang/Iterable;	never runs in game (data generation, examples or an optional integration); method missing on 26.3
+software/bernie/example/entity/DynamicExampleEntity.swingingZ	never runs in game (data generation, examples or an optional integration); field missing on 26.3
+software/bernie/example/item/GeckoArmorItem$1.this$0Lsoftware/bernie/example/item/GeckoArmorItem;	never runs in game (data generation, examples or an optional integration); class missing on 26.3
+software/bernie/example/item/WolfArmorItem$1.this$0Lsoftware/bernie/example/item/WolfArmorItem;	never runs in game (data generation, examples or an optional integration); class missing on 26.3
+software/bernie/example/registry/ItemRegistry.ITEMSLnet/minecraftforge/registries/DeferredRegister;	never runs in game (data generation, examples or an optional integration); not accessible on 26.3
+software/bernie/example/registry/ItemRegistry.TABSLnet/minecraftforge/registries/DeferredRegister;	never runs in game (data generation, examples or an optional integration); not accessible on 26.3
+software/bernie/geckolib/cache/texture/AnimatableTexture.access$000(Lsoftware/bernie/geckolib/cache/texture/AnimatableTexture;)Lnet/minecraft/resources/Identifier;	not accessible on 26.3; needs a rule or shim (in AnimatableTexture$AnimationContents)
+software/bernie/geckolib/cache/texture/AnimatableTexture.access$100(Lsoftware/bernie/geckolib/cache/texture/AnimatableTexture;)Lnet/minecraft/resources/Identifier;	not accessible on 26.3; needs a rule or shim (in AnimatableTexture$AnimationContents)
+software/bernie/geckolib/cache/texture/AnimatableTexture.access$200(Lsoftware/bernie/geckolib/cache/texture/AnimatableTexture;)Lnet/minecraft/resources/Identifier;	not accessible on 26.3; needs a rule or shim (in AnimatableTexture$AnimationContents)
+software/bernie/geckolib/cache/texture/AnimatableTexture.access$300(Lsoftware/bernie/geckolib/cache/texture/AnimatableTexture;)Lnet/minecraft/resources/Identifier;	not accessible on 26.3; needs a rule or shim (in AnimatableTexture$AnimationContents)
+software/bernie/geckolib/cache/texture/AnimatableTexture.getId()I	not accessible on 26.3; needs a rule or shim (in AnimatableTexture$AnimationContents$Texture)
+software/bernie/geckolib/cache/texture/AnimatableTexture.onRenderThread(Lcom/mojang/blaze3d/pipeline/RenderCall;)V	class missing on 26.3; needs a rule or shim (in AnimatableTexture$AnimationContents$Texture)
+software/bernie/geckolib/cache/texture/AnimatableTexture.setAndUpdate(Lnet/minecraft/resources/Identifier;)V	not accessible on 26.3; needs a rule or shim (in GeoArmorRenderer, GeoBlockRenderer, GeoEntityRenderer, GeoItemRenderer, GeoObjectRenderer, GeoReplacedEntityRenderer)
+software/bernie/geckolib/cache/texture/AutoGlowingTexture.getId()I	not accessible on 26.3; needs a rule or shim (in AnimatableTexture$AnimationContents$Texture)
+software/bernie/geckolib/cache/texture/AutoGlowingTexture.getRenderType(Lnet/minecraft/resources/Identifier;)Lnet/minecraft/client/renderer/rendertype/RenderType;	not accessible on 26.3; needs a rule or shim (in AutoGlowingGeoLayer)
+software/bernie/geckolib/renderer/DynamicGeoEntityRenderer.getRenderOffset(Lnet/minecraft/world/entity/Entity;F)Lnet/minecraft/world/phys/Vec3;	method missing on 26.3; needs a rule or shim (in DynamicGeoEntityRenderer)
+software/bernie/geckolib/renderer/GeoArmorRenderer.youngZ	field missing on 26.3; needs a rule or shim (in GeoArmorRenderer)
+software/bernie/geckolib/renderer/GeoEntityRenderer.getRenderOffset(Lnet/minecraft/world/entity/Entity;F)Lnet/minecraft/world/phys/Vec3;	method missing on 26.3; needs a rule or shim (in GeoEntityRenderer)
+software/bernie/geckolib/renderer/GeoReplacedEntityRenderer.getRenderOffset(Lnet/minecraft/world/entity/Entity;F)Lnet/minecraft/world/phys/Vec3;	method missing on 26.3; needs a rule or shim (in GeoReplacedEntityRenderer)
+top/theillusivec4/curios/client/gui/CuriosScreen.getGuiLeft()I	method missing on 26.3; needs a rule or shim (in CuriosScreen)
+top/theillusivec4/curios/client/gui/CuriosScreen.getMinecraft()Lnet/minecraft/client/Minecraft;	method missing on 26.3; needs a rule or shim (in CuriosScreen)
+top/theillusivec4/curios/client/gui/CuriosScreen.getSlotUnderMouse()Lnet/minecraft/world/inventory/Slot;	method missing on 26.3; needs a rule or shim (in CuriosScreen)
+top/theillusivec4/curios/client/gui/CuriosScreenV2.getGuiLeft()I	method missing on 26.3; needs a rule or shim (in CosmeticButton, CuriosScreenV2, PageButton)
+top/theillusivec4/curios/client/gui/CuriosScreenV2.getGuiTop()I	method missing on 26.3; needs a rule or shim (in CosmeticButton, CuriosScreenV2)
+top/theillusivec4/curios/client/gui/CuriosScreenV2.getMinecraft()Lnet/minecraft/client/Minecraft;	method missing on 26.3; needs a rule or shim (in CuriosScreenV2)
+top/theillusivec4/curios/client/gui/CuriosScreenV2.getSlotUnderMouse()Lnet/minecraft/world/inventory/Slot;	method missing on 26.3; needs a rule or shim (in CuriosScreenV2)
+top/theillusivec4/curios/common/util/SetCurioAttributesFunction$Modifier.<init>(Ljava/lang/String;Lnet/minecraft/world/entity/ai/attributes/Attribute;Lnet/minecraft/world/entity/ai/attributes/AttributeModifier$Operation;Lnet/minecraft/world/level/storage/loot/providers/number/NumberProvider;[Ljava/lang/String;Ljava/util/UUID;)V	class missing on 26.3; needs a rule or shim (in SetCurioAttributesFunction$Modifier)
+top/theillusivec4/curios/common/util/SetCurioAttributesFunction$Modifier.amountLnet/minecraft/world/level/storage/loot/providers/number/NumberProvider;	class missing on 26.3; needs a rule or shim (in SetCurioAttributesFunction, SetCurioAttributesFunction$Modifier)
+vectorwing/farmersdelight/client/gui/CookingPotRecipeBookComponent.filterButtonLnet/minecraft/client/gui/components/StateSwitchingButton;	class missing on 26.3; needs a rule or shim (in CookingPotRecipeBookComponent)
+vectorwing/farmersdelight/client/gui/CookingPotRecipeBookComponent.ghostRecipeLnet/minecraft/client/gui/screens/recipebook/GhostRecipe;	class missing on 26.3; needs a rule or shim (in CookingPotRecipeBookComponent)
+vectorwing/farmersdelight/client/gui/CookingPotRecipeBookComponent.menuLnet/minecraft/world/inventory/RecipeBookMenu;	field missing on 26.3; needs a rule or shim (in CookingPotRecipeBookComponent)
+vectorwing/farmersdelight/client/gui/CookingPotRecipeBookComponent.minecraftLnet/minecraft/client/Minecraft;	field missing on 26.3; needs a rule or shim (in CookingPotRecipeBookComponent)
+vectorwing/farmersdelight/client/gui/CookingPotRecipeBookComponent.placeRecipe(IIILnet/minecraft/world/item/crafting/Recipe;Ljava/util/Iterator;I)V	method missing on 26.3; needs a rule or shim (in CookingPotRecipeBookComponent)
+vectorwing/farmersdelight/client/renderer/CanvasSignRenderer.getSignModelRenderScale()F	method missing on 26.3; needs a rule or shim (in CanvasSignRenderer)
+vectorwing/farmersdelight/client/renderer/CanvasSignRenderer.getSignTextRenderScale()F	method missing on 26.3; needs a rule or shim (in CanvasSignRenderer)
+vectorwing/farmersdelight/common/block/entity/SyncedBlockEntity.getCapability(Lnet/minecraftforge/common/capabilities/Capability;Lnet/minecraft/core/Direction;)Lnet/minecraftforge/common/util/LazyOptional;	method missing on 26.3; needs a rule or shim (in CookingPotBlockEntity, CuttingBoardBlockEntity)
+vectorwing/farmersdelight/common/item/RiceItem.use(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/InteractionHand;)Lnet/minecraft/world/InteractionResultHolder;	method missing on 26.3; needs a rule or shim (in RiceItem)

@@ -31,6 +31,7 @@ final class CuriosChecks {
         test("cu_worn_curios_tick_and_drop", CuriosChecks::wornCuriosTickAndDrop);
         test("cu_curse_and_orb_shims", CuriosChecks::curseAndOrbShims);
         test("cu_curios_menu_opens", CuriosChecks::curiosMenuOpens);
+        test("cu_equipped_curios_and_invalid_stacks", CuriosChecks::equippedCuriosAndInvalidStacks);
     }
 
     /** Positions whose BreakEvent experience the listener below sets to 42. */
@@ -286,6 +287,30 @@ final class CuriosChecks {
         helper.assertTrue((int) call(curioSlot, "getSlotIndex") == curioSlot.getContainerSlot(), "getSlotIndex isn't the container slot");
         call(curioSlot, "getRenderStatus");
         player.closeContainer();
+        helper.succeed();
+    }
+
+    /**
+     * Curios merges worn curios into a player's NBT (as /data get entity reads it) through getEquippedCurios, a Forge
+     * CombinedInvWrapper over every slot type; curios a slot no longer accepts go back to the player through
+     * ItemHandlerHelper.giveItemToPlayer.
+     */
+    private static void equippedCuriosAndInvalidStacks(GameTestHelper helper) {
+        if (skip(helper, CU)) return;
+        var player = helper.makeMockServerPlayerInLevel();
+        Object handler = ((Optional<?>) call(callStatic(api(), "getCuriosInventory", new Class<?>[] {LivingEntity.class}, player), "resolve")).orElseThrow();
+        Object head = ((Optional<?>) AddonCheck.call2(handler, "getStacksHandler", String.class, "head")).orElseThrow(() -> new IllegalStateException("no head slot"));
+        var apple = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.APPLE);
+        AddonCheck.setSlot(call(head, "getStacks"), 0, apple);
+        var equipped = (net.minecraftforge.items.IItemHandler) call(handler, "getEquippedCurios");
+        boolean found = false;
+        for (int i = 0; i < equipped.getSlots(); i++) found |= equipped.getStackInSlot(i).is(net.minecraft.world.item.Items.APPLE);
+        helper.assertTrue(found, "the worn apple isn't among the " + equipped.getSlots() + " equipped curios");
+        net.minecraft.advancements.predicates.NbtPredicate.getEntityTagToCompare(player);
+
+        AddonCheck.call2(handler, "loseInvalidStack", net.minecraft.world.item.ItemStack.class, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.STICK, 3));
+        call(handler, "handleInvalidStacks");
+        helper.assertTrue(player.getInventory().getNonEquipmentItems().stream().filter(s -> s.is(net.minecraft.world.item.Items.STICK)).mapToInt(net.minecraft.world.item.ItemStack::getCount).sum() == 3, "the invalid stack wasn't given back to the player");
         helper.succeed();
     }
 }

@@ -30,6 +30,7 @@ public final class AddonCheck implements ModInitializer {
         AppleSkinChecks.register();
         GeckoLibChecks.register();
         LinkageChecks.register();
+        ReferenceChecks.register();
         LegacyListChecks.register();
         test("creative_tabs_have_places", AddonCheck::creativeTabsHavePlaces);
         test("legacy_key_codes_are_26_3_keys", AddonCheck::legacyKeyCodes);

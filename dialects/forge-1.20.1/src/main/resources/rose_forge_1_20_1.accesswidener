@@ -35,3 +35,8 @@ accessible field net/minecraft/commands/synchronization/ArgumentTypeInfos BY_CLA
 
 # Forge 1.20.1 RegisterKeyMappingsEvent adds mods' mappings to the options
 mutable field net/minecraft/client/Options keyMappings [Lnet/minecraft/client/KeyMapping;
+
+# Forge 1.20.1's access transformer made Mob.goalSelector and targetSelector public: mods add goals to vanilla mobs
+# from event listeners (FD tempts horses with horse feed).
+accessible field net/minecraft/world/entity/Mob goalSelector Lnet/minecraft/world/entity/ai/goal/GoalSelector;
+accessible field net/minecraft/world/entity/Mob targetSelector Lnet/minecraft/world/entity/ai/goal/GoalSelector;

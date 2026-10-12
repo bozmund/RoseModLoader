@@ -87,6 +87,7 @@ final class FdGameplay {
         test("placed_skillets_keep_their_item", FdGameplay::placedSkilletsKeepTheirItem);
         test("safety_nets_bounce", FdGameplay::safetyNetsBounce);
         test("canvas_signs_can_be_placed", FdGameplay::canvasSignsCanBePlaced);
+        test("horses_are_tempted_by_horse_feed", FdGameplay::horsesAreTemptedByHorseFeed);
     }
 
     private static void test(String name, Consumer<GameTestHelper> test) {
@@ -621,4 +622,41 @@ final class FdGameplay {
     }
 
     private FdGameplay() {}
+
+    /**
+     * FD's CommonEvents adds a TemptGoal for horse feed to horses as they join the level, through Mob.goalSelector
+     * (public in Forge 1.20.1); without it the whole listener class fails to register.
+     */
+    private static void horsesAreTemptedByHorseFeed(GameTestHelper helper) {
+        if (skip(helper)) return;
+        var horse = helper.spawn(EntityTypes.HORSE, POS.above());
+        var feed = new ItemStack(item("horse_feed"));
+        boolean tempted = goals(horse).getAvailableGoals().stream()
+                .map(net.minecraft.world.entity.ai.goal.WrappedGoal::getGoal)
+                .filter(goal -> goal instanceof net.minecraft.world.entity.ai.goal.TemptGoal)
+                .anyMatch(goal -> temptedBy(goal, feed));
+        helper.assertTrue(tempted, "no tempt goal for horse feed on a horse");
+        helper.succeed();
+    }
+
+    private static net.minecraft.world.entity.ai.goal.GoalSelector goals(net.minecraft.world.entity.Mob mob) {
+        try {
+            var field = net.minecraft.world.entity.Mob.class.getDeclaredField("goalSelector");
+            field.setAccessible(true);
+            return (net.minecraft.world.entity.ai.goal.GoalSelector) field.get(mob);
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static boolean temptedBy(net.minecraft.world.entity.ai.goal.Goal goal, ItemStack stack) {
+        try {
+            var items = net.minecraft.world.entity.ai.goal.TemptGoal.class.getDeclaredField("items");
+            items.setAccessible(true);
+            return ((java.util.function.Predicate<ItemStack>) items.get(goal)).test(stack);
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException(e);
+        }
+    }
 }

@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "fdcheck:horses_are_tempted_by_horse_feed",
+  "structure": "minecraft:empty",
+  "max_ticks": 20,
+  "padding": 2
+}

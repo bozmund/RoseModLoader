@@ -149,7 +149,7 @@ final class LinkageChecks {
     }
 
     /** Packages of the mod's mixin configs: mixin classes are applied to targets, never loaded themselves. */
-    private static Set<String> mixinPackages(ModMetadata mod) {
+    static Set<String> mixinPackages(ModMetadata mod) {
         Set<String> out = new HashSet<>();
         try (ZipFile zip = new ZipFile(mod.root().toFile())) {
             for (String config : mod.mixins()) {
