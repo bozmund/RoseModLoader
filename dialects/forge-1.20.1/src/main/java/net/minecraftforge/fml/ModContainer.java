@@ -7,6 +7,7 @@ import rose.loader.ModMetadata;
 public class ModContainer {
     private final ModMetadata metadata;
     private final IModInfo info;
+    private final java.util.Map<Class<?>, java.util.function.Supplier<?>> extensions = new java.util.concurrent.ConcurrentHashMap<>();
 
     public ModContainer(ModMetadata metadata) {
         this.metadata = metadata;
@@ -38,5 +39,16 @@ public class ModContainer {
 
     public IModInfo getModInfo() {
         return info;
+    }
+
+    /** Registers the mod's extension of type {@code point} (a config screen factory, a display test). */
+    public <T extends Record & IExtensionPoint<T>> void registerExtensionPoint(Class<? extends T> point, java.util.function.Supplier<T> extension) {
+        extensions.put(point, extension);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T extends Record> java.util.Optional<T> getCustomExtension(Class<? extends T> point) {
+        java.util.function.Supplier<?> extension = extensions.get(point);
+        return extension == null ? java.util.Optional.empty() : java.util.Optional.of((T) extension.get());
     }
 }

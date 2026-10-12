@@ -34,6 +34,23 @@ public final class AddonCheck implements ModInitializer {
         test("creative_tabs_have_places", AddonCheck::creativeTabsHavePlaces);
         test("legacy_key_codes_are_26_3_keys", AddonCheck::legacyKeyCodes);
         test("legacy_hud_icons_are_sprites", AddonCheck::legacyHudIcons);
+        test("forge_config_screen_factories_are_kept", AddonCheck::configScreenFactories);
+    }
+
+    /**
+     * SpectreLib registers each mod's config screen as a Forge ConfigScreenFactory extension on the mod's container
+     * (and registers its logout handling in the same setup); the factory can be looked up again by mod.
+     */
+    private static void configScreenFactories(GameTestHelper helper) {
+        var container = net.minecraftforge.fml.ModList.get().getModContainerById("addoncheck").orElseThrow();
+        java.util.function.BiFunction<net.minecraft.client.Minecraft, net.minecraft.client.gui.screens.Screen, net.minecraft.client.gui.screens.Screen> screen = (mc, parent) -> parent;
+        container.registerExtensionPoint(net.minecraftforge.client.ConfigScreenHandler.ConfigScreenFactory.class,
+                () -> new net.minecraftforge.client.ConfigScreenHandler.ConfigScreenFactory(screen));
+        var found = net.minecraftforge.client.ConfigScreenHandler.getScreenFactoryFor(container.getModInfo());
+        helper.assertTrue(found.isPresent() && found.get() == screen, "the config screen factory is " + found);
+        helper.assertTrue(net.minecraftforge.client.ConfigScreenHandler.getScreenFactoryFor(
+                net.minecraftforge.fml.ModList.get().getModContainerById("sample").orElseThrow().getModInfo()).isEmpty(), "another mod has a config screen");
+        helper.succeed();
     }
 
     /**

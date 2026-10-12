@@ -18,6 +18,11 @@ public class ModLoadingContext {
         return active != null ? active.modId() : "minecraft";
     }
 
+    /** Registers an extension on the mod being loaded (see ModContainer). */
+    public <T extends Record & IExtensionPoint<T>> void registerExtensionPoint(Class<? extends T> point, java.util.function.Supplier<T> extension) {
+        ModList.get().getModContainerById(getActiveNamespace()).ifPresent(container -> container.registerExtensionPoint(point, extension));
+    }
+
     public void registerConfig(ModConfig.Type type, IConfigSpec<?> spec) {
         registerConfig(type, spec, getActiveNamespace() + "-" + type.extension() + ".toml");
     }
