@@ -5,5 +5,6 @@ dependencies {
     compileOnly(rootProject.extra["minecraft"] as FileCollection)
     compileOnly(project(":api"))
     compileOnly(project(":loader"))
+    compileOnly(project(":eras:era-1.20.1")) // Rose's 1.20.1 era, loaded with the game
     compileOnly(libs.asm) // provided by the launcher's class loader
 }

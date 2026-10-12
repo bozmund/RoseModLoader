@@ -44,9 +44,12 @@ public final class RedirectingClassVisitor extends ClassVisitor {
         this.modClasses = modClasses;
     }
 
-    /** The rule for a call, or {@code null}; {@code super} calls to the mod's own overrides have none. */
+    /**
+     * The rule for a call, or {@code null}. {@code super} and virtual calls that reach the mod's own method (its
+     * override of a game method that a rule redirects) have none: the mod's method is still there to call.
+     */
     private RedirectRules.Redirect ruleFor(int opcode, String owner, String name, String desc) {
-        if (opcode == Opcodes.INVOKESPECIAL && modDeclares(owner, name + desc)) return null;
+        if ((opcode == Opcodes.INVOKESPECIAL || opcode == Opcodes.INVOKEVIRTUAL) && modDeclares(owner, name + desc)) return null;
         return rules.find(owner, name, desc);
     }
 

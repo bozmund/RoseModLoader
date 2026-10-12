@@ -137,5 +137,30 @@ public final class LegacyKeyCodes {
         };
     }
 
+    /** The 1.20.1 (GLFW, from 0) mouse button for a 26.3 one, the inverse of {@link #mouseButton}. */
+    public static int glfwMouseButton(int button) {
+        return switch (button) {
+            case 1 -> 0;
+            case 3 -> 1;
+            case 2 -> 2;
+            default -> button - 1;
+        };
+    }
+
+    /** 26.3 key to 1.20.1 GLFW key code, the inverse of {@link #key}. */
+    private static final java.util.Map<Integer, Integer> TO_GLFW = new java.util.HashMap<>();
+
+    static {
+        for (int glfw = 0; glfw <= 348; glfw++) {
+            int key = key(glfw);
+            if (key != 0) TO_GLFW.putIfAbsent(key, glfw);
+        }
+    }
+
+    /** The 1.20.1 GLFW key code for a 26.3 keyboard key (what old {@code keyPressed} overrides compare with); -1 if none. */
+    public static int glfw(int key) {
+        return TO_GLFW.getOrDefault(key, -1);
+    }
+
     private LegacyKeyCodes() {}
 }

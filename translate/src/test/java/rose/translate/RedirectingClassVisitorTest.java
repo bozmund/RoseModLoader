@@ -234,6 +234,30 @@ class RedirectingClassVisitorTest {
         assertEquals(List.of("shim/ItemShim.getFoodProperties(Lgame/Item;)Lgame/Food;"), calls(parent, rules, mod));
     }
 
+    /**
+     * Nature's Compass' text field overrides EditBox.tick ({@code m_94120_}, gone in 26.3) and its screen calls
+     * {@code field.tick()}: that call reaches the mod's override and stays; the override's super call is redirected.
+     */
+    @Test
+    void virtualCallsToTheModsOwnOverridesStay() throws java.io.IOException {
+        String food = "()Lgame/Food;";
+        RedirectRules rules = new RedirectRules(Map.of("game/Item.m_41473_" + food,
+                new Redirect("game/Item.m_41473_" + food, "shim/ItemShim", "getFoodProperties", "test")));
+        byte[] item = foodItem("mod/FoodItem", "game/Item", Opcodes.INVOKESPECIAL, "game/Item");
+        byte[] caller = foodItem("mod/Caller", "java/lang/Object", Opcodes.INVOKEVIRTUAL, "mod/FoodItem");
+        byte[] gameCaller = foodItem("mod/GameCaller", "java/lang/Object", Opcodes.INVOKEVIRTUAL, "game/Item");
+        java.nio.file.Path jar = java.nio.file.Files.createTempFile("mod", ".jar");
+        try (var out = new java.util.zip.ZipOutputStream(java.nio.file.Files.newOutputStream(jar))) {
+            out.putNextEntry(new java.util.zip.ZipEntry("mod/FoodItem.class"));
+            out.write(item);
+            out.closeEntry();
+        }
+        ClassIndex mod = ClassIndex.of(List.of(jar), false);
+        java.nio.file.Files.delete(jar);
+        assertEquals(List.of("mod/FoodItem.m_41473_" + food), calls(caller, rules, mod));
+        assertEquals(List.of("shim/ItemShim.getFoodProperties(Lgame/Item;)Lgame/Food;"), calls(gameCaller, rules, mod));
+    }
+
     /** {@code class name extends parent { Food m_41473_() { return super.m_41473_(); } }} */
     private static byte[] foodItem(String name, String parent, int opcode, String owner) {
         ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);

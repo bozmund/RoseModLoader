@@ -30,6 +30,7 @@ public final class AddonCheck implements ModInitializer {
         AppleSkinChecks.register();
         GeckoLibChecks.register();
         LinkageChecks.register();
+        LegacyListChecks.register();
         test("creative_tabs_have_places", AddonCheck::creativeTabsHavePlaces);
         test("legacy_key_codes_are_26_3_keys", AddonCheck::legacyKeyCodes);
         test("legacy_hud_icons_are_sprites", AddonCheck::legacyHudIcons);
@@ -64,7 +65,7 @@ public final class AddonCheck implements ModInitializer {
 
     /**
      * 1.20.1 mods name keys by GLFW key code (AppleSkin and Curios check shift with isKeyDown(window, 340)); 26.3 key
-     * codes are SDL scancodes, and mouse buttons count from 1.
+     * codes are SDL scancodes, and mouse buttons count from 1. Input to old screens goes the other way.
      */
     private static void legacyKeyCodes(GameTestHelper helper) {
         Class<?> codes = modClass("rose.era.v1_20_1.client.LegacyKeyCodes");
@@ -77,6 +78,14 @@ public final class AddonCheck implements ModInitializer {
         for (int[] b : buttons) {
             int got = (int) callStatic(codes, "mouseButton", new Class<?>[] {int.class}, b[0]);
             helper.assertTrue(got == b[1], "GLFW mouse button " + b[0] + " became " + got + ", not " + b[1]);
+            int back = (int) callStatic(codes, "glfwMouseButton", new Class<?>[] {int.class}, b[1]);
+            helper.assertTrue(back == b[0], "26.3 mouse button " + b[1] + " went back to " + back + ", not " + b[0]);
+        }
+        // old screens and lists compare 26.3 keys as GLFW codes (Escape 256, Enter 257)
+        for (int[] k : keys) {
+            if (k[1] == 0) continue;
+            int back = (int) callStatic(codes, "glfw", new Class<?>[] {int.class}, k[1]);
+            helper.assertTrue(back == k[0], "26.3 key " + k[1] + " went back to GLFW " + back + ", not " + k[0]);
         }
         helper.succeed();
     }

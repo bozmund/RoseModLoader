@@ -13,7 +13,7 @@ import rose.era.v1_20_1.bridge.Legacy;
  * KeyEvent, CharacterEvent); 1.20.1 screens override {@code mouseClicked(x, y, button)}, {@code keyPressed(key,
  * scancode, modifiers)} and so on, and call {@code super} with those. The bridges call the old overrides; the old
  * {@code super} calls reach Screen's old-shaped methods (ScreenInputMixin), which come back here marked as super
- * calls and run the game's own implementation.
+ * calls and run the game's own implementation. Old screens get 1.20.1 (GLFW) key codes (LegacyKeyCodes).
  */
 public final class InputBridges {
     private static final ThreadLocal<Object> SUPER_CALL = new ThreadLocal<>();
@@ -35,18 +35,18 @@ public final class InputBridges {
 
     public static boolean mouseClicked(Screen self, MouseButtonEvent event, boolean doubleClick) {
         if (isSuperCall(self)) return call(self, "mouseClicked", MethodType.methodType(boolean.class, MouseButtonEvent.class, boolean.class), event, doubleClick);
-        return old(self, "mouseClicked", MethodType.methodType(boolean.class, double.class, double.class, int.class), event.x(), event.y(), event.button());
+        return old(self, "mouseClicked", MethodType.methodType(boolean.class, double.class, double.class, int.class), event.x(), event.y(), LegacyKeyCodes.glfwMouseButton(event.button()));
     }
 
     public static boolean mouseReleased(Screen self, MouseButtonEvent event) {
         if (isSuperCall(self)) return call(self, "mouseReleased", MethodType.methodType(boolean.class, MouseButtonEvent.class), event);
-        return old(self, "mouseReleased", MethodType.methodType(boolean.class, double.class, double.class, int.class), event.x(), event.y(), event.button());
+        return old(self, "mouseReleased", MethodType.methodType(boolean.class, double.class, double.class, int.class), event.x(), event.y(), LegacyKeyCodes.glfwMouseButton(event.button()));
     }
 
     public static boolean mouseDragged(Screen self, MouseButtonEvent event, double dx, double dy) {
         if (isSuperCall(self)) return call(self, "mouseDragged", MethodType.methodType(boolean.class, MouseButtonEvent.class, double.class, double.class), event, dx, dy);
         return old(self, "mouseDragged", MethodType.methodType(boolean.class, double.class, double.class, int.class, double.class, double.class),
-                event.x(), event.y(), event.button(), dx, dy);
+                event.x(), event.y(), LegacyKeyCodes.glfwMouseButton(event.button()), dx, dy);
     }
 
     /** 1.20.1 scrolled vertically only ({@code mouseScrolled(x, y, delta)}). */
@@ -57,12 +57,12 @@ public final class InputBridges {
 
     public static boolean keyPressed(Screen self, KeyEvent event) {
         if (isSuperCall(self)) return call(self, "keyPressed", MethodType.methodType(boolean.class, KeyEvent.class), event);
-        return old(self, "keyPressed", MethodType.methodType(boolean.class, int.class, int.class, int.class), event.key(), event.keycode(), event.modifiers());
+        return old(self, "keyPressed", MethodType.methodType(boolean.class, int.class, int.class, int.class), LegacyKeyCodes.glfw(event.key()), event.keycode(), event.modifiers());
     }
 
     public static boolean keyReleased(Screen self, KeyEvent event) {
         if (isSuperCall(self)) return call(self, "keyReleased", MethodType.methodType(boolean.class, KeyEvent.class), event);
-        return old(self, "keyReleased", MethodType.methodType(boolean.class, int.class, int.class, int.class), event.key(), event.keycode(), event.modifiers());
+        return old(self, "keyReleased", MethodType.methodType(boolean.class, int.class, int.class, int.class), LegacyKeyCodes.glfw(event.key()), event.keycode(), event.modifiers());
     }
 
     /** 1.20.1 passed a char and the modifiers; 26.x a code point. */

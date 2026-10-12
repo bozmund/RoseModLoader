@@ -18,7 +18,7 @@ public abstract class ScreenInputMixin {
         Screen self = (Screen) (Object) this;
         InputBridges.beginSuper(self);
         try {
-            return self.mouseClicked(new MouseButtonEvent(x, y, new MouseButtonInfo(button, 0)), false);
+            return self.mouseClicked(new MouseButtonEvent(x, y, new MouseButtonInfo(rose.era.v1_20_1.client.LegacyKeyCodes.mouseButton(button), 0)), false);
         } finally {
             InputBridges.endSuper(self);
         }
@@ -28,7 +28,7 @@ public abstract class ScreenInputMixin {
         Screen self = (Screen) (Object) this;
         InputBridges.beginSuper(self);
         try {
-            return self.mouseReleased(new MouseButtonEvent(x, y, new MouseButtonInfo(button, 0)));
+            return self.mouseReleased(new MouseButtonEvent(x, y, new MouseButtonInfo(rose.era.v1_20_1.client.LegacyKeyCodes.mouseButton(button), 0)));
         } finally {
             InputBridges.endSuper(self);
         }
@@ -38,7 +38,7 @@ public abstract class ScreenInputMixin {
         Screen self = (Screen) (Object) this;
         InputBridges.beginSuper(self);
         try {
-            return self.mouseDragged(new MouseButtonEvent(x, y, new MouseButtonInfo(button, 0)), dx, dy);
+            return self.mouseDragged(new MouseButtonEvent(x, y, new MouseButtonInfo(rose.era.v1_20_1.client.LegacyKeyCodes.mouseButton(button), 0)), dx, dy);
         } finally {
             InputBridges.endSuper(self);
         }
@@ -58,7 +58,7 @@ public abstract class ScreenInputMixin {
         Screen self = (Screen) (Object) this;
         InputBridges.beginSuper(self);
         try {
-            return self.keyPressed(new KeyEvent(key, scancode, modifiers));
+            return self.keyPressed(new KeyEvent(rose.era.v1_20_1.client.LegacyKeyCodes.key(key), scancode, modifiers));
         } finally {
             InputBridges.endSuper(self);
         }
@@ -68,7 +68,7 @@ public abstract class ScreenInputMixin {
         Screen self = (Screen) (Object) this;
         InputBridges.beginSuper(self);
         try {
-            return self.keyReleased(new KeyEvent(key, scancode, modifiers));
+            return self.keyReleased(new KeyEvent(rose.era.v1_20_1.client.LegacyKeyCodes.key(key), scancode, modifiers));
         } finally {
             InputBridges.endSuper(self);
         }

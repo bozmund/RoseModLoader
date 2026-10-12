@@ -57,6 +57,90 @@ public final class GuiShim {
         return x + font.width(text) + (shadow ? 1 : 0);
     }
 
+    /** 1.20.1 {@code drawString(font, text, x, y, color)}: with a shadow; returns the end x. */
+    public static int drawString(GuiGraphicsExtractor g, Font font, String text, int x, int y, int color) {
+        return drawString(g, font, text, x, y, color, true);
+    }
+
+    /** 1.20.1 {@code drawString(font, text, x, y, color, shadow)}. */
+    public static int drawString(GuiGraphicsExtractor g, Font font, String text, int x, int y, int color, boolean shadow) {
+        if (text == null) return 0;
+        g.text(font, text, x, y, opaque(color), shadow);
+        return x + font.width(text) + (shadow ? 1 : 0);
+    }
+
+    /** 1.20.1 {@code drawString(font, sequence, x, y, color)}: with a shadow. */
+    public static int drawString(GuiGraphicsExtractor g, Font font, net.minecraft.util.FormattedCharSequence text, int x, int y, int color) {
+        return drawString(g, font, text, x, y, color, true);
+    }
+
+    /** 1.20.1 {@code drawString(font, sequence, x, y, color, shadow)}. */
+    public static int drawString(GuiGraphicsExtractor g, Font font, net.minecraft.util.FormattedCharSequence text, int x, int y, int color, boolean shadow) {
+        g.text(font, text, x, y, opaque(color), shadow);
+        return x + font.width(text) + (shadow ? 1 : 0);
+    }
+
+    /** 1.20.1 {@code drawString(font, component, x, y, color)}: with a shadow. */
+    public static int drawString(GuiGraphicsExtractor g, Font font, Component text, int x, int y, int color) {
+        return drawString(g, font, text, x, y, color, true);
+    }
+
+    /** 1.20.1 {@code drawCenteredString(font, text, x, y, color)}: centred on x, with a shadow. */
+    public static void drawCenteredString(GuiGraphicsExtractor g, Font font, String text, int x, int y, int color) {
+        g.centeredText(font, text, x, y, opaque(color));
+    }
+
+    public static void drawCenteredString(GuiGraphicsExtractor g, Font font, Component text, int x, int y, int color) {
+        g.centeredText(font, text, x, y, opaque(color));
+    }
+
+    public static void drawCenteredString(GuiGraphicsExtractor g, Font font, net.minecraft.util.FormattedCharSequence text, int x, int y, int color) {
+        g.centeredText(font, text, x, y, opaque(color));
+    }
+
+    /** 1.20.1 {@code drawWordWrap(font, text, x, y, width, color)}: lines of at most width, 9 apart, no shadow. */
+    public static void drawWordWrap(GuiGraphicsExtractor g, Font font, net.minecraft.network.chat.FormattedText text, int x, int y, int width, int color) {
+        for (net.minecraft.util.FormattedCharSequence line : font.split(text, width)) {
+            g.text(font, line, x, y, opaque(color), false);
+            y += font.lineHeight;
+        }
+    }
+
+    /** 1.20.1 {@code fill(x0, y0, x1, y1, z, color)}: 26.3 GUI has no z. */
+    public static void fill(GuiGraphicsExtractor g, int x0, int y0, int x1, int y1, int z, int color) {
+        g.fill(x0, y0, x1, y1, color);
+    }
+
+    /** 1.20.1 {@code fill(renderType, x0, y0, x1, y1, color)}: 26.3 GUI fills pick their pipeline (see {@link #guiOverlay}). */
+    public static void fill(GuiGraphicsExtractor g, net.minecraft.client.renderer.rendertype.RenderType renderType, int x0, int y0, int x1, int y1, int color) {
+        g.fill(x0, y0, x1, y1, color);
+    }
+
+    public static void fill(GuiGraphicsExtractor g, net.minecraft.client.renderer.rendertype.RenderType renderType, int x0, int y0, int x1, int y1, int z, int color) {
+        g.fill(x0, y0, x1, y1, color);
+    }
+
+    /** 1.20.1 {@code fillGradient(x0, y0, x1, y1, z, from, to)}. */
+    public static void fillGradient(GuiGraphicsExtractor g, int x0, int y0, int x1, int y1, int z, int from, int to) {
+        g.fillGradient(x0, y0, x1, y1, from, to);
+    }
+
+    public static void fillGradient(GuiGraphicsExtractor g, net.minecraft.client.renderer.rendertype.RenderType renderType, int x0, int y0, int x1, int y1, int from, int to, int z) {
+        g.fillGradient(x0, y0, x1, y1, from, to);
+    }
+
+    /**
+     * 1.20.1 {@code RenderType.guiOverlay()} / {@code guiTextHighlight()}, only passed to the fills above: 26.3 GUI
+     * draws have no render types, so there is none to return.
+     */
+    public static net.minecraft.client.renderer.rendertype.RenderType guiOverlay() {
+        return null;
+    }
+
+    /** 1.20.1 {@code EditBox.tick()} advanced the cursor blink; 26.3 blinks by time, so there is nothing to tick. */
+    public static void tick(net.minecraft.client.gui.components.EditBox self) {
+    }
+
     /** 1.20.1 screens drew their dimmed background themselves; since 1.20.2 Screen does it before rendering. */
     public static void renderBackground(Screen self, GuiGraphicsExtractor g) {
     }
