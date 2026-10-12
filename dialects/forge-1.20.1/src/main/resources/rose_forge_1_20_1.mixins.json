@@ -44,6 +44,7 @@
     "ServerLifecycleMixin",
     "ServerPlayerEventsMixin",
     "ServerPlayerSleepMixin",
+    "SlotForgeMixin",
     "StemBlockMixin",
     "VegetationBlockMixin"
   ],
@@ -62,7 +63,9 @@
     "client.KeyInputEventsMixin",
     "client.ParticleResourcesMixin",
     "client.ScreenAccessor",
+    "client.SlotBackgroundScreenMixin",
     "client.ScreenEventsMixin",
+    "client.ScreenForgeMixin",
     "client.ScreenMouseEventsMixin",
     "client.TooltipComponentsMixin",
     "client.TooltipEventsMixin"

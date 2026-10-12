@@ -92,6 +92,15 @@ public final class ForgeMods {
         return out;
     }
 
+    /** The game jars by file name and size, in order. */
+    static String gameJarsKey(List<Path> gameJars) throws IOException {
+        StringBuilder key = new StringBuilder();
+        for (Path jar : gameJars) {
+            key.append(jar.getFileName()).append(':').append(Files.isRegularFile(jar) ? Files.size(jar) : -1).append(';');
+        }
+        return key.toString();
+    }
+
     public List<ModMetadata> load(List<Path> jars) throws IOException {
         if (jars.isEmpty()) return List.of();
         jars = JarJar.expand(jars, cacheDir.resolve("jarjar"));
@@ -115,6 +124,9 @@ public final class ForgeMods {
             if (id != null) knownMods.add(id);
         }
         inputsHash = ModTranslator.sha256(concat(inputsHash.getBytes(StandardCharsets.UTF_8), String.join(",", knownMods).getBytes(StandardCharsets.UTF_8)));
+        // what translated code links against: a dedicated server has no client classes, so access transformer
+        // entries and call adaptations for them are left out of its translation (the client needs its own)
+        inputsHash = ModTranslator.sha256(concat(inputsHash.getBytes(StandardCharsets.UTF_8), gameJarsKey(gameJars).getBytes(StandardCharsets.UTF_8)));
         NameLayer layer = NameLayer.read(nameLayer);
         ClassIndex game = ClassIndex.of(gameJars, true);
         ModTranslator translator = new ModTranslator(layer, RedirectRules.read(redirects), BridgeRules.read(bridges),

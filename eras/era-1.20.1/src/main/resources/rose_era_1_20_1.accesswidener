@@ -58,3 +58,6 @@ accessible field net/minecraft/world/level/block/DropExperienceBlock xpRange Lne
 
 # 1.20.1 ExperienceOrb.value was a public field mods changed (Curios curio mending); 26.3 keeps setValue private
 accessible method net/minecraft/world/entity/ExperienceOrb setValue (I)V
+
+# 1.20.1 mods ask a game screen for its recipe book (LegacyRecipeBookComponent.of)
+accessible field net/minecraft/client/gui/screens/inventory/AbstractRecipeBookScreen recipeBookComponent Lnet/minecraft/client/gui/screens/recipebook/RecipeBookComponent;

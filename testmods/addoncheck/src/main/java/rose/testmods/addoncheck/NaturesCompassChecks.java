@@ -22,6 +22,7 @@ final class NaturesCompassChecks {
         test("nc_compass_finds_a_biome", NaturesCompassChecks::compassFindsABiome);
         test("nc_compass_points_somewhere_before_a_search", NaturesCompassChecks::compassAngle);
         test("nc_compass_knows_its_frame", NaturesCompassChecks::compassKnowsItsFrame);
+        test("nc_op_check_reads_the_op_list", NaturesCompassChecks::opCheck);
     }
 
     private static void compassRegistered(GameTestHelper helper) {
@@ -96,6 +97,27 @@ final class NaturesCompassChecks {
         Object got = AddonCheck.callStatic(shim, "withPropertyOwner", types, frame, (java.util.function.Supplier<Float>)
                 () -> AddonCheck.callStatic(shim, "getFrame", new Class<?>[] {ItemStack.class}, stack) == frame ? 1F : 0F);
         helper.assertTrue((float) got == 1F, "getFrame isn't the frame");
+        helper.succeed();
+    }
+
+    /**
+     * Every compass use on a dedicated server asks NC's PlayerUtils.isOp, which looks the player's 1.20.1 GameProfile
+     * up in the op list; 26.3 keys that list by NameAndId.
+     */
+    private static void opCheck(GameTestHelper helper) {
+        if (skip(helper, NC)) return;
+        var player = helper.makeMockServerPlayer(net.minecraft.world.level.GameType.SURVIVAL);
+        Class<?> utils = AddonCheck.modClass("com.chaosthedude.naturescompass.util.PlayerUtils");
+        Class<?>[] types = {net.minecraft.world.entity.player.Player.class};
+        helper.assertTrue(!(boolean) AddonCheck.callStatic(utils, "isOp", types, player), "a new player is an op");
+        var players = helper.getLevel().getServer().getPlayerList();
+        var id = new net.minecraft.server.players.NameAndId(player.getGameProfile());
+        players.op(id);
+        try {
+            helper.assertTrue((boolean) AddonCheck.callStatic(utils, "isOp", types, player), "an op isn't an op");
+        } finally {
+            players.deop(id);
+        }
         helper.succeed();
     }
 }

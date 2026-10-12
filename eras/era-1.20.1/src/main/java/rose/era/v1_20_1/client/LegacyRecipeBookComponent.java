@@ -176,6 +176,50 @@ public class LegacyRecipeBookComponent implements GuiEventListener, NarratableEn
         if (book != null) book.updateNarration(output);
     }
 
+    private static final java.util.Map<RecipeBookComponent<?>, LegacyRecipeBookComponent> VIEWS = new java.util.WeakHashMap<>();
+
+    /**
+     * 1.20.1 {@code screen.getRecipeBookComponent()} on a game screen (Curios hides the inventory's book before opening
+     * its own screen): the screen's 26.3 book, seen as a 1.20.1 one that can be shown, hidden and toggled. A mod's
+     * screen answers with its own book instead.
+     */
+    public static LegacyRecipeBookComponent of(net.minecraft.client.gui.screens.recipebook.RecipeUpdateListener screen) {
+        if (!(screen instanceof net.minecraft.client.gui.screens.inventory.AbstractRecipeBookScreen<?> recipeScreen)) return new LegacyRecipeBookComponent();
+        RecipeBookComponent<?> vanilla = recipeScreen.recipeBookComponent;
+        synchronized (VIEWS) {
+            return VIEWS.computeIfAbsent(vanilla, VanillaView::new);
+        }
+    }
+
+    /** A game screen's 26.3 recipe book behind the 1.20.1 visibility methods. */
+    private static final class VanillaView extends LegacyRecipeBookComponent {
+        private final RecipeBookComponent<?> vanilla;
+
+        VanillaView(RecipeBookComponent<?> vanilla) {
+            this.vanilla = vanilla;
+        }
+
+        @Override
+        public boolean isVisible() {
+            return vanilla.isVisible();
+        }
+
+        @Override
+        public void setVisible(boolean visible) {
+            if (vanilla.isVisible() != visible) vanilla.toggleVisibility();
+        }
+
+        @Override
+        public void toggleVisibility() {
+            vanilla.toggleVisibility();
+        }
+
+        @Override
+        public void hide() {
+            setVisible(false);
+        }
+    }
+
     /** The 26.3 book over a legacy menu's crafting grid. */
     private static final class Book extends RecipeBookComponent<RecipeBookMenu> {
         private static final WidgetSprites FILTER_BUTTON_SPRITES = new WidgetSprites(

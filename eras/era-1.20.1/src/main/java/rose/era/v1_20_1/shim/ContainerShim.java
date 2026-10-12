@@ -11,6 +11,14 @@ import net.minecraft.world.level.block.state.BlockState;
 /** Redirect targets for 1.20.1 container opening (ContainerOpenersCounter) and Direction.getNormal. */
 public final class ContainerShim {
     /**
+     * 1.20.1 {@code InventoryMenu.BLOCK_ATLAS}, the block atlas texture (slot backgrounds name it); 26.3 keeps the same
+     * id as the client-only TextureAtlas.LOCATION_BLOCKS.
+     */
+    public static net.minecraft.resources.Identifier blockAtlas() {
+        return net.minecraft.resources.Identifier.withDefaultNamespace("textures/atlas/blocks.png");
+    }
+
+    /**
      * 1.20.1 {@code incrementOpeners(player, level, pos, state)}; 26.x also takes how far the opener may reach, which
      * vanilla containers pass as the user's container interaction range (26.3 BarrelBlockEntity.startOpen).
      */

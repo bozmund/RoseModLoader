@@ -30,6 +30,7 @@ final class CuriosChecks {
         test("cu_drop_rules_keep_their_overrides", CuriosChecks::dropRulesKeepTheirOverrides);
         test("cu_worn_curios_tick_and_drop", CuriosChecks::wornCuriosTickAndDrop);
         test("cu_curse_and_orb_shims", CuriosChecks::curseAndOrbShims);
+        test("cu_curios_menu_opens", CuriosChecks::curiosMenuOpens);
     }
 
     /** Positions whose BreakEvent experience the listener below sets to 42. */
@@ -256,6 +257,35 @@ final class CuriosChecks {
         helper.assertTrue(loaded != null && loaded.equals(modifier) && rose.era.v1_20_1.shim.AttributeModifierShim.getId(loaded).equals(uuid)
                 && loaded.operation() == net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADD_MULTIPLIED_BASE,
                 "the modifier came back as " + loaded);
+        helper.succeed();
+    }
+
+    /**
+     * The Curios button asks the server to open Curios' menu (CPacketOpenCurios), whose curio slots show their slot
+     * type's icon through Forge's Slot.setBackground with 1.20.1 InventoryMenu.BLOCK_ATLAS.
+     */
+    private static void curiosMenuOpens(GameTestHelper helper) {
+        if (skip(helper, CU)) return;
+        var player = helper.makeMockServerPlayerInLevel();
+        try {
+            var provider = (net.minecraft.world.MenuProvider) modClass("top.theillusivec4.curios.common.inventory.container.CuriosContainerProvider")
+                    .getConstructor().newInstance();
+            net.minecraftforge.network.NetworkHooks.openScreen(player, provider);
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException(e);
+        }
+        var menu = player.containerMenu;
+        helper.assertTrue(menu.getClass().getName().startsWith("top.theillusivec4.curios"), "the open menu is " + menu.getClass().getName());
+        var backgrounds = menu.slots.stream().filter(slot -> slot.getClass().getSimpleName().equals("CurioSlot"))
+                .map(slot -> ((rose.dialect.forge.v1_20_1.ForgeSlot) slot).rose$backgroundSprite()).toList();
+        helper.assertTrue(!backgrounds.isEmpty() && backgrounds.stream().allMatch(java.util.Objects::nonNull), "curio slot backgrounds: " + backgrounds);
+        helper.assertTrue(((rose.dialect.forge.v1_20_1.ForgeSlot) menu.slots.stream().filter(slot -> slot.getClass().getSimpleName().equals("CurioSlot"))
+                .findFirst().orElseThrow()).rose$backgroundAtlas().toString().equals("minecraft:textures/atlas/blocks.png"), "the background atlas isn't the block atlas");
+        // CurioSlot.getRenderStatus reads Forge's Slot.getSlotIndex(), the slot's index in its container
+        var curioSlot = menu.slots.stream().filter(slot -> slot.getClass().getSimpleName().equals("CurioSlot")).findFirst().orElseThrow();
+        helper.assertTrue((int) call(curioSlot, "getSlotIndex") == curioSlot.getContainerSlot(), "getSlotIndex isn't the container slot");
+        call(curioSlot, "getRenderStatus");
+        player.closeContainer();
         helper.succeed();
     }
 }

@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:function",
+  "environment": "minecraft:default",
+  "function": "addoncheck:nc_op_check_reads_the_op_list",
+  "structure": "minecraft:empty",
+  "max_ticks": 100,
+  "padding": 2
+}

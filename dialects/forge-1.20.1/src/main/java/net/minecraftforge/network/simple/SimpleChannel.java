@@ -110,7 +110,8 @@ public class SimpleChannel {
     }
 
     public <MSG> void send(PacketDistributor.PacketTarget target, MSG message) {
-        target.send(new Message(toClient, indexOf(message), message));
+        boolean toTheServer = target.getDirection() == NetworkDirection.PLAY_TO_SERVER;
+        target.send(new Message(toTheServer ? toServer : toClient, indexOf(message), message));
     }
 
     public <MSG> void sendTo(MSG message, ServerPlayer player) {
